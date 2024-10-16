@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-avian2d = "0.1"
+avian2d = { version = "0.1", features = ["2d"] }
 bevy = { version = "0.14", features= ["wayland"] }
