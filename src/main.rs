@@ -1,5 +1,5 @@
 use avian2d::{math::Vector, parry::{na::Dynamic, transformation::utils::transform}, prelude::{AngularVelocity, Collider, Collision, ExternalAngularImpulse, ExternalTorque, Friction, Gravity, Joint, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, RevoluteJoint, RigidBody, SubstepCount, SweptCcd}, PhysicsPlugins};
-use bevy::{color::palettes::css::RED, input::mouse::{MouseButtonInput, MouseScrollUnit, MouseWheel}, prelude::*, scene::ron::de};
+use bevy::{color::palettes::css::{GRAY, PINK, PURPLE, RED, WHITE}, input::mouse::{MouseButtonInput, MouseScrollUnit, MouseWheel}, prelude::*, scene::ron::de, sprite::{Material2d, MaterialMesh2dBundle, Mesh2d}};
 
 fn main() {
     App::new()
@@ -24,16 +24,19 @@ camera_follow
 fn setup_ground(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>
+    mut materials: ResMut<Assets<ColorMaterial>>
 ) {
+    let width: f32 = 10000.0;
+    let height: f32 = 300.0;
+
     commands.spawn((
         RigidBody::Static,
-        Collider::rectangle(10000.0, 10.0),
+        Collider::rectangle(width, height),
         Friction::new(1.0),
         SweptCcd::default(),
-        PbrBundle {
-            mesh: meshes.add(Rectangle::new(10000.0, 10.0)),
-            material: materials.add(Color::WHITE),
+        ColorMesh2dBundle {
+            mesh: meshes.add(Rectangle::new(width, height)).into(),
+            material: materials.add(ColorMaterial::from_color(GRAY)),
             transform: Transform::from_xyz(0.0, -200.0, 0.0),
             ..default()
         }
@@ -58,7 +61,7 @@ impl PlayerCircle {
 fn setup_circle(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>
+    mut materials: ResMut<Assets<ColorMaterial>>
 ) {
     let front_id = commands.spawn((
         PlayerCircle::Front,
@@ -66,10 +69,9 @@ fn setup_circle(
         Collider::circle(PlayerCircle::size()),
         Friction::new(1.0),
         SweptCcd::default(),
-        PbrBundle {
-            mesh: meshes.add(Circle::new(PlayerCircle::size())),
-            material: materials.add(Color::WHITE),
-            transform: Transform::from_xyz(40.0, 0.0, 0.0),
+        ColorMesh2dBundle {
+            mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
+            material: materials.add(ColorMaterial::from_color(Color::WHITE)),
             ..default()
         }
     )).id();
@@ -80,10 +82,9 @@ fn setup_circle(
         Collider::circle(PlayerCircle::size()),
         Friction::new(1.0),
         SweptCcd::default(),
-        PbrBundle {
-            mesh: meshes.add(Circle::new(PlayerCircle::size())),
-            material: materials.add(Color::WHITE),
-            transform: Transform::from_xyz(-40.0, 0.0, 0.0),
+        ColorMesh2dBundle {
+            mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
+            material: materials.add(ColorMaterial::from_color(Color::WHITE)),
             ..default()
         }
     )).id();
