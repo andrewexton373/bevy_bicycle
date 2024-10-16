@@ -1,0 +1,8 @@
+[package]
+name = "bevy-bicycle"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+avian2d = "0.1"
+bevy = { version = "0.14", features= ["wayland"] }
