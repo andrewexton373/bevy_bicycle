@@ -1,5 +1,5 @@
-use avian2d::{math::Vector, prelude::{AngularVelocity, Collider, Friction, Gravity, Joint, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
-use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::DVec2, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
+use avian2d::{math::Vector, parry::mass_properties::MassProperties, prelude::{AngularVelocity, Collider, ExternalTorque, FixedJoint, Friction, Gravity, Joint, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
+use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::{dvec2, DVec2}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 
 fn main() {
     App::new()
@@ -11,6 +11,7 @@ fn main() {
     ))
     .insert_resource(ClearColor(Color::BLACK))
     .insert_resource(Gravity(Vector::NEG_Y * 100.0))
+    // .insert_resource(Time::new_with(Physics::fixed_hz(144.0)))
     .insert_resource(SubstepCount(100))
     .add_systems(Startup, (setup_ground, setup_camera, setup_bicycle))
     .add_systems(Update, (zoom_scale, spin_wheel))
@@ -129,27 +130,81 @@ fn setup_bicycle(
         }
     )).id();
 
-    let frame_id = commands.spawn((
-        Frame,
+    let rear_hub = dvec2(-40.0, 0.0);
+    let front_hub = dvec2(35.0, 0.0);
+    let bottom_bracket = dvec2(0.0, 0.0);
+    let seat_clamp = dvec2(-10.0, 20.0);
+    let stem_clamp = dvec2(30.0, 20.0);
+
+    let mut frame_points_1: Vec<DVec2> = vec![];
+    frame_points_1.push(rear_hub);
+    frame_points_1.push(seat_clamp);
+    frame_points_1.push(bottom_bracket);
+    frame_points_1.push(rear_hub);
+
+    let mut frame_points_2: Vec<DVec2> = vec![];
+    frame_points_2.push(stem_clamp);
+    frame_points_2.push(seat_clamp);
+    frame_points_2.push(bottom_bracket);
+    frame_points_2.push(stem_clamp);
+
+    let mut fork_points: Vec<DVec2> = vec![];
+    fork_points.push(stem_clamp);
+    fork_points.push(front_hub);
+
+    let rear_frame_id = commands.spawn((
         RigidBody::Dynamic,
-        Collider::segment(DVec2 { x: -40.0, y: 0.0 }, DVec2 { x: 40.0, y: 0.0 }),
+        Collider::polyline(frame_points_1.clone(), None),
         Sensor,
-        MassPropertiesBundle::new_computed(&Collider::rectangle(50.0, 50.0), 1.0),
+        MassPropertiesBundle {
+            mass: Mass(10.0),
+            ..default()
+        }
+    )).id();
+
+    let front_frame_id = commands.spawn((
+        RigidBody::Dynamic,
+        Collider::polyline(frame_points_2, None),
+        Sensor,
+        MassPropertiesBundle {
+            mass: Mass(10.0),
+            ..default()
+        }
+    )).id();
+
+    let fork_id = commands.spawn((
+        RigidBody::Dynamic,
+        Collider::polyline(fork_points, None),
+        Sensor,
+        MassPropertiesBundle {
+            mass: Mass(10.0),
+            ..default()
+        }
     )).id();
 
     commands.spawn(
-        RevoluteJoint::new(frame_id, front_id).with_local_anchor_1(DVec2 { x: -40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        FixedJoint::new(front_frame_id, rear_frame_id).with_local_anchor_1(bottom_bracket).with_local_anchor_2(bottom_bracket).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+    );
+    commands.spawn(
+        FixedJoint::new(front_frame_id, rear_frame_id).with_local_anchor_1(seat_clamp).with_local_anchor_2(seat_clamp).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+    );
+    commands.spawn(
+        FixedJoint::new(front_frame_id, fork_id).with_local_anchor_1(stem_clamp).with_local_anchor_2(stem_clamp).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     commands.spawn(
-        RevoluteJoint::new(frame_id, back_id).with_local_anchor_1(DVec2 { x: 40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        RevoluteJoint::new(front_frame_id, front_id).with_local_anchor_1(front_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+    );
+
+    commands.spawn(
+        RevoluteJoint::new(rear_frame_id, back_id).with_local_anchor_1(rear_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     
 }
 
 fn spin_wheel(
-    mut wheel_query: Query<(&BicycleWheel, &mut AngularVelocity), With<BicycleWheel>>,
+    mut wheel_query: Query<(&BicycleWheel, &mut ExternalTorque), With<BicycleWheel>>,
     mut mouse_wheel_evt: EventReader<MouseWheel>
 ) {
 
@@ -157,11 +212,12 @@ fn spin_wheel(
         match &evt.unit {
             MouseScrollUnit::Line => {
 
-                for (wheel, mut ang_vel) in wheel_query.iter_mut() {
+                for (wheel, mut torque) in wheel_query.iter_mut() {
                     match wheel {
                         BicycleWheel::Back => {
-                            ang_vel.0 += -10.0 as f64 * evt.y as f64;
-                            println!("ang vel: {}", ang_vel.0);
+                            *torque = ExternalTorque::new(-1000000000.0 as f64 * evt.y as f64).with_persistence(true);
+                            // ang_vel.0 += -10.0 as f64 * evt.y as f64;
+                            println!("torque {}", torque.torque());
                         },
                         _ => {
             
