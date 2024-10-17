@@ -1,16 +1,17 @@
-use avian2d::{math::Vector, parry::{na::Dynamic, transformation::utils::transform}, prelude::{AngularVelocity, Collider, Collision, ExternalAngularImpulse, ExternalTorque, Friction, Gravity, Joint, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, RevoluteJoint, RigidBody, SubstepCount, SweptCcd}, PhysicsPlugins};
-use bevy::{color::palettes::css::{GRAY, PINK, PURPLE, RED, WHITE}, input::mouse::{MouseButtonInput, MouseScrollUnit, MouseWheel}, prelude::*, scene::ron::de, sprite::{Material2d, MaterialMesh2dBundle, Mesh2d}};
+use avian2d::{math::Vector, prelude::{AngularVelocity, Collider, Friction, Gravity, Joint, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, RevoluteJoint, RigidBody, SubstepCount, SweptCcd}, PhysicsPlugins};
+use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 
 fn main() {
     App::new()
     .add_plugins((
         DefaultPlugins,
         PhysicsPlugins::default(),
-        PhysicsDebugPlugin::default()
+        PhysicsDebugPlugin::default(),
+        Material2dPlugin::<CustomMaterial>::default(),
     ))
     .insert_resource(ClearColor(Color::BLACK))
     .insert_resource(Gravity(Vector::NEG_Y * 100.0))
-    .insert_resource(SubstepCount(50))
+    .insert_resource(SubstepCount(12))
     .add_systems(Startup, (setup_ground, setup_camera, setup_circle))
     .add_systems(Update, (zoom_scale, spin_wheel))
     .add_systems(PostUpdate,
@@ -58,10 +59,38 @@ impl PlayerCircle {
     }
 }
 
+// This struct defines the data that will be passed to your shader
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
+struct CustomMaterial {
+    #[uniform(0)]
+    color: LinearRgba,
+    #[texture(1)]
+    #[sampler(2)]
+    color_texture: Option<Handle<Image>>,
+    alpha_mode: AlphaMode,
+}
+
+/// The Material trait is very configurable, but comes with sensible defaults for all methods.
+/// You only need to implement functions for features that need non-default behavior. See the Material api docs for details!
+impl Material2d for CustomMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/custom_material_2d.wgsl".into()
+    }
+
+    // fn alpha_mode(&self) -> AlphaMode {
+    //     self.alpha_mode
+    // }
+}
+
+
+
 fn setup_circle(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>
+    mut color_materials: ResMut<Assets<ColorMaterial>>,
+    mut custom_materials: ResMut<Assets<CustomMaterial>>,
+    mut asset_server: Res<AssetServer>
+
 ) {
     let front_id = commands.spawn((
         PlayerCircle::Front,
@@ -69,9 +98,19 @@ fn setup_circle(
         Collider::circle(PlayerCircle::size()),
         Friction::new(1.0),
         SweptCcd::default(),
-        ColorMesh2dBundle {
+        // ColorMesh2dBundle {
+        //     mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
+        //     material: color_materials.add(ColorMaterial::from_color(Color::WHITE)),
+        //     ..default()
+        // },
+        MaterialMesh2dBundle {
             mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
-            material: materials.add(ColorMaterial::from_color(Color::WHITE)),
+            
+            material: custom_materials.add(CustomMaterial {
+                color: LinearRgba::WHITE,
+                color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
+                alpha_mode: AlphaMode::Blend,
+            }),
             ..default()
         }
     )).id();
@@ -84,7 +123,7 @@ fn setup_circle(
         SweptCcd::default(),
         ColorMesh2dBundle {
             mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
-            material: materials.add(ColorMaterial::from_color(Color::WHITE)),
+            material: color_materials.add(ColorMaterial::from_color(Color::WHITE)),
             ..default()
         }
     )).id();
@@ -137,8 +176,8 @@ fn spin_wheel(
                 for (wheel, mut ang_vel) in wheel_query.iter_mut() {
                     match wheel {
                         PlayerCircle::Back => {
-                            ang_vel.0 += -100000.0 * evt.y;
-                            println!("HIT! {}", evt.y);
+                            ang_vel.0 += -100.0 * evt.y;
+                            println!("HIT! {} ang vel: {}", evt.y, ang_vel.0);
                         },
                         _ => {
             
@@ -197,8 +236,34 @@ fn setup_camera(
 
 fn zoom_scale(
     mut query_camera: Query<&mut OrthographicProjection, With<FollowCamera>>,
+    mut keyboard_input: EventReader<KeyboardInput>
 ) {
-    let mut projection = query_camera.single_mut();
+
+    for event in keyboard_input.read() {
+        match event.state {
+            ButtonState::Pressed => {
+
+                let mut projection: Mut<'_, OrthographicProjection> = query_camera.single_mut();
+
+                match event.logical_key {
+                    Key::ArrowUp => {
+                        projection.scale /= 1.25;
+                    },
+                    Key::ArrowDown => {
+                        projection.scale *= 1.25;
+                    },
+                    _ => {
+
+                    }
+                }
+
+            },
+            _ => {
+
+            }
+        }
+    }
+
     // zoom in
     // projection.scale /= 1.25;
     // zoom out
