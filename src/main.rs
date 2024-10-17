@@ -1,5 +1,5 @@
 use avian2d::{math::Vector, prelude::{AngularVelocity, Collider, Friction, Gravity, Joint, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
-use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
+use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::DVec2, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 
 fn main() {
     App::new()
@@ -27,8 +27,8 @@ fn setup_ground(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>
 ) {
-    let width: f32 = 10000.0;
-    let height: f32 = 300.0;
+    let width: f64 = 10000.0;
+    let height: f64 = 300.0;
 
     commands.spawn((
         RigidBody::Static,
@@ -37,7 +37,7 @@ fn setup_ground(
         Restitution::new(0.0),
         SweptCcd::default(),
         ColorMesh2dBundle {
-            mesh: meshes.add(Rectangle::new(width, height)).into(),
+            mesh: meshes.add(Rectangle::new(width as f32, height as f32)).into(),
             material: materials.add(ColorMaterial::from_color(GRAY)),
             transform: Transform::from_xyz(0.0, -200.0, 0.0),
             ..default()
@@ -94,7 +94,7 @@ fn setup_bicycle(
     let front_id = commands.spawn((
         BicycleWheel::Front,
         RigidBody::Dynamic,
-        Collider::circle(BicycleWheel::size()),
+        Collider::circle(BicycleWheel::size() as f64),
         Friction::new(1.0),
         Restitution::new(0.0),
         SweptCcd::default(),
@@ -113,7 +113,7 @@ fn setup_bicycle(
     let back_id = commands.spawn((
         BicycleWheel::Back,
         RigidBody::Dynamic,
-        Collider::circle(BicycleWheel::size()),
+        Collider::circle(BicycleWheel::size() as f64),
         Friction::new(1.0),
         Restitution::new(0.0),
         SweptCcd::default(),
@@ -132,17 +132,17 @@ fn setup_bicycle(
     let frame_id = commands.spawn((
         Frame,
         RigidBody::Dynamic,
-        Collider::segment(Vec2 { x: -40.0, y: 0.0 }, Vec2 { x: 40.0, y: 0.0 }),
+        Collider::segment(DVec2 { x: -40.0, y: 0.0 }, DVec2 { x: 40.0, y: 0.0 }),
         Sensor,
         MassPropertiesBundle::new_computed(&Collider::rectangle(50.0, 50.0), 1.0),
     )).id();
 
     commands.spawn(
-        RevoluteJoint::new(frame_id, front_id).with_local_anchor_1(Vec2 { x: -40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        RevoluteJoint::new(frame_id, front_id).with_local_anchor_1(DVec2 { x: -40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     commands.spawn(
-        RevoluteJoint::new(frame_id, back_id).with_local_anchor_1(Vec2 { x: 40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        RevoluteJoint::new(frame_id, back_id).with_local_anchor_1(DVec2 { x: 40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     
@@ -160,7 +160,7 @@ fn spin_wheel(
                 for (wheel, mut ang_vel) in wheel_query.iter_mut() {
                     match wheel {
                         BicycleWheel::Back => {
-                            ang_vel.0 += -10.0 * evt.y;
+                            ang_vel.0 += -10.0 as f64 * evt.y as f64;
                             println!("ang vel: {}", ang_vel.0);
                         },
                         _ => {
