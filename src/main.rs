@@ -1,4 +1,4 @@
-use avian2d::{math::Vector, prelude::{AngularVelocity, Collider, Friction, Gravity, Joint, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, RevoluteJoint, RigidBody, SubstepCount, SweptCcd}, PhysicsPlugins};
+use avian2d::{math::Vector, prelude::{AngularVelocity, Collider, Friction, Gravity, Joint, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
 use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 
 fn main() {
@@ -11,8 +11,8 @@ fn main() {
     ))
     .insert_resource(ClearColor(Color::BLACK))
     .insert_resource(Gravity(Vector::NEG_Y * 100.0))
-    .insert_resource(SubstepCount(12))
-    .add_systems(Startup, (setup_ground, setup_camera, setup_circle))
+    .insert_resource(SubstepCount(100))
+    .add_systems(Startup, (setup_ground, setup_camera, setup_bicycle))
     .add_systems(Update, (zoom_scale, spin_wheel))
     .add_systems(PostUpdate,
 camera_follow
@@ -34,6 +34,7 @@ fn setup_ground(
         RigidBody::Static,
         Collider::rectangle(width, height),
         Friction::new(1.0),
+        Restitution::new(0.0),
         SweptCcd::default(),
         ColorMesh2dBundle {
             mesh: meshes.add(Rectangle::new(width, height)).into(),
@@ -45,7 +46,7 @@ fn setup_ground(
 }
 
 #[derive(Component)]
-enum PlayerCircle {
+enum BicycleWheel {
     Front,
     Back
 }
@@ -53,7 +54,7 @@ enum PlayerCircle {
 #[derive(Component)]
 struct Frame;
 
-impl PlayerCircle {
+impl BicycleWheel {
     fn size() -> f32 {
         20.0
     }
@@ -84,22 +85,21 @@ impl Material2d for CustomMaterial {
 
 
 
-fn setup_circle(
+fn setup_bicycle(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut asset_server: Res<AssetServer>
-
 ) {
     let front_id = commands.spawn((
-        PlayerCircle::Front,
+        BicycleWheel::Front,
         RigidBody::Dynamic,
-        Collider::circle(PlayerCircle::size()),
+        Collider::circle(BicycleWheel::size()),
         Friction::new(1.0),
+        Restitution::new(0.0),
         SweptCcd::default(),
         MaterialMesh2dBundle {
-            mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
+            mesh: meshes.add(Circle::new(BicycleWheel::size())).into(),
             
             material: custom_materials.add(CustomMaterial {
                 color: LinearRgba::WHITE,
@@ -111,13 +111,14 @@ fn setup_circle(
     )).id();
 
     let back_id = commands.spawn((
-        PlayerCircle::Back,
+        BicycleWheel::Back,
         RigidBody::Dynamic,
-        Collider::circle(PlayerCircle::size()),
+        Collider::circle(BicycleWheel::size()),
         Friction::new(1.0),
+        Restitution::new(0.0),
         SweptCcd::default(),
         MaterialMesh2dBundle {
-            mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
+            mesh: meshes.add(Circle::new(BicycleWheel::size())).into(),
             
             material: custom_materials.add(CustomMaterial {
                 color: LinearRgba::WHITE,
@@ -132,22 +133,23 @@ fn setup_circle(
         Frame,
         RigidBody::Dynamic,
         Collider::segment(Vec2 { x: -40.0, y: 0.0 }, Vec2 { x: 40.0, y: 0.0 }),
+        Sensor,
         MassPropertiesBundle::new_computed(&Collider::rectangle(50.0, 50.0), 1.0),
     )).id();
 
     commands.spawn(
-        RevoluteJoint::new(frame_id, front_id).with_local_anchor_1(Vec2 { x: -40.0, y: 0.0 }).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        RevoluteJoint::new(frame_id, front_id).with_local_anchor_1(Vec2 { x: -40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     commands.spawn(
-        RevoluteJoint::new(frame_id, back_id).with_local_anchor_1(Vec2 { x: 40.0, y: 0.0 }).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        RevoluteJoint::new(frame_id, back_id).with_local_anchor_1(Vec2 { x: 40.0, y: 0.0 }).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     
 }
 
 fn spin_wheel(
-    mut wheel_query: Query<(&PlayerCircle, &mut AngularVelocity), With<PlayerCircle>>,
+    mut wheel_query: Query<(&BicycleWheel, &mut AngularVelocity), With<BicycleWheel>>,
     mut mouse_wheel_evt: EventReader<MouseWheel>
 ) {
 
@@ -157,9 +159,9 @@ fn spin_wheel(
 
                 for (wheel, mut ang_vel) in wheel_query.iter_mut() {
                     match wheel {
-                        PlayerCircle::Back => {
+                        BicycleWheel::Back => {
                             ang_vel.0 += -10.0 * evt.y;
-                            println!("HIT! {} ang vel: {}", evt.y, ang_vel.0);
+                            println!("ang vel: {}", ang_vel.0);
                         },
                         _ => {
             
@@ -178,14 +180,14 @@ fn spin_wheel(
 }
 
 fn camera_follow(
-    player_query: Query<(&PlayerCircle, &Transform), (With<PlayerCircle>, Without<FollowCamera>)>,
-    mut camera_query: Query<&mut Transform, (With<FollowCamera>, Without<PlayerCircle>)>
+    player_query: Query<(&BicycleWheel, &Transform), (With<BicycleWheel>, Without<FollowCamera>)>,
+    mut camera_query: Query<&mut Transform, (With<FollowCamera>, Without<BicycleWheel>)>
 ) {
 
     // Follow the Front Circle
     for (circle, circle_t) in player_query.iter() {
         match circle {
-            PlayerCircle::Front => {
+            BicycleWheel::Front => {
                 let mut camera_t = camera_query.single_mut();
                 camera_t.translation = circle_t.translation;
             },
