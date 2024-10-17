@@ -98,11 +98,6 @@ fn setup_circle(
         Collider::circle(PlayerCircle::size()),
         Friction::new(1.0),
         SweptCcd::default(),
-        // ColorMesh2dBundle {
-        //     mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
-        //     material: color_materials.add(ColorMaterial::from_color(Color::WHITE)),
-        //     ..default()
-        // },
         MaterialMesh2dBundle {
             mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
             
@@ -121,30 +116,17 @@ fn setup_circle(
         Collider::circle(PlayerCircle::size()),
         Friction::new(1.0),
         SweptCcd::default(),
-        ColorMesh2dBundle {
+        MaterialMesh2dBundle {
             mesh: meshes.add(Circle::new(PlayerCircle::size())).into(),
-            material: color_materials.add(ColorMaterial::from_color(Color::WHITE)),
+            
+            material: custom_materials.add(CustomMaterial {
+                color: LinearRgba::WHITE,
+                color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
+                alpha_mode: AlphaMode::Blend,
+            }),
             ..default()
         }
     )).id();
-
-    let spoke = commands.spawn((
-        TextBundle::from_section(
-            // Accepts a `String` or any type that converts into a `String`, such as `&str`
-            "X",
-            TextStyle {
-                // This font is loaded and will be used instead of the default font.
-                font_size: 100.0,
-                color: Color::WHITE,
-                ..default()
-            },
-        ).with_background_color(Color::from(RED)),
-
-        // Collider::segment(Vec2 { x: -10.0, y: 0.0 }, Vec2 { x: 10.0, y: 0.0 })
-    )).id();
-
-    commands.entity(back_id).add_child(spoke);
-
 
     let frame_id = commands.spawn((
         Frame,
@@ -176,7 +158,7 @@ fn spin_wheel(
                 for (wheel, mut ang_vel) in wheel_query.iter_mut() {
                     match wheel {
                         PlayerCircle::Back => {
-                            ang_vel.0 += -100.0 * evt.y;
+                            ang_vel.0 += -10.0 * evt.y;
                             println!("HIT! {} ang vel: {}", evt.y, ang_vel.0);
                         },
                         _ => {
@@ -264,8 +246,4 @@ fn zoom_scale(
         }
     }
 
-    // zoom in
-    // projection.scale /= 1.25;
-    // zoom out
-    // projection.scale *= 1.25;
 }
