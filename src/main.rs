@@ -1,4 +1,4 @@
-use avian2d::{math::Vector, parry::mass_properties::MassProperties, prelude::{AngularVelocity, Collider, ExternalTorque, FixedJoint, Friction, Gravity, Joint, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
+use avian2d::{math::Vector, parry::{mass_properties::MassProperties, math::Rotation}, prelude::{AngularVelocity, Collider, CollisionMargin, ExternalTorque, FixedJoint, Friction, Gravity, Joint, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Position, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
 use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::{dvec2, DVec2}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 
 fn main() {
@@ -34,7 +34,7 @@ fn setup_ground(
     commands.spawn((
         RigidBody::Static,
         Collider::rectangle(width, height),
-        Friction::new(1.0),
+        Friction::new(0.95),
         Restitution::new(0.0),
         SweptCcd::default(),
         ColorMesh2dBundle {
@@ -84,8 +84,6 @@ impl Material2d for CustomMaterial {
     // }
 }
 
-
-
 fn setup_bicycle(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -96,7 +94,8 @@ fn setup_bicycle(
         BicycleWheel::Front,
         RigidBody::Dynamic,
         Collider::circle(BicycleWheel::size() as f64),
-        Friction::new(1.0),
+        CollisionMargin(1.0),
+        Friction::new(0.95),
         Restitution::new(0.0),
         SweptCcd::default(),
         MaterialMesh2dBundle {
@@ -115,7 +114,8 @@ fn setup_bicycle(
         BicycleWheel::Back,
         RigidBody::Dynamic,
         Collider::circle(BicycleWheel::size() as f64),
-        Friction::new(1.0),
+        CollisionMargin(1.0),
+        Friction::new(0.95),
         Restitution::new(0.0),
         SweptCcd::default(),
         MaterialMesh2dBundle {
@@ -136,6 +136,9 @@ fn setup_bicycle(
     let seat_clamp = dvec2(-10.0, 20.0);
     let stem_clamp = dvec2(30.0, 20.0);
 
+    let frame_points_all: Vec<DVec2> = vec![rear_hub, bottom_bracket, seat_clamp, stem_clamp, front_hub];
+    let frame_points_all_indicies: Vec<[u32; 2]> = vec![[0, 1], [1, 2], [2, 0], [2, 3], [1, 3], [3, 4]];
+
     let mut frame_points_1: Vec<DVec2> = vec![];
     frame_points_1.push(rear_hub);
     frame_points_1.push(seat_clamp);
@@ -152,29 +155,11 @@ fn setup_bicycle(
     fork_points.push(stem_clamp);
     fork_points.push(front_hub);
 
-    let rear_frame_id = commands.spawn((
-        RigidBody::Dynamic,
-        Collider::polyline(frame_points_1.clone(), None),
-        Sensor,
-        MassPropertiesBundle {
-            mass: Mass(10.0),
-            ..default()
-        }
-    )).id();
+    let frame_collider = Collider::convex_decomposition(frame_points_all, frame_points_all_indicies);
 
-    let front_frame_id = commands.spawn((
+    let frame_id = commands.spawn((
         RigidBody::Dynamic,
-        Collider::polyline(frame_points_2, None),
-        Sensor,
-        MassPropertiesBundle {
-            mass: Mass(10.0),
-            ..default()
-        }
-    )).id();
-
-    let fork_id = commands.spawn((
-        RigidBody::Dynamic,
-        Collider::polyline(fork_points, None),
+        frame_collider,
         Sensor,
         MassPropertiesBundle {
             mass: Mass(10.0),
@@ -183,21 +168,11 @@ fn setup_bicycle(
     )).id();
 
     commands.spawn(
-        FixedJoint::new(front_frame_id, rear_frame_id).with_local_anchor_1(bottom_bracket).with_local_anchor_2(bottom_bracket).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
-    );
-    commands.spawn(
-        FixedJoint::new(front_frame_id, rear_frame_id).with_local_anchor_1(seat_clamp).with_local_anchor_2(seat_clamp).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
-    );
-    commands.spawn(
-        FixedJoint::new(front_frame_id, fork_id).with_local_anchor_1(stem_clamp).with_local_anchor_2(stem_clamp).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        RevoluteJoint::new(frame_id, front_id).with_local_anchor_1(front_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     commands.spawn(
-        RevoluteJoint::new(front_frame_id, front_id).with_local_anchor_1(front_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
-    );
-
-    commands.spawn(
-        RevoluteJoint::new(rear_frame_id, back_id).with_local_anchor_1(rear_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+        RevoluteJoint::new(frame_id, back_id).with_local_anchor_1(rear_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     
@@ -215,7 +190,7 @@ fn spin_wheel(
                 for (wheel, mut torque) in wheel_query.iter_mut() {
                     match wheel {
                         BicycleWheel::Back => {
-                            *torque = ExternalTorque::new(-1000000000.0 as f64 * evt.y as f64).with_persistence(true);
+                            *torque = ExternalTorque::new(-2000000.0 as f64 * evt.y as f64).with_persistence(true);
                             // ang_vel.0 += -10.0 as f64 * evt.y as f64;
                             println!("torque {}", torque.torque());
                         },
