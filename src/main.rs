@@ -1,10 +1,25 @@
-use avian2d::{math::Vector, parry::{mass_properties::MassProperties, math::Rotation}, prelude::{AngularVelocity, Collider, CollisionMargin, ExternalTorque, FixedJoint, Friction, Gravity, Joint, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Position, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
+use avian2d::{math::Vector, parry::{mass_properties::MassProperties, math::Rotation}, prelude::{AngularVelocity, Collider, CollisionMargin, ExternalTorque, FixedJoint, Friction, Gravity, Joint, LinearVelocity, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Position, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
 use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::{dvec2, DVec2}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
+use bevy_parallax::{Animation, CreateParallaxEvent, LayerData, LayerRepeat, LayerSpeed, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxPlugin, ParallaxSystems, RepeatStrategy};
 
 fn main() {
+
+    let primary_window = Window {
+        title: "Bevy Bicycle".to_string(),
+        resolution: (1280.0, 720.0).into(),
+        resizable: false,
+        ..default()
+    };
+
     App::new()
     .add_plugins((
-        DefaultPlugins,
+        DefaultPlugins
+            .set(WindowPlugin {
+                primary_window: Some(primary_window),
+                ..default()
+            })
+            .set(ImagePlugin::default_nearest()),
+        ParallaxPlugin,
         PhysicsPlugins::default(),
         PhysicsDebugPlugin::default(),
         Material2dPlugin::<CustomMaterial>::default(),
@@ -19,6 +34,7 @@ fn main() {
 camera_follow
             .after(PhysicsSet::Sync)
             .before(TransformSystem::TransformPropagate)
+            .before(ParallaxSystems)
     )
     .run();
 }
@@ -40,7 +56,7 @@ fn setup_ground(
         ColorMesh2dBundle {
             mesh: meshes.add(Rectangle::new(width as f32, height as f32)).into(),
             material: materials.add(ColorMaterial::from_color(GRAY)),
-            transform: Transform::from_xyz(0.0, -200.0, 0.0),
+            transform: Transform::from_xyz(0.0, -200.0, 10.0),
             ..default()
         }
     ));
@@ -100,6 +116,10 @@ fn setup_bicycle(
         SweptCcd::default(),
         MaterialMesh2dBundle {
             mesh: meshes.add(Circle::new(BicycleWheel::size())).into(),
+            transform: Transform {
+                translation: Vec3::new(0.0, 0.0, 10.0),
+                ..default()
+            },
             
             material: custom_materials.add(CustomMaterial {
                 color: LinearRgba::WHITE,
@@ -120,7 +140,10 @@ fn setup_bicycle(
         SweptCcd::default(),
         MaterialMesh2dBundle {
             mesh: meshes.add(Circle::new(BicycleWheel::size())).into(),
-            
+            transform: Transform {
+                translation: Vec3::new(0.0, 0.0, 10.0),
+                ..default()
+            },
             material: custom_materials.add(CustomMaterial {
                 color: LinearRgba::WHITE,
                 color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
@@ -161,6 +184,7 @@ fn setup_bicycle(
         RigidBody::Dynamic,
         frame_collider,
         Sensor,
+
         MassPropertiesBundle {
             mass: Mass(10.0),
             ..default()
@@ -211,21 +235,30 @@ fn spin_wheel(
 }
 
 fn camera_follow(
-    player_query: Query<(&BicycleWheel, &Transform), (With<BicycleWheel>, Without<FollowCamera>)>,
-    mut camera_query: Query<&mut Transform, (With<FollowCamera>, Without<BicycleWheel>)>
+    player_query: Query<(&BicycleWheel, &Transform, &LinearVelocity), (With<BicycleWheel>, Without<FollowCamera>)>,
+    mut camera_query: Query<(Entity, &mut Transform), (With<FollowCamera>, Without<BicycleWheel>)>,
+    mut move_event_writer: EventWriter<ParallaxMoveEvent>,
 ) {
 
     // Follow the Front Circle
-    for (circle, circle_t) in player_query.iter() {
+    for (circle, circle_t, circle_v) in player_query.iter() {
         match circle {
             BicycleWheel::Front => {
-                let mut camera_t = camera_query.single_mut();
+                let (camera, mut camera_t) = camera_query.single_mut();
                 camera_t.translation = circle_t.translation;
+
+                move_event_writer.send(ParallaxMoveEvent {
+                    translation: Vec2::new((circle_v.0.x / 100.0) as f32, 0.0),
+                    camera: camera,
+                    rotation: 0.,
+                });
             },
             _ => {
             }
         }
     }
+
+    
 
 }
 
@@ -233,9 +266,10 @@ fn camera_follow(
 struct FollowCamera;
 
 fn setup_camera(
-    mut commands: Commands
+    mut commands: Commands,
+    mut create_parallax: EventWriter<CreateParallaxEvent>
 ) {
-    commands.spawn((
+    let camera = commands.spawn((
         FollowCamera,
         Camera2dBundle {
             projection: OrthographicProjection {
@@ -246,7 +280,89 @@ fn setup_camera(
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..default()
         },
-    ));
+    ))
+    .insert(ParallaxCameraComponent::default())
+    .id();
+
+    let event = CreateParallaxEvent {
+        layers_data: vec![
+            LayerData {
+                speed: LayerSpeed::Bidirectional(0.99, 0.99),
+                repeat: LayerRepeat::horizontally(RepeatStrategy::Same),
+                path: "media/mills-back.png".to_string(),
+                tile_size: UVec2::new(1123, 794),
+                cols: 6,
+                rows: 1,
+                scale: Vec2::splat(0.15),
+                z: 0.6,
+                position: Vec2::new(0., 50.),
+                color: Color::BLACK,
+                animation: Some(Animation::FPS(30.)),
+                ..default()
+            },
+            LayerData {
+                speed: LayerSpeed::Bidirectional(0.98, 0.98),
+                repeat: LayerRepeat::horizontally(RepeatStrategy::Same),
+                path: "media/mills-back.png".to_string(),
+                tile_size: UVec2::new(1123, 794),
+                cols: 6,
+                rows: 1,
+                scale: Vec2::splat(0.25),
+                z: 0.7,
+                position: Vec2::new(0., 50.),
+                color: bevy::color::palettes::css::DARK_GRAY.into(),
+                index: 2,
+                animation: Some(Animation::FPS(28.)),
+                ..default()
+            },
+            LayerData {
+                speed: LayerSpeed::Bidirectional(0.95, 0.95),
+                repeat: LayerRepeat::horizontally(RepeatStrategy::Same),
+                path: "media/mills-back.png".to_string(),
+                tile_size: UVec2::new(1123, 794),
+                cols: 6,
+                rows: 1,
+                scale: Vec2::splat(0.5),
+                z: 0.8,
+                position: Vec2::new(0., 25.),
+                color: bevy::color::palettes::css::GRAY.into(),
+                index: 5,
+                animation: Some(Animation::FPS(26.)),
+                ..default()
+            },
+            LayerData {
+                speed: LayerSpeed::Bidirectional(0.9, 0.9),
+                repeat: LayerRepeat::horizontally(RepeatStrategy::MirrorBoth),
+                path: "media/mills-back.png".to_string(),
+                tile_size: UVec2::new(1123, 794),
+                cols: 6,
+                rows: 1,
+                scale: Vec2::splat(0.8),
+                z: 0.9,
+                color: Color::WHITE,
+                index: 1,
+                animation: Some(Animation::FPS(24.)),
+                ..default()
+            },
+            LayerData {
+                speed: LayerSpeed::Bidirectional(0.8, 0.8),
+                repeat: LayerRepeat::horizontally(RepeatStrategy::MirrorBoth),
+                path: "media/mills-front.png".to_string(),
+                tile_size: UVec2::new(750, 434),
+                cols: 6,
+                rows: 1,
+                z: 1.0,
+                scale: Vec2::splat(1.5),
+                position: Vec2::new(0., -100.),
+                index: 3,
+                animation: Some(Animation::FPS(20.)),
+                ..default()
+            },
+        ],
+        camera: camera,
+    };
+    create_parallax.send(event);
+
 }
 
 fn zoom_scale(

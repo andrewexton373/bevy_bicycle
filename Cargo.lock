@@ -341,6 +341,16 @@ version = "0.1.0"
 dependencies = [
  "avian2d",
  "bevy",
+ "bevy-parallax",
+]
+
+[[package]]
+name = "bevy-parallax"
+version = "0.10.0"
+source = "git+https://github.com/Corrosive-Games/bevy-parallax.git#3978874fdcdb44763cb3f040647edb5b02685fd5"
+dependencies = [
+ "bevy",
+ "serde",
 ]
 
 [[package]]
