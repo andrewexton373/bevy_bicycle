@@ -185,22 +185,6 @@ fn setup_bicycle(
     let frame_points_all: Vec<DVec2> = vec![rear_hub, bottom_bracket, seat_clamp, stem_clamp, front_hub];
     let frame_points_all_indicies: Vec<[u32; 2]> = vec![[0, 1], [1, 2], [2, 0], [2, 3], [1, 3], [3, 4]];
 
-    let mut frame_points_1: Vec<DVec2> = vec![];
-    frame_points_1.push(rear_hub);
-    frame_points_1.push(seat_clamp);
-    frame_points_1.push(bottom_bracket);
-    frame_points_1.push(rear_hub);
-
-    let mut frame_points_2: Vec<DVec2> = vec![];
-    frame_points_2.push(stem_clamp);
-    frame_points_2.push(seat_clamp);
-    frame_points_2.push(bottom_bracket);
-    frame_points_2.push(stem_clamp);
-
-    let mut fork_points: Vec<DVec2> = vec![];
-    fork_points.push(stem_clamp);
-    fork_points.push(front_hub);
-
     let frame_collider = Collider::convex_decomposition(frame_points_all, frame_points_all_indicies);
 
     let frame_id = commands.spawn((
@@ -214,12 +198,28 @@ fn setup_bicycle(
         }
     )).id();
 
+    let crank_collider = Collider::polyline(vec![bottom_bracket + 8.0 * DVec2::Y, bottom_bracket + 8.0 * DVec2::NEG_Y], vec![[0, 1]].into());
+
+    let crank = commands.spawn((
+        RigidBody::Dynamic,
+        crank_collider,
+        Sensor,
+        MassPropertiesBundle {
+            mass: Mass(10.0),
+            ..default()
+        }
+    )).id();
+
     commands.spawn(
         RevoluteJoint::new(frame_id, front_id).with_local_anchor_1(front_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     commands.spawn(
         RevoluteJoint::new(frame_id, back_id).with_local_anchor_1(rear_hub).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
+    );
+
+    commands.spawn(
+        RevoluteJoint::new(frame_id, crank).with_local_anchor_1(bottom_bracket).with_compliance(0.0).with_angular_velocity_damping(0.0).with_linear_velocity_damping(0.0)
     );
 
     
