@@ -1,5 +1,5 @@
 use avian2d::{math::Vector, parry::{mass_properties::MassProperties, math::Rotation}, prelude::{AngularVelocity, Collider, CollisionMargin, ExternalTorque, FixedJoint, Friction, Gravity, Joint, LinearVelocity, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Position, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
-use bevy::{color::palettes::css::{GRAY, RED}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::{dvec2, DVec2}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
+use bevy::{color::palettes::{css::{BLUE, GRAY, RED}, tailwind::{BLUE_100, BLUE_400}}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::{dvec2, DVec2}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
 use bevy_parallax::{Animation, CreateParallaxEvent, LayerData, LayerRepeat, LayerSpeed, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxPlugin, ParallaxSystems, RepeatStrategy};
 
 fn main() {
@@ -24,7 +24,7 @@ fn main() {
         PhysicsDebugPlugin::default(),
         Material2dPlugin::<CustomMaterial>::default(),
     ))
-    .insert_resource(ClearColor(Color::BLACK))
+    .insert_resource(ClearColor(Color::from(BLUE_400)))
     .insert_resource(Gravity(Vector::NEG_Y * 100.0))
     // .insert_resource(Time::new_with(Physics::fixed_hz(144.0)))
     .insert_resource(SubstepCount(100))
@@ -111,6 +111,7 @@ fn setup_bicycle(
         RigidBody::Dynamic,
         Collider::circle(BicycleWheel::size() as f64),
         CollisionMargin(1.0),
+        Mass(1.0),
         Friction::new(0.95),
         Restitution::new(0.0),
         SweptCcd::default(),
@@ -135,6 +136,7 @@ fn setup_bicycle(
         RigidBody::Dynamic,
         Collider::circle(BicycleWheel::size() as f64),
         CollisionMargin(1.0),
+        Mass(1.0),
         Friction::new(0.95),
         Restitution::new(0.0),
         SweptCcd::default(),
@@ -238,6 +240,7 @@ fn camera_follow(
     player_query: Query<(&BicycleWheel, &Transform, &LinearVelocity), (With<BicycleWheel>, Without<FollowCamera>)>,
     mut camera_query: Query<(Entity, &mut Transform), (With<FollowCamera>, Without<BicycleWheel>)>,
     mut move_event_writer: EventWriter<ParallaxMoveEvent>,
+    time: Res<Time>
 ) {
 
     // Follow the Front Circle
@@ -248,7 +251,7 @@ fn camera_follow(
                 camera_t.translation = circle_t.translation;
 
                 move_event_writer.send(ParallaxMoveEvent {
-                    translation: Vec2::new((circle_v.0.x / 100.0) as f32, 0.0),
+                    translation: Vec2::new(-circle_v.0.x as f32 * time.delta_seconds(), 0.0),
                     camera: camera,
                     rotation: 0.,
                 });
@@ -295,39 +298,9 @@ fn setup_camera(
                 rows: 1,
                 scale: Vec2::splat(0.15),
                 z: 0.6,
-                position: Vec2::new(0., 50.),
+                position: Vec2::new(0., -20.),
                 color: Color::BLACK,
                 animation: Some(Animation::FPS(30.)),
-                ..default()
-            },
-            LayerData {
-                speed: LayerSpeed::Bidirectional(0.98, 0.98),
-                repeat: LayerRepeat::horizontally(RepeatStrategy::Same),
-                path: "media/mills-back.png".to_string(),
-                tile_size: UVec2::new(1123, 794),
-                cols: 6,
-                rows: 1,
-                scale: Vec2::splat(0.25),
-                z: 0.7,
-                position: Vec2::new(0., 50.),
-                color: bevy::color::palettes::css::DARK_GRAY.into(),
-                index: 2,
-                animation: Some(Animation::FPS(28.)),
-                ..default()
-            },
-            LayerData {
-                speed: LayerSpeed::Bidirectional(0.95, 0.95),
-                repeat: LayerRepeat::horizontally(RepeatStrategy::Same),
-                path: "media/mills-back.png".to_string(),
-                tile_size: UVec2::new(1123, 794),
-                cols: 6,
-                rows: 1,
-                scale: Vec2::splat(0.5),
-                z: 0.8,
-                position: Vec2::new(0., 25.),
-                color: bevy::color::palettes::css::GRAY.into(),
-                index: 5,
-                animation: Some(Animation::FPS(26.)),
                 ..default()
             },
             LayerData {
@@ -338,6 +311,7 @@ fn setup_camera(
                 cols: 6,
                 rows: 1,
                 scale: Vec2::splat(0.8),
+                position: Vec2::new(0., -50.),
                 z: 0.9,
                 color: Color::WHITE,
                 index: 1,
@@ -351,7 +325,7 @@ fn setup_camera(
                 tile_size: UVec2::new(750, 434),
                 cols: 6,
                 rows: 1,
-                z: 1.0,
+                z: 20.0,
                 scale: Vec2::splat(1.5),
                 position: Vec2::new(0., -100.),
                 index: 3,
