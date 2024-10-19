@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 avian2d = { version = "0.1", default-features = false, features = ["2d", "f64", "parry-f64", "debug-plugin", "enhanced-determinism"] }
 bevy = { version = "0.14", features= ["wayland"] }
+bevy_egui = "0.30"
 bevy-parallax = {git = "https://github.com/Corrosive-Games/bevy-parallax.git"}

@@ -1,5 +1,6 @@
-use avian2d::{math::Vector, parry::{mass_properties::MassProperties, math::Rotation}, prelude::{AngularVelocity, Collider, CollisionMargin, ExternalTorque, FixedJoint, Friction, Gravity, Joint, LinearVelocity, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Position, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
+use avian2d::{math::{Vector, PI}, parry::{mass_properties::MassProperties, math::Rotation}, prelude::{AngularVelocity, Collider, CollisionMargin, ExternalTorque, FixedJoint, Friction, Gravity, Joint, LinearVelocity, Mass, MassPropertiesBundle, Physics, PhysicsDebugPlugin, PhysicsSet, Position, Restitution, RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd}, PhysicsPlugins};
 use bevy::{color::palettes::{css::{BLUE, GRAY, RED}, tailwind::{BLUE_100, BLUE_400}}, input::{keyboard::{Key, KeyboardInput}, mouse::{MouseScrollUnit, MouseWheel}, ButtonState}, math::{dvec2, DVec2}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle}};
+use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use bevy_parallax::{Animation, CreateParallaxEvent, LayerData, LayerRepeat, LayerSpeed, ParallaxCameraComponent, ParallaxMoveEvent, ParallaxPlugin, ParallaxSystems, RepeatStrategy};
 
 fn main() {
@@ -19,6 +20,7 @@ fn main() {
                 ..default()
             })
             .set(ImagePlugin::default_nearest()),
+        EguiPlugin,  
         ParallaxPlugin,
         PhysicsPlugins::default(),
         PhysicsDebugPlugin::default(),
@@ -30,6 +32,7 @@ fn main() {
     .insert_resource(SubstepCount(100))
     .add_systems(Startup, (setup_ground, setup_camera, setup_bicycle))
     .add_systems(Update, (zoom_scale, spin_wheel))
+    .add_systems(Update, ui_system)
     .add_systems(PostUpdate,
 camera_follow
             .after(PhysicsSet::Sync)
@@ -37,6 +40,24 @@ camera_follow
             .before(ParallaxSystems)
     )
     .run();
+}
+
+fn ui_system(
+    mut contexts: EguiContexts,
+    rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>
+) {
+
+    
+
+    egui::Window::new("Bicyle Statistics").show(contexts.ctx_mut(), |ui| {
+
+        for (wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {
+            let rpm = -ang_vel.0 * 60.0 / (2.0 * PI);
+            ui.label(format!("RPM {:?} {:.2}", wheel, rpm));
+        }
+
+        
+    });
 }
 
 fn setup_ground(
@@ -62,7 +83,7 @@ fn setup_ground(
     ));
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 enum BicycleWheel {
     Front,
     Back
@@ -260,8 +281,6 @@ fn camera_follow(
             }
         }
     }
-
-    
 
 }
 
