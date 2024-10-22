@@ -1,12 +1,12 @@
 
+use std::{f32::consts::PI};
+
 use avian2d::{
-    math::{Vector, PI},
-    prelude::{
+    math::Vector, parry::na::{Point2, Rotation2}, prelude::{
         AngularVelocity, Collider, CollisionMargin, ExternalTorque, Friction, Gravity, Joint,
         LinearVelocity, Mass, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, Restitution,
         RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd,
-    },
-    PhysicsPlugins,
+    }, PhysicsPlugins
 };
 use bevy::{
     color::palettes::{css::GRAY, tailwind::BLUE_400},
@@ -47,6 +47,7 @@ fn main() {
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
             Material2dPlugin::<CustomMaterial>::default(),
+            SprocketPlugin
         ))
         .insert_resource(ClearColor(Color::from(BLUE_400)))
         .insert_resource(Gravity(Vector::NEG_Y * 100.0))
@@ -71,7 +72,7 @@ fn ui_system(
 ) {
     egui::Window::new("Bicyle Statistics").show(contexts.ctx_mut(), |ui| {
         for (wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {
-            let rpm = -ang_vel.0 * 60.0 / (2.0 * PI);
+            let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
             ui.label(format!("RPM {:?} {:.2}", wheel, rpm));
         }
     });
@@ -407,139 +408,233 @@ fn zoom_scale(
     }
 }
 
-// struct SprocketPlugin;
 
-// impl Plugin for SprocketPlugin {
-//     fn build(&self, app: &mut App) {
+struct SprocketPlugin;
 
-//     }
+impl Plugin for SprocketPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, SprocketPlugin::setup_sproket);
+    }
+}
+
+impl SprocketPlugin {
+    
+    fn setup_sproket(mut commands: Commands) {
+
+        let sproket = Sprocket::new(SprocketOptions { size: 100.0, teeth: 32 });
+        let geometry = sproket.get_geometry();
+        println!("GEO: {:?}", geometry);
+        let collider =
+        Collider::polyline(geometry, None);
+
+        let id = commands
+        .spawn((
+            RigidBody::Static,
+            collider,
+            Sensor,
+            MassPropertiesBundle {
+                mass: Mass(10.0),
+                ..default()
+            },
+        ))
+        .id();
+
+    }
+
+}
+
+struct SprocketOptions {
+    size: f32,
+    teeth: u32,
 
 
+}
+
+struct Sprocket {
+    options: SprocketOptions
+}
+
+impl Sprocket {
+
+    fn new(options: SprocketOptions) -> Self {
+        Self { options }
+    }
+
+    fn get_pitch(self) {
+
+    }
+
+    fn get_roller_diameter(self) {
+
+    }
+
+    fn invert_x(p: Vec2) -> Vec2 {
+        return Vec2::new(-p.x, p.y);
+    }
+
+    fn get_geometry(self) -> Vec<DVec2> {
+        return self.effect();
+    }
+
+    fn effect(self) -> Vec<DVec2> {
+
+        let mut points: Vec<DVec2> = vec![];
+
+        let p = 12.70;
+        let n = self.options.teeth;
+        let pd = p / f32::sin(PI / n as f32);
+        let pr = pd / 2 as f32;
+        let dr = 7.77;
+        let ds = 1.0005 * dr + 0.0762;
+        let r = ds / 2 as f32;
+        let a = f32::to_radians(35.0 + 60.0 / n as f32);
+        let b = f32::to_radians(18.0 - 56.0 / n as f32);
+        let ac = 0.8 * dr;
+        let m = ac * f32::cos(a);
+        let t = ac * f32::sin(a);
+        let e = 1.3025 * dr + 0.0381;
+        let ab = 1.4 * dr;
+        let w = ab * f32::cos(PI / n as f32);
+        let v = ab * f32::sin(PI / n as f32);
+        let f = dr * (0.8 * f32::cos(b) + 1.4 * f32::cos(17.0 - 64.0 / n as f32) - 1.3025) - 0.0381;
+        let t_inc = 2.0 * PI / n as f32;
+
+        let mut thetas: Vec<f32> = vec![];
+
+        for x in 0..n {
+            let theta = x as f32 * t_inc;
+            thetas.push(theta);
+        }
+
+        for theta in thetas {
+
+            println!("THETA: {}", theta);
+
+            // Seating curve center
+            let seat_c = (0.0, -pr);
+            println!("SEATING CURVE CENTER: {:?}", seat_c);
 
 
-
-// }
-
-// struct SprocketOptions {
-//     size: f32,
-//     teeth: u32,
+            // Transitional curve center
+            let c = (m, -pr - t);
 
 
-// }
-
-// struct Sprocket {
-//     options: SprocketOptions
-// }
-
-// impl Sprocket {
-
-//     fn new(mut self, options: SprocketOptions) {
-//         self.options = options;
-//     }
-
-//     fn get_pitch(self) {
-
-//     }
-
-//     fn get_roller_diameter(self) {
-
-//     }
-
-//     fn invert_x(p: Vec2) -> Vec2 {
-//         return Vec2::new(-p.x, p.y);
-//     }
-
-//     fn effect(self) {
-//         let p = 12.70;
-//         let n = self.options.teeth;
-//         let pd = p / f32::sin(PI / n as f32);
-//         let pr = pd / 2 as f32;
-//         let dr = 7.77;
-//         let ds = 1.0005 * dr + 0.003;
-//         let r = ds / 2 as f32;
-//         let a = f32::to_radians(35.0 + 60.0 / n as f32);
-//         let b = f32::to_radians(18.0 - 56.0 / n as f32);
-//         let ac = 0.8 * dr;
-//         let m = ac * f32::cos(a);
-//         let t = ac * f32::sin(a);
-//         let e = 1.3025 * dr + 0.0015;
-//         let ab = 1.4 * dr;
-//         let w = ab * f32::cos(PI / n as f32);
-//         let v = ab * f32::sin(PI / n as f32);
-//         let f = dr * (0.8 * f32::cos(b) + 1.4 * f32::cos(17.0 - 64.0 / n as f32) - 1.3025) - 0.0015;
-//         let t_inc = 2.0 * PI / n as f32;
-
-//         let mut thetas: Vec<f32> = vec![];
-
-//         for x in 0..n {
-//             let theta = x as f32 * t_inc;
-//             thetas.push(theta);
-//         }
-
-//         for theta in thetas {
-//             let seat_c = (0.0, -pr);
-
-//             let c = (m, -pr - t);
-
-//             let cx_m = -f32::tan(a);
-//             let cx_b = c.1 - cx_m * c.0;
+            let cx_m = -f32::tan(a);
+            let cx_b = c.1 - cx_m * c.0;
             
-//             let q_a = cx_m * (cx_m + 1.0);
-//             let q_b = 2.0 * (cx_m * cx_b - cx_m * seat_c.0);
-//             let q_c = seat_c.1 * seat_c.1 - r * r + seat_c.0 * seat_c.0 - 2.0 * cx_b * seat_c.1 + cx_b * cx_b;
-//             let cx_x = (-q_b - f32::sqrt(q_b * q_b - 4.0 * q_a * q_c)) / (2.0 * q_a);
+            let q_a = cx_m * cx_m + 1.0;
+            let q_b = 2.0 * (cx_m * cx_b - cx_m * seat_c.1 - seat_c.0);
+            let q_c = seat_c.1 * seat_c.1 - r * r + seat_c.0 * seat_c.0 - 2.0 * cx_b * seat_c.1 + cx_b * cx_b;
+            let cx_x = (-q_b - f32::sqrt(q_b * q_b - 4.0 * q_a * q_c)) / (2.0 * q_a);
 
-//             let x = (cx_x, cx_m * cx_x + cx_b);
+            // Seating curve/Transitional curve junction
+            let x = (cx_x, cx_m * cx_x + cx_b);
 
-//             let cy_m = -f32::tan(a - b);
-//             let cy_b = c.1 - cy_m * c.0;
+            let cy_m = -f32::tan(a - b);
+            let cy_b = c.1 - cy_m * c.0;
 
-//             let y_x = c.0 - e / f32::sqrt(1.0 + cy_m * cy_m);
+            let y_x = c.0 - e / f32::sqrt(1.0 + cy_m * cy_m);
 
-//             let y = (y_x, cy_m * y_x + cy_b);
+            // Transitional curve/Tangent line junction
+            let y = (y_x, cy_m * y_x + cy_b);
 
-//             let z = ((x.0 + y.0) / 2.0, (x.1 + y.1) / 2.0);
-//             let x_diff = y.0 - x.0;
-//             let y_diff = y.1 - x.1;
-//             let q = f32::sqrt(x_diff * x_diff + y_diff * y_diff);
-//             let t_x = z.0 + f32::sqrt(e * e - (q / 2.0) * (q / 2.0)) * (x.1 - y.1) / q;
-//             let t_y = z.1 + f32::sqrt(e * e - (q / 2.0) * (q / 2.0)) * (y.0 - x.0) / q;
+            let z = ((x.0 + y.0) / 2.0, (x.1 + y.1) / 2.0);
+            let x_diff = y.0 - x.0;
+            let y_diff = y.1 - x.1;
+            let q = f32::sqrt(x_diff * x_diff + y_diff * y_diff);
 
-//             let tran_c = (t_x, t_y);
+            println!("e^2: {}", e*e);
+            println!("(q/2)^2: {}", (q / 2.0) * (q / 2.0));
+            println!("sqrt: {}", f32::sqrt(e * e - (q / 2.0) * (q / 2.0)));
 
-//             let tanl_m = -(tran_c.0 - y.0) / (tran_c.1 - y.1);
-//             let tanl_b = -y.0 * tanl_m + y.1;
+            let t_x = z.0 + f32::sqrt(e * e - (q / 2.0) * (q / 2.0)) * (x.1 - y.1) / q;
+            let t_y = z.1 + f32::sqrt(e * e - (q / 2.0) * (q / 2.0)) * (y.0 - x.0) / q;
+
+            // Transitional curve center
+            let tran_c = (t_x, t_y);
+
+            println!("tran_c: {:?}", tran_c);
+
+            let tanl_m = -(tran_c.0 - y.0) / (tran_c.1 - y.1);
+            let tanl_b = -y.0 * tanl_m + y.1;
             
-//             let t_off = (y.0 - 10.0, tanl_m * (y.0 - 10.0) + tanl_b);
+            let t_off = (y.0 - 10.0, tanl_m * (y.0 - 10.0) + tanl_b);
 
-//             let top_c = (-w, -pr + v);
+            // Topping curve center
+            let top_c = (-w, -pr + v);
+            println!("TOPPING CURVE CENTER: {:?}", top_c);
 
-//             let f = f32::abs(top_c.1 - tanl_m * top_c.0 - tanl_b) / f32::sqrt(tanl_m * tanl_m + 1.0) * 1.0001;
-//             let tta = tanl_m * tanl_m + 1.0;
-//             let ttb = 2.0 * (tanl_m * tanl_b - tanl_m * top_c.1 - top_c.0);
-//             let ttc = top_c.1 * top_c.1 - f * f + top_c.0 * top_c.0 -2.0 * tanl_b * top_c.1 + tanl_b * tanl_b;
-//             let tanl_x = (-ttb - f32::sqrt(ttb * ttb - 4.0 * tta * ttc)) / (2.0 * tta);
+            println!("top_c: {:?}, tanl_m: {}, tanl_b: {}", top_c, tanl_m, tanl_b);
 
-//             let tanl = (tanl_x, tanl_m * tanl_x + tanl_b);
+            let f = f32::abs(top_c.1 - tanl_m * top_c.0 - tanl_b) / f32::sqrt(tanl_m * tanl_m + 1.0) * 1.0001;
+
+            println!("f: {}", f);
+
+
+            let tta = tanl_m * tanl_m + 1.0;
+            let ttb = 2.0 * (tanl_m * tanl_b - tanl_m * top_c.1 - top_c.0);
+            let ttc = top_c.1 * top_c.1 - f * f + top_c.0 * top_c.0 -2.0 * tanl_b * top_c.1 + tanl_b * tanl_b;
+            let tanl_x = (-ttb - f32::sqrt(ttb * ttb - 4.0 * tta * ttc)) / (2.0 * tta);
+
+            // Tagent line/Topping curve junction
+            let tanl = (tanl_x, tanl_m * tanl_x + tanl_b);
             
-//             let tip_m = -tan(PI / 2.0 + t_inc / 2.0);
-//             let tip_b = 0.0;
+            let tip_m = -f32::tan(PI / 2.0 + t_inc / 2.0);
+            let tip_b = 0.0;
 
-//             let ta = tip_m * tip_m + 1.0;
-//             let tb = 2.0 * (tip_m * tip_b - tip_m * top_c.1 - top_c.0);
-//             let tc = top_c.1 * top_c.1 - f * f + top_c.0 * top_c.0 - 2.0 * tip_b * top_c.1 + tip_b * tip_b;
-//             let tip_x = (-tb - f32::sqrt(tb * tb - 4.0 * ta * tc)) / (2.0 * ta);
+            let ta = tip_m * tip_m + 1.0;
+            let tb = 2.0 * (tip_m * tip_b - tip_m * top_c.1 - top_c.0);
 
-//             let tip = (tip_x, tip_m * tip_x + tip_b);
+            println!("top_c: {:?} f: {}, tip_b {}", top_c, f, tip_b);
 
-//             if (theta == 0) {
+            let tc = top_c.1 * top_c.1 - f * f + top_c.0 * top_c.0 - 2.0 * tip_b * top_c.1 + tip_b * tip_b;
 
-//             }
+            println!("a{} b{} c{}", ta, tb, tc);
+
+            let tip_x = (-tb - f32::sqrt(tb * tb - 4.0 * ta * tc)) / (2.0 * ta);
+
+            // Topping curve top
+            let tip = (tip_x, tip_m * tip_x + tip_b);
+            println!("TOPPING CURVE TOP: {:?}", tip);
+
+            
+            let rotated_tip = Sprocket::rotate_vector(tip, theta);
+            let rotated_top_c = Sprocket::rotate_vector(top_c, theta);
 
 
-//         }
+            // if (theta == 0) {
 
-//     }
+            // }
+            points.push(DVec2 { x: rotated_tip.0 as f64, y: rotated_tip.1 as f64});
+            points.push(DVec2 { x: rotated_top_c.0 as f64, y: rotated_top_c.1 as f64});
 
 
-// }
+        }
+
+        return points;
+    }
+
+    fn rotate_vector(vec: (f32, f32), angle_radians: f32) -> (f32, f32) {
+
+        let cos_theta = f32::cos(angle_radians);
+    
+        let sin_theta = f32::sin(angle_radians);
+    
+    
+    
+        let rotation_matrix = [[cos_theta, -sin_theta], [sin_theta, cos_theta]];
+    
+    
+    
+        let new_x = rotation_matrix[0][0] * vec.0 + rotation_matrix[0][1] * vec.1;
+    
+        let new_y = rotation_matrix[1][0] * vec.0 + rotation_matrix[1][1] * vec.1;
+    
+    
+    
+        (new_x, new_y)
+    
+    }
+
+
+}
