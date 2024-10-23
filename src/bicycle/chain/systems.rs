@@ -50,15 +50,18 @@ impl ChainPlugin {
                 .id();
 
             commands.spawn(
-                RevoluteJoint::new(previous_link, current_link)
-                    // .with_local_anchor_2(Vector::Y * (link_radius * 2.0 + 1.0))
+                DistanceJoint::new(previous_link, current_link)
+                    // .with_local_anchor_2(V ector::Y * (link_radius * 2.0 + 1.0))
+                    .with_rest_length(10.0)
                     .with_compliance(0.0000001),
             );
 
             // Form the Loop
             if n == chain_links {
                 commands.spawn(
-                    RevoluteJoint::new(current_link, initial_link)
+                    DistanceJoint::new(current_link, initial_link)
+                        .with_rest_length(10.0)
+
                         // .with_local_anchor_2(Vector::Y * (link_radius * 2.0 + 1.0))
                         .with_compliance(0.0000001),
                 );

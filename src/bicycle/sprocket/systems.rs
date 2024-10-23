@@ -8,7 +8,7 @@ use super::plugin::SprocketPlugin;
 impl SprocketPlugin {
     pub fn setup_sproket(mut commands: Commands) {
         let sproket = Sprocket::new(SprocketOptions {
-            size: 100.0,
+            size: 3.0,
             teeth: 32,
         });
         let geometry = sproket.get_geometry();
@@ -24,6 +24,10 @@ impl SprocketPlugin {
                     mass: Mass(10.0),
                     ..default()
                 },
+                Transform {
+                    translation: Vec3::new(0.0, 100.0, 0.0),
+                    ..default()
+                }
             ))
             .id();
     }
