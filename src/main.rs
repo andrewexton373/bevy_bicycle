@@ -1,34 +1,21 @@
+pub mod bicycle;
+pub mod camera;
 pub mod ui;
 pub mod world;
-pub mod camera;
-pub mod bicycle;
-
-use std::{f32::consts::PI};
 
 use avian2d::{
-    math::Vector, parry::na::{Point2, Rotation2}, prelude::{
-        AngularVelocity, Collider, CollisionMargin, ExternalTorque, Friction, Gravity, Joint,
-        LinearVelocity, Mass, MassPropertiesBundle, PhysicsDebugPlugin, PhysicsSet, Restitution,
-        RevoluteJoint, RigidBody, Sensor, SubstepCount, SweptCcd,
-    }, PhysicsPlugins
+    math::Vector,
+    prelude::{Gravity, Joint, PhysicsDebugPlugin, SubstepCount},
+    PhysicsPlugins,
 };
 use bevy::{
-    color::palettes::{css::GRAY, tailwind::BLUE_400},
-    input::{
-        keyboard::{Key, KeyboardInput},
-        mouse::{MouseScrollUnit, MouseWheel},
-        ButtonState,
-    },
-    math::{dvec2, vec3, DVec2},
+    color::palettes::tailwind::BLUE_400,
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin, MaterialMesh2dBundle},
+    sprite::{Material2d, Material2dPlugin},
 };
-use bevy_egui::{egui, EguiContexts, EguiPlugin};
-use bevy_parallax::{
-    Animation, CreateParallaxEvent, LayerData, LayerRepeat, LayerSpeed, ParallaxCameraComponent,
-    ParallaxMoveEvent, ParallaxPlugin, ParallaxSystems, RepeatStrategy,
-};
+use bevy_egui::EguiPlugin;
+use bevy_parallax::ParallaxPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
 use ui::plugin::UIPlugin;
@@ -58,13 +45,12 @@ fn main() {
             UIPlugin,
             WorldPlugin,
             CameraPlugin,
-            BicyclePlugin
+            BicyclePlugin,
         ))
         .insert_resource(ClearColor(Color::from(BLUE_400)))
         .insert_resource(Gravity(Vector::NEG_Y * 100.0))
         // .insert_resource(Time::new_with(Physics::fixed_hz(144.0)))
         .insert_resource(SubstepCount(10))
-
         .run();
 }
 

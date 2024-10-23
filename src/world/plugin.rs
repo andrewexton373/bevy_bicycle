@@ -7,4 +7,3 @@ impl Plugin for WorldPlugin {
         app.add_systems(Startup, WorldPlugin::setup_ground);
     }
 }
-

@@ -1,5 +1,10 @@
 use avian2d::prelude::*;
-use bevy::{input::mouse::{MouseScrollUnit, MouseWheel}, math::{dvec2, DVec2}, prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{
+    input::mouse::{MouseScrollUnit, MouseWheel},
+    math::{dvec2, DVec2},
+    prelude::*,
+    sprite::MaterialMesh2dBundle,
+};
 
 use crate::CustomMaterial;
 
@@ -28,7 +33,7 @@ impl BicyclePlugin {
                         translation: Vec3::new(0.0, 0.0, 10.0),
                         ..default()
                     },
-    
+
                     material: custom_materials.add(CustomMaterial {
                         color: LinearRgba::WHITE,
                         color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
@@ -38,7 +43,7 @@ impl BicyclePlugin {
                 },
             ))
             .id();
-    
+
         let back_id = commands
             .spawn((
                 BicycleWheel::Back,
@@ -64,21 +69,21 @@ impl BicyclePlugin {
                 },
             ))
             .id();
-    
+
         let rear_hub = dvec2(-40.0, 0.0);
         let front_hub = dvec2(35.0, 0.0);
         let bottom_bracket = dvec2(0.0, 0.0);
         let seat_clamp = dvec2(-10.0, 20.0);
         let stem_clamp = dvec2(30.0, 20.0);
-    
+
         let frame_points_all: Vec<DVec2> =
             vec![rear_hub, bottom_bracket, seat_clamp, stem_clamp, front_hub];
         let frame_points_all_indicies: Vec<[u32; 2]> =
             vec![[0, 1], [1, 2], [2, 0], [2, 3], [1, 3], [3, 4]];
-    
+
         let frame_collider =
             Collider::convex_decomposition(frame_points_all, frame_points_all_indicies);
-    
+
         let frame_id = commands
             .spawn((
                 RigidBody::Dynamic,
@@ -90,7 +95,7 @@ impl BicyclePlugin {
                 },
             ))
             .id();
-    
+
         let crank_collider = Collider::polyline(
             vec![
                 bottom_bracket + 8.0 * DVec2::Y,
@@ -98,7 +103,7 @@ impl BicyclePlugin {
             ],
             vec![[0, 1]].into(),
         );
-    
+
         let crank = commands
             .spawn((
                 RigidBody::Dynamic,
@@ -110,7 +115,7 @@ impl BicyclePlugin {
                 },
             ))
             .id();
-    
+
         commands.spawn(
             RevoluteJoint::new(frame_id, front_id)
                 .with_local_anchor_1(front_hub)
@@ -118,7 +123,7 @@ impl BicyclePlugin {
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(0.0),
         );
-    
+
         commands.spawn(
             RevoluteJoint::new(frame_id, back_id)
                 .with_local_anchor_1(rear_hub)
@@ -126,7 +131,7 @@ impl BicyclePlugin {
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(0.0),
         );
-    
+
         commands.spawn(
             RevoluteJoint::new(frame_id, crank)
                 .with_local_anchor_1(bottom_bracket)
@@ -135,7 +140,7 @@ impl BicyclePlugin {
                 .with_linear_velocity_damping(0.0),
         );
     }
-    
+
     pub fn spin_wheel(
         mut wheel_query: Query<(&BicycleWheel, &mut ExternalTorque), With<BicycleWheel>>,
         mut mouse_wheel_evt: EventReader<MouseWheel>,

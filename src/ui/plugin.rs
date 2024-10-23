@@ -7,4 +7,3 @@ impl Plugin for UIPlugin {
         app.add_systems(Update, UIPlugin::ui_system);
     }
 }
-

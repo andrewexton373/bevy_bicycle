@@ -14,4 +14,3 @@ impl BicycleWheel {
 
 #[derive(Component)]
 pub struct Frame;
-

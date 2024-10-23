@@ -1,16 +1,25 @@
 use avian2d::prelude::LinearVelocity;
-use bevy::{input::{keyboard::{Key, KeyboardInput}, ButtonState}, prelude::*};
-use bevy_parallax::{Animation, CreateParallaxEvent, LayerData, LayerRepeat, LayerSpeed, ParallaxCameraComponent, ParallaxMoveEvent, RepeatStrategy};
+use bevy::{
+    input::{
+        keyboard::{Key, KeyboardInput},
+        ButtonState,
+    },
+    prelude::*,
+};
+use bevy_parallax::{
+    Animation, CreateParallaxEvent, LayerData, LayerRepeat, LayerSpeed, ParallaxCameraComponent,
+    ParallaxMoveEvent, RepeatStrategy,
+};
 
 use crate::bicycle::components::BicycleWheel;
 
 use super::{components::FollowCamera, plugin::CameraPlugin};
 
-
 impl CameraPlugin {
-    
-
-    pub fn setup_camera(mut commands: Commands, mut create_parallax: EventWriter<CreateParallaxEvent>) {
+    pub fn setup_camera(
+        mut commands: Commands,
+        mut create_parallax: EventWriter<CreateParallaxEvent>,
+    ) {
         let camera = commands
             .spawn((
                 FollowCamera,
@@ -83,7 +92,10 @@ impl CameraPlugin {
             (&BicycleWheel, &Transform, &LinearVelocity),
             (With<BicycleWheel>, Without<FollowCamera>),
         >,
-        mut camera_query: Query<(Entity, &mut Transform), (With<FollowCamera>, Without<BicycleWheel>)>,
+        mut camera_query: Query<
+            (Entity, &mut Transform),
+            (With<FollowCamera>, Without<BicycleWheel>),
+        >,
         mut move_event_writer: EventWriter<ParallaxMoveEvent>,
         time: Res<Time>,
     ) {
@@ -92,7 +104,7 @@ impl CameraPlugin {
             if let BicycleWheel::Front = circle {
                 let (camera, mut camera_t) = camera_query.single_mut();
                 camera_t.translation = circle_t.translation;
-    
+
                 move_event_writer.send(ParallaxMoveEvent {
                     translation: Vec2::new(-circle_v.0.x as f32 * time.delta_seconds(), 0.0),
                     camera,

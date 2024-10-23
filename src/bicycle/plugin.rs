@@ -6,10 +6,8 @@ pub struct BicyclePlugin;
 
 impl Plugin for BicyclePlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_plugins((ChainPlugin, SprocketPlugin))
+        app.add_plugins((ChainPlugin, SprocketPlugin))
             .add_systems(Startup, BicyclePlugin::setup_bicycle)
             .add_systems(Update, BicyclePlugin::spin_wheel);
     }
 }
-

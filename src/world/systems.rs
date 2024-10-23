@@ -1,5 +1,5 @@
-use bevy::{color::palettes::css::GRAY, prelude::*};
 use avian2d::prelude::*;
+use bevy::{color::palettes::css::GRAY, prelude::*};
 
 use super::plugin::WorldPlugin;
 
@@ -11,7 +11,7 @@ impl WorldPlugin {
     ) {
         let width: f64 = 10000.0;
         let height: f64 = 300.0;
-    
+
         commands.spawn((
             RigidBody::Static,
             Collider::rectangle(width, height),

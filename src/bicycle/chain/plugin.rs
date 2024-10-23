@@ -1,7 +1,4 @@
-use std::f32::consts::PI;
-
-use bevy::{math::vec3, prelude::*};
-use avian2d::prelude::*;
+use bevy::prelude::*;
 
 pub struct ChainPlugin;
 

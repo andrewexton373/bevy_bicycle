@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use avian2d::prelude::*;
 
 pub struct SprocketPlugin;
 
