@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{color::palettes::css::GRAY, prelude::*};
+use bevy::{color::palettes::css::GRAY, prelude::*, sprite::MaterialMesh2dBundle};
 
 use super::plugin::WorldPlugin;
 
@@ -18,14 +18,11 @@ impl WorldPlugin {
             Friction::new(0.95),
             Restitution::new(0.0),
             SweptCcd::default(),
-            ColorMesh2dBundle {
-                mesh: meshes
-                    .add(Rectangle::new(width as f32, height as f32))
-                    .into(),
-                material: materials.add(ColorMaterial::from_color(GRAY)),
-                transform: Transform::from_xyz(0.0, -200.0, 10.0),
-                ..default()
-            },
+            Mesh2d(meshes
+                .add(Rectangle::new(width as f32, height as f32))
+                .into()),
+            MeshMaterial2d(materials.add(ColorMaterial::from_color(GRAY))),
+            Transform::from_xyz(0.0, -200.0, 10.0),
         ));
     }
 }

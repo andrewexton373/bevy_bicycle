@@ -3,10 +3,13 @@ use bevy::prelude::*;
 
 use crate::bicycle::sprocket::components::{Sprocket, SprocketOptions};
 
-use super::plugin::SprocketPlugin;
+use super::{components::SprocketInfo, plugin::SprocketPlugin};
 
 impl SprocketPlugin {
-    pub fn setup_sproket(mut commands: Commands) {
+    pub fn setup_sproket(
+        mut commands: Commands,
+        sprocket_info: ResMut<SprocketInfo>
+    ) {
         let sproket = Sprocket::new(SprocketOptions {
             size: 3.0,
             teeth: 32,

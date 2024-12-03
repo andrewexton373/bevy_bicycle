@@ -1,6 +1,11 @@
 use std::f32::consts::PI;
 
-use bevy::math::DVec2;
+use bevy::{math::DVec2, prelude::Resource};
+
+#[derive(Resource, Default)]
+pub struct SprocketInfo {
+
+}
 
 pub struct SprocketOptions {
     pub(crate) size: f32,
