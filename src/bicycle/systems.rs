@@ -23,24 +23,20 @@ impl BicyclePlugin {
                 RigidBody::Dynamic,
                 Collider::circle(BicycleWheel::size() as f64),
                 CollisionMargin(1.0),
-                Mass(1.0),
+                Mass::new(1.0),
                 Friction::new(0.95),
                 Restitution::new(0.0),
                 SweptCcd::default(),
-                MaterialMesh2dBundle {
-                    mesh: meshes.add(Circle::new(BicycleWheel::size())).into(),
-                    transform: Transform {
-                        translation: Vec3::new(0.0, 0.0, 10.0),
-                        ..default()
-                    },
-
-                    material: custom_materials.add(CustomMaterial {
-                        color: LinearRgba::WHITE,
-                        color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
-                        alpha_mode: AlphaMode::Blend,
-                    }),
+                Mesh2d(meshes.add(Circle::new(BicycleWheel::size())).into()),
+                MeshMaterial2d(custom_materials.add(CustomMaterial {
+                    color: LinearRgba::WHITE,
+                    color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
+                    alpha_mode: AlphaMode::Blend,
+                })),
+                Transform {
+                    translation: Vec3::new(0.0, 0.0, 10.0),
                     ..default()
-                },
+                }
             ))
             .id();
 
@@ -50,23 +46,16 @@ impl BicyclePlugin {
                 RigidBody::Dynamic,
                 Collider::circle(BicycleWheel::size() as f64),
                 CollisionMargin(1.0),
-                Mass(1.0),
+                Mass::new(1.0),
                 Friction::new(0.95),
                 Restitution::new(0.0),
                 SweptCcd::default(),
-                MaterialMesh2dBundle {
-                    mesh: meshes.add(Circle::new(BicycleWheel::size())).into(),
-                    transform: Transform {
-                        translation: Vec3::new(0.0, 0.0, 10.0),
-                        ..default()
-                    },
-                    material: custom_materials.add(CustomMaterial {
-                        color: LinearRgba::WHITE,
-                        color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
-                        alpha_mode: AlphaMode::Blend,
-                    }),
-                    ..default()
-                },
+                Mesh2d(meshes.add(Circle::new(BicycleWheel::size())).into()),
+                MeshMaterial2d(custom_materials.add(CustomMaterial {
+                    color: LinearRgba::WHITE,
+                    color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
+                    alpha_mode: AlphaMode::Blend,
+                })),
             ))
             .id();
 
@@ -90,7 +79,7 @@ impl BicyclePlugin {
                 frame_collider,
                 Sensor,
                 MassPropertiesBundle {
-                    mass: Mass(10.0),
+                    mass: Mass::new(10.0),
                     ..default()
                 },
             ))
@@ -110,7 +99,7 @@ impl BicyclePlugin {
                 crank_collider,
                 Sensor,
                 MassPropertiesBundle {
-                    mass: Mass(10.0),
+                    mass: Mass::new(10.0),
                     ..default()
                 },
             ))

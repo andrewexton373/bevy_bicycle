@@ -24,7 +24,7 @@ impl SprocketPlugin {
                 collider,
                 Sensor,
                 MassPropertiesBundle {
-                    mass: Mass(10.0),
+                    mass: Mass::new(10.0),
                     ..default()
                 },
                 Transform {

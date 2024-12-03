@@ -15,7 +15,7 @@ use bevy::{
     sprite::{Material2d, Material2dPlugin},
 };
 use bevy_egui::EguiPlugin;
-use bevy_parallax::ParallaxPlugin;
+// use bevy_parallax::ParallaxPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
 use ui::plugin::UIPlugin;
@@ -38,7 +38,7 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
             EguiPlugin,
-            ParallaxPlugin,
+            // ParallaxPlugin,
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
             Material2dPlugin::<CustomMaterial>::default(),

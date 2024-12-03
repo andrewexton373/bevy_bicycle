@@ -1,6 +1,6 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
-use bevy_parallax::ParallaxSystems;
+// use bevy_parallax::ParallaxSystems;
 
 pub struct CameraPlugin;
 
@@ -13,7 +13,7 @@ impl Plugin for CameraPlugin {
                 CameraPlugin::camera_follow
                     .after(PhysicsSet::Sync)
                     .before(TransformSystem::TransformPropagate)
-                    .before(ParallaxSystems),
+                    // .before(ParallaxSystems),
             );
     }
 }

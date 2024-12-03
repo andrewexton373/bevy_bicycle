@@ -17,7 +17,7 @@ impl ChainPlugin {
                 RigidBody::Dynamic,
                 Collider::circle(link_radius),
                 MassPropertiesBundle {
-                    mass: Mass(0.01),
+                    mass: Mass::new(0.01),
                     ..default()
                 },
                 Transform {
@@ -35,7 +35,7 @@ impl ChainPlugin {
                     RigidBody::Dynamic,
                     Collider::circle(link_radius),
                     MassPropertiesBundle {
-                        mass: Mass(0.01),
+                        mass: Mass::new(0.01),
                         ..default()
                     },
                     Transform {
