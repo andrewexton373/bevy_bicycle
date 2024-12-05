@@ -1,9 +1,11 @@
+use core::f64;
+
 use avian2d::prelude::*;
 use bevy::{math::vec3, prelude::*};
 
 use crate::bicycle::groupset::components::{Axle, Disc, Point};
 
-use super::plugin::ChainPlugin;
+use super::{components::Chain, plugin::ChainPlugin};
 
 impl ChainPlugin {
 
@@ -23,7 +25,7 @@ impl ChainPlugin {
 
                     let larger_disc = Disc {
                         center: disc.center,
-                        radius: disc.radius + 2.5
+                        radius: disc.radius + 3.0
                     };
 
                     let poly = larger_disc.simplify_disc_as_polygon(20).iter().map(|point| {
@@ -48,58 +50,58 @@ impl ChainPlugin {
         equidistant_points
     }
 
-    pub fn setup_chain(mut commands: &mut Commands, links: Vec<Point>) {
-        let link_radius = 5.0;
+    pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
+        let link_radius = 1.0;
         let r = links[0].distance(&links[1]);
-        let compliance: f64 = 0.000000001;
+        let compliance: f64 = 0.000000000001;
 
-        let mut previous_link = None;
+        commands.spawn((Chain, Transform::default())).with_children(|parent| {
+            let mut previous_link = None;
 
-        let mut link_ents = vec![];
-
-        for link in links[0..].iter() {
-
-            let current_link = commands
-                        .spawn((
-                            RigidBody::Dynamic,
-                            Collider::circle(link_radius),
-                            SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
-                            Friction::new(0.99),
-                            LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
-                            MassPropertiesBundle {
-                                mass: Mass::new(0.01),
-                                ..default()
-                            },
-                            Transform {
-                                translation: vec3(link.x as f32, link.y as f32, 0.0),
-                                ..default()
-                            },
-                        ))
-                        .id();
-
-                link_ents.push(current_link);
-
-            if previous_link.is_some() {
-                commands.spawn(
-                    DistanceJoint::new(previous_link.unwrap(), current_link)
-                        .with_rest_length(r as f64)
-                        .with_compliance(compliance),
-                );
+            let mut link_ents = vec![];
+    
+            for link in links[0..].iter() {
+    
+                let current_link = parent
+                            .spawn((
+                                RigidBody::Dynamic,
+                                Collider::circle(link_radius),
+                                SweptCcd::default(),
+                                Friction::new(0.99),
+                                LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
+                                MassPropertiesBundle {
+                                    mass: Mass::new(0.01),
+                                    ..default()
+                                },
+                                Transform {
+                                    translation: vec3(link.x as f32, link.y as f32, 0.0),
+                                    ..default()
+                                },
+                            ))
+                            .id();
+    
+                    link_ents.push(current_link);
+    
+                if previous_link.is_some() {
+                    parent.spawn(
+                        DistanceJoint::new(previous_link.unwrap(), current_link)
+                            .with_rest_length(r as f64)
+                    );
+                }
+                previous_link = Some(current_link);
+                
             }
-            previous_link = Some(current_link);
-            
-        }
+    
+            // Complete the Loop
+            parent.spawn(
+                DistanceJoint::new(*link_ents.first().unwrap(), *link_ents.last().unwrap())
+                    .with_rest_length(r as f64)
+                    .with_compliance(compliance),
+            );
+        });
 
-        // Complete the Loop
-        commands.spawn(
-            DistanceJoint::new(*link_ents.first().unwrap(), *link_ents.last().unwrap())
-                .with_rest_length(r as f64)
-                .with_compliance(compliance),
-        );
-        
     }
 }
-
 
 
 // Cross product of vectors OA and OB

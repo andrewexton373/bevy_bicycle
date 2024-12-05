@@ -5,7 +5,7 @@ pub mod world;
 
 use avian2d::{
     math::Vector,
-    prelude::{Gravity, Joint, PhysicsDebugPlugin, SubstepCount},
+    prelude::{Gravity, Joint, Physics, PhysicsDebugPlugin, SubstepCount},
     PhysicsPlugins,
 };
 use bevy::{
@@ -47,10 +47,10 @@ fn main() {
             CameraPlugin,
             BicyclePlugin,
         ))
+        
         .insert_resource(ClearColor(Color::from(BLUE_400)))
         .insert_resource(Gravity(Vector::NEG_Y * 100.0))
-        // .insert_resource(Time::new_with(Physics::fixed_hz(144.0)))
-        .insert_resource(SubstepCount(10))
+        .insert_resource(SubstepCount(50))
         .run();
 }
 
