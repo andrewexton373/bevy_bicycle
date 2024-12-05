@@ -45,7 +45,7 @@ impl ChainPlugin {
 
     pub fn generate_chain_link_points_from_point_set(points: &Vec<Point>) -> Vec<Point> {
         let convex_hull = gift_wrapping(&points);
-        let equidistant_points = equidistant_points_on_polygon(&convex_hull, 25);
+        let equidistant_points = equidistant_points_on_polygon(&convex_hull, 60);
 
         equidistant_points
     }
@@ -55,7 +55,7 @@ impl ChainPlugin {
         let r = links[0].distance(&links[1]);
         let compliance: f64 = 0.000000000001;
 
-        commands.spawn((Chain, Transform::default())).with_children(|parent| {
+        commands.spawn((Chain, GlobalTransform::default())).with_children(|parent| {
             let mut previous_link = None;
 
             let mut link_ents = vec![];
