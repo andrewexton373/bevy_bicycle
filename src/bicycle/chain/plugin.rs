@@ -4,6 +4,6 @@ pub struct ChainPlugin;
 
 impl Plugin for ChainPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, ChainPlugin::setup_chain);
+        app.add_systems(Update, ChainPlugin::reset_chain);
     }
 }

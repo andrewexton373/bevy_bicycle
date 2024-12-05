@@ -4,3 +4,4 @@ pub mod systems;
 
 pub mod chain;
 pub mod sprocket;
+pub mod groupset;
