@@ -1,23 +1,37 @@
 use avian2d::prelude::*;
 use bevy::{
-    input::mouse::{MouseScrollUnit, MouseWheel},
-    math::{dvec2, DVec2},
-    prelude::*,
-    sprite::MaterialMesh2dBundle,
+    ecs::system::{RunSystemOnce, SystemState}, input::mouse::{MouseScrollUnit, MouseWheel}, math::{dvec2, DVec2}, prelude::*, sprite::MaterialMesh2dBundle, state::commands
 };
 
 use crate::CustomMaterial;
 
 use super::{components::BicycleWheel, plugin::BicyclePlugin};
 
+pub struct AttachmentPoints {
+    frame_id: Entity,
+    bottom_bracket: DVec2,
+    front_hub: DVec2,
+    rear_hub: DVec2
+}
+
 impl BicyclePlugin {
-    pub fn setup_bicycle(
-        mut commands: Commands,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut custom_materials: ResMut<Assets<CustomMaterial>>,
-        asset_server: Res<AssetServer>,
-    ) {
-        let front_id = commands
+
+    pub fn spawn_wheel(
+        In(wheel):In<BicycleWheel>,
+        world: &mut World,
+        params: &mut SystemState<(
+            Commands,
+            ResMut<Assets<Mesh>>,
+            ResMut<Assets<CustomMaterial>>,
+            Res<AssetServer>,
+        )>,
+    ) -> Entity {
+
+        let id = {
+            let (mut commands, mut meshes, mut custom_materials, mut asset_server) =
+            params.get_mut(world);
+
+            commands
             .spawn((
                 BicycleWheel::Front,
                 RigidBody::Dynamic,
@@ -36,29 +50,23 @@ impl BicyclePlugin {
                 Transform {
                     translation: Vec3::new(0.0, 0.0, 10.0),
                     ..default()
-                }
-            ))
-            .id();
+                })).id()
+        };
 
-        let back_id = commands
-            .spawn((
-                BicycleWheel::Back,
-                RigidBody::Dynamic,
-                Collider::circle(BicycleWheel::size() as f64),
-                CollisionMargin(1.0),
-                Mass::new(1.0),
-                Friction::new(0.95),
-                Restitution::new(0.0),
-                SweptCcd::default(),
-                Mesh2d(meshes.add(Circle::new(BicycleWheel::size())).into()),
-                MeshMaterial2d(custom_materials.add(CustomMaterial {
-                    color: LinearRgba::WHITE,
-                    color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
-                    alpha_mode: AlphaMode::Blend,
-                })),
-            ))
-            .id();
+        params.apply(world);
 
+        id
+   
+    }
+
+    
+
+    pub fn spawn_frame(
+        world: &mut World,
+        params: &mut SystemState<(
+            Commands,
+        )>,
+    ) -> AttachmentPoints {
         let rear_hub = dvec2(-40.0, 0.0);
         let front_hub = dvec2(35.0, 0.0);
         let bottom_bracket = dvec2(0.0, 0.0);
@@ -73,7 +81,7 @@ impl BicyclePlugin {
         let frame_collider =
             Collider::convex_decomposition(frame_points_all, frame_points_all_indicies);
 
-        let frame_id = commands
+        let frame_id = world
             .spawn((
                 RigidBody::Dynamic,
                 frame_collider,
@@ -85,15 +93,28 @@ impl BicyclePlugin {
             ))
             .id();
 
+        return AttachmentPoints {
+            frame_id,
+            front_hub,
+            bottom_bracket,
+            rear_hub
+        }
+    }
+    
+    pub fn spawn_crank(
+        In(attachment_point): In<DVec2>,
+        world: &mut World,
+    ) -> Entity {
+        
         let crank_collider = Collider::polyline(
             vec![
-                bottom_bracket + 8.0 * DVec2::Y,
-                bottom_bracket + 8.0 * DVec2::NEG_Y,
+                attachment_point + 8.0 * DVec2::Y,
+                attachment_point + 8.0 * DVec2::NEG_Y,
             ],
             vec![[0, 1]].into(),
         );
 
-        let crank = commands
+        world
             .spawn((
                 RigidBody::Dynamic,
                 crank_collider,
@@ -103,27 +124,39 @@ impl BicyclePlugin {
                     ..default()
                 },
             ))
-            .id();
+            .id()
+    }
+    
+    pub fn setup_bicycle(
+        world: &mut World,
+    ) {
 
-        commands.spawn(
-            RevoluteJoint::new(frame_id, front_id)
-                .with_local_anchor_1(front_hub)
+        let front_id = world.run_system_once_with(BicycleWheel::Front, BicyclePlugin::spawn_wheel).unwrap();
+        let back_id = world.run_system_once_with(BicycleWheel::Back, BicyclePlugin::spawn_wheel).unwrap();
+
+        let attachment_points = world.run_system_once(BicyclePlugin::spawn_frame).unwrap();
+
+        let crank = world.run_system_once_with(attachment_points.bottom_bracket, BicyclePlugin::spawn_crank).unwrap();
+
+        world.spawn(
+            RevoluteJoint::new(attachment_points.frame_id, front_id)
+                .with_local_anchor_1(attachment_points.front_hub)
                 .with_compliance(0.0)
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(0.0),
         );
 
-        commands.spawn(
-            RevoluteJoint::new(frame_id, back_id)
-                .with_local_anchor_1(rear_hub)
+        world.spawn(
+            RevoluteJoint::new(attachment_points.frame_id, back_id)
+                .with_local_anchor_1(attachment_points.rear_hub)
                 .with_compliance(0.0)
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(0.0),
         );
 
-        commands.spawn(
-            RevoluteJoint::new(frame_id, crank)
-                .with_local_anchor_1(bottom_bracket)
+        world.spawn(
+            RevoluteJoint::new(attachment_points.frame_id, crank)
+                .with_local_anchor_1(attachment_points.bottom_bracket)
                 .with_compliance(0.0)
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(0.0),

@@ -10,8 +10,8 @@ impl Plugin for BicyclePlugin {
             ChainPlugin,
             // SprocketPlugin, 
             GroupsetPlugin
-        ));
-            // .add_systems(Startup, BicyclePlugin::setup_bicycle);
+        ))
+            .add_systems(Startup, BicyclePlugin::setup_bicycle);
             // .add_systems(Update,
             //     (
             //         // BicyclePlugin::spin_wheel
