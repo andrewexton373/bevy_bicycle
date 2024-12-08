@@ -1,6 +1,8 @@
-use bevy::prelude::Component;
+use bevy::{math::DVec2, prelude::Component, utils::HashMap};
 
-#[derive(Component, Debug)]
+use super::systems::AttachmentPoint;
+
+#[derive(Component, Debug, Clone, Copy)]
 pub enum BicycleWheel {
     Front,
     Back,
@@ -14,3 +16,6 @@ impl BicycleWheel {
 
 #[derive(Component)]
 pub struct Frame;
+
+#[derive(Component)]
+pub struct Bicycle;

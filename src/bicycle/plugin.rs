@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{chain::plugin::ChainPlugin, groupset::plugin::GroupsetPlugin, sprocket::plugin::SprocketPlugin};
+use super::{chain::plugin::ChainPlugin, groupset::plugin::GroupsetPlugin, sprocket::plugin::SprocketPlugin, systems::{SpawnBicycleEvent, SpawnCrankEvent, SpawnFrameEvent, SpawnWheelEvent}};
 
 pub struct BicyclePlugin;
 
@@ -11,10 +11,16 @@ impl Plugin for BicyclePlugin {
             // SprocketPlugin, 
             GroupsetPlugin
         ))
-            .add_systems(Startup, BicyclePlugin::setup_bicycle);
-            // .add_systems(Update,
-            //     (
-            //         // BicyclePlugin::spin_wheel
-            //     ));
+            .add_systems(Startup, BicyclePlugin::initialize)
+            .add_systems(Update, (
+                BicyclePlugin::spawn_bicycle,
+                BicyclePlugin::spawn_frame,
+                BicyclePlugin::spawn_wheel,
+                BicyclePlugin::spawn_crank
+            ))
+            .add_event::<SpawnBicycleEvent>()
+            .add_event::<SpawnFrameEvent>()
+            .add_event::<SpawnWheelEvent>()
+            .add_event::<SpawnCrankEvent>();
     }
 }
