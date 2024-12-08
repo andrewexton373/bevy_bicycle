@@ -14,12 +14,12 @@ impl Plugin for BicyclePlugin {
             .add_systems(Startup, BicyclePlugin::initialize)
             .add_systems(Update, (
                 BicyclePlugin::spawn_bicycle,
-                BicyclePlugin::spawn_frame,
-                BicyclePlugin::spawn_wheel,
-                BicyclePlugin::spawn_crank
             ))
+            .add_observer(BicyclePlugin::spawn_frame)
+            .add_observer(BicyclePlugin::spawn_wheel)
+            .add_observer(BicyclePlugin::spawn_crank)
             .add_event::<SpawnBicycleEvent>()
-            .add_event::<SpawnFrameEvent>()
+            // .add_event::<SpawnFrameEvent>()
             .add_event::<SpawnWheelEvent>()
             .add_event::<SpawnCrankEvent>();
     }
