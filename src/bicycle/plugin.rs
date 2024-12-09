@@ -11,13 +11,11 @@ impl Plugin for BicyclePlugin {
             // SprocketPlugin, 
             GroupsetPlugin
         ))
-            .add_systems(Startup, BicyclePlugin::initialize)
-            .add_observer(BicyclePlugin::spawn_bicycle)
+            .add_systems(Startup, BicyclePlugin::init_bicycle)
             .add_observer(BicyclePlugin::spawn_frame)
             .add_observer(BicyclePlugin::spawn_wheel)
             .add_observer(BicyclePlugin::spawn_crank)
             .add_event::<SpawnBicycleEvent>()
-            // .add_event::<SpawnFrameEvent>()
             .add_event::<SpawnWheelEvent>()
             .add_event::<SpawnCrankEvent>();
     }

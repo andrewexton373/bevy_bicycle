@@ -2,11 +2,17 @@ use std::f64::consts::PI;
 
 use bevy::prelude::Component;
 
+#[derive(Component)]
+pub struct Groupset;
+
 #[derive(Component, PartialEq)]
 pub enum Axle {
     FRONT,
     REAR
 }
+
+#[derive(Component)]
+pub struct Radius(pub f32);
 
 // Define a struct for a 2D point
 #[derive(PartialEq, Debug, Clone, Copy)]

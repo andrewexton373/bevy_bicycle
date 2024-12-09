@@ -3,7 +3,7 @@ use core::f64;
 use avian2d::prelude::*;
 use bevy::{math::vec3, prelude::*};
 
-use crate::bicycle::groupset::components::{Axle, Disc, Point};
+use crate::bicycle::{groupset::components::{Axle, Disc, Point, Radius}, systems::GameLayer};
 
 use super::{components::Chain, plugin::ChainPlugin};
 
@@ -11,28 +11,32 @@ impl ChainPlugin {
 
     pub fn reset_chain(
         mut commands: Commands,
-        axles: Query<(&Axle, Option<&Disc>, &Transform)>,
+        // axles: Query<(&Axle, Option<&Disc>, &Transform)>,
+        axles: Query<(&Axle, &Radius, &Transform)>,
+
         keys: Res<ButtonInput<KeyCode>>,
 
     ) {
         if keys.just_pressed(KeyCode::KeyR) {
             let mut point_set = vec![];
 
-            // Space was pressed
-            for (axle, disc, transform) in axles.iter() {
+            
 
-                if let Some(disc) = disc {
+            // Space was pressed
+            for (axle, radius, transform) in axles.iter() {
+
+                // if let Some(disc) = disc {
 
                     let larger_disc = Disc {
-                        center: disc.center,
-                        radius: disc.radius + 3.0
+                        center: Point {x: transform.translation.x as f64, y: transform.translation.y as f64},
+                        radius: radius.0 as f64 + 3.0
                     };
 
                     let poly = larger_disc.simplify_disc_as_polygon(20).iter().map(|point| {
                         Point {x: point.x + transform.translation.x as f64, y: point.y + transform.translation.y as f64}
                     }).collect::<Vec<Point>>();
                     point_set.extend(poly);
-                }
+                // }
 
             }
 
@@ -45,13 +49,13 @@ impl ChainPlugin {
 
     pub fn generate_chain_link_points_from_point_set(points: &Vec<Point>) -> Vec<Point> {
         let convex_hull = gift_wrapping(&points);
-        let equidistant_points = equidistant_points_on_polygon(&convex_hull, 60);
+        let equidistant_points = equidistant_points_on_polygon(&convex_hull, 50);
 
         equidistant_points
     }
 
     pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
-        let link_radius = 1.0;
+        let link_radius = 0.01;
         let r = links[0].distance(&links[1]);
         let compliance: f64 = 0.000000000001;
 
@@ -77,6 +81,7 @@ impl ChainPlugin {
                                     translation: vec3(link.x as f32, link.y as f32, 0.0),
                                     ..default()
                                 },
+                                CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset)
                             ))
                             .id();
     
@@ -152,6 +157,8 @@ fn gift_wrapping(points: &Vec<Point>) -> Vec<Point> {
     hull
 }
 
+
+// Calculate the perimter of a polygon
 fn polygon_perimeter(polygon: &Vec<Point>) -> f64 {
 
     let mut perimeter = 0.0;
@@ -165,6 +172,7 @@ fn polygon_perimeter(polygon: &Vec<Point>) -> f64 {
     perimeter
 }
 
+// Calculate num_points on a polygon that are equally spaced apart
 fn equidistant_points_on_polygon(polygon: &Vec<Point>, num_points: usize) -> Vec<Point> {
     let mut result = Vec::new();
     let perimeter = polygon_perimeter(polygon);

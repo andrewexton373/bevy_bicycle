@@ -5,34 +5,36 @@ use bevy::{
 
 use crate::CustomMaterial;
 
-use super::{components::{Bicycle, BicycleWheel, Frame}, plugin::BicyclePlugin};
-
-pub struct AttachmentPoints {
-    frame_id: Entity,
-    bottom_bracket: DVec2,
-    front_hub: DVec2,
-    rear_hub: DVec2
-}
+use super::{components::{Bicycle, BicycleWheel, Frame}, groupset::events::SpawnGroupsetEvent, plugin::BicyclePlugin};
 
 #[derive(Event)]
 pub struct SpawnBicycleEvent;
 
 #[derive(Event)]
 pub struct SpawnWheelEvent {
-    frame_id: Entity,
     wheel: BicycleWheel
 }
 
 #[derive(Event)]
-pub struct SpawnFrameEvent {
-    bicycle_id: Entity,
-}
+pub struct SpawnFrameEvent;
 
 #[derive(Event)]
 pub struct SpawnCrankEvent;
 
 #[derive(Event)]
 pub struct SpawnAttachmentPointEvent;
+
+#[derive(PhysicsLayer, Default)]
+pub enum GameLayer {
+    #[default]
+    World,
+    Frame,
+    Wheels,
+    AttachmentPoints,
+    Groupset
+}
+
+
 
 #[derive(Component, PartialEq, Eq, Hash)]
 pub enum AttachmentPoint {
@@ -43,58 +45,16 @@ pub enum AttachmentPoint {
 
 impl BicyclePlugin {
 
-    pub fn initialize(mut commands: Commands) {
-        commands.trigger(SpawnBicycleEvent);
-    }
-
-    pub fn spawn_wheel(
-        trigger: Trigger<SpawnWheelEvent>,
+    pub fn init_bicycle(
         mut commands: Commands,
-        attachment_points: Query<(Entity, &AttachmentPoint)>,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut custom_materials: ResMut<Assets<CustomMaterial>>,
-        asset_server: Res<AssetServer>,
     ) {
-
-        let evt = trigger.event();
-
-        let (attachment_point_ent, _) =  match evt.wheel {
-            BicycleWheel::Front => attachment_points.iter().find(|(_, attachment_point)| *attachment_point == &AttachmentPoint::FrontWheelFork).unwrap(),
-            BicycleWheel::Back => attachment_points.iter().find(|(_, attachment_point)| *attachment_point == &AttachmentPoint::RearWheelFork).unwrap(),
-        };
-
-        let wheel = commands.spawn((
-            evt.wheel,
-            Name::new("Wheel"),
-            RigidBody::Dynamic,
-            Collider::circle(BicycleWheel::size() as f64),
-            CollisionMargin(1.0),
-            Mass::new(1.0),
-            Friction::new(0.95),
-            Restitution::new(0.0),
-            SweptCcd::default(),
-            Mesh2d(meshes.add(Circle::new(BicycleWheel::size())).into()),
-            MeshMaterial2d(custom_materials.add(CustomMaterial {
-                color: LinearRgba::WHITE,
-                color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
-                alpha_mode: AlphaMode::Blend,
-            })),
-        )).id();
-
-        commands.entity(attachment_point_ent).add_child(wheel);
-        
-
-        commands.entity(attachment_point_ent).with_child(
-            RevoluteJoint::new(attachment_point_ent, wheel)
-                // .with_local_anchor_1(attachment_points.front_hub)
-                .with_compliance(0.0)
-                .with_angular_velocity_damping(0.0)
-                .with_linear_velocity_damping(0.0),
-        );
-   
+        commands.spawn((
+            Bicycle,
+            Name::new("Bicycle"),
+            Transform::default(),
+            InheritedVisibility::default()
+        ));           
     }
-
-    
 
     pub fn spawn_frame(
         trigger: Trigger<OnAdd, Bicycle>,
@@ -133,9 +93,9 @@ impl BicyclePlugin {
                 ..default()
             },
         )).with_children(|frame| {
-            let id1 = frame.spawn((AttachmentPoint::BottomBracket, Name::new("Bottom Bracket"), RigidBody::Dynamic, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(bottom_bracket.extend(0.0)))).id();
-            let id2 = frame.spawn((AttachmentPoint::FrontWheelFork, Name::new("Front Wheel Fork"), RigidBody::Dynamic, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(front_hub.extend(0.0)))).id();
-            let id3 = frame.spawn((AttachmentPoint::RearWheelFork, Name::new("Rear Wheel Fork"), RigidBody::Dynamic, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(rear_hub.extend(0.0)))).id();
+            let id1 = frame.spawn((AttachmentPoint::BottomBracket, Name::new("Bottom Bracket"), RigidBody::Dynamic, Sensor, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(bottom_bracket.extend(0.0)))).id();
+            let id2 = frame.spawn((AttachmentPoint::FrontWheelFork, Name::new("Front Wheel Fork"), RigidBody::Dynamic, Sensor, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(front_hub.extend(0.0)))).id();
+            let id3 = frame.spawn((AttachmentPoint::RearWheelFork, Name::new("Rear Wheel Fork"), RigidBody::Dynamic, Sensor, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(rear_hub.extend(0.0)))).id();
             
             frame.spawn(FixedJoint::new(frame.parent_entity(), id1).with_local_anchor_1(bottom_bracket.as_dvec2()));
             frame.spawn(FixedJoint::new(frame.parent_entity(), id2).with_local_anchor_1(front_hub.as_dvec2()));
@@ -146,17 +106,64 @@ impl BicyclePlugin {
         commands.entity(bicycle_ent).add_child(frame_id);
 
         commands.trigger(SpawnWheelEvent {
-            frame_id,
             wheel: BicycleWheel::Front
         });
 
         commands.trigger(SpawnWheelEvent {
-            frame_id,
             wheel: BicycleWheel::Back
         });
 
-        commands.trigger(SpawnCrankEvent);
+        // commands.trigger(SpawnCrankEvent);
 
+        commands.trigger(SpawnGroupsetEvent);
+
+    }
+
+    pub fn spawn_wheel(
+        trigger: Trigger<SpawnWheelEvent>,
+        mut commands: Commands,
+        attachment_points: Query<(Entity, &AttachmentPoint)>,
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut custom_materials: ResMut<Assets<CustomMaterial>>,
+        asset_server: Res<AssetServer>,
+    ) {
+
+        let evt = trigger.event();
+
+        let (attachment_point_ent, _) =  match evt.wheel {
+            BicycleWheel::Front => attachment_points.iter().find(|(_, attachment_point)| *attachment_point == &AttachmentPoint::FrontWheelFork).unwrap(),
+            BicycleWheel::Back => attachment_points.iter().find(|(_, attachment_point)| *attachment_point == &AttachmentPoint::RearWheelFork).unwrap(),
+        };
+
+        let wheel = commands.spawn((
+            evt.wheel,
+            Name::new("Wheel"),
+            RigidBody::Dynamic,
+            Collider::circle(BicycleWheel::size() as f64),
+            CollisionMargin(1.0),
+            Mass::new(1.0),
+            Friction::new(0.95),
+            Restitution::new(0.0),
+            SweptCcd::default(),
+            Mesh2d(meshes.add(Circle::new(BicycleWheel::size())).into()),
+            // CollisionLayers::new(GameLayer::Wheels.to_bits(), GameLayer::World)
+            // MeshMaterial2d(custom_materials.add(CustomMaterial {
+            //     color: LinearRgba::WHITE,
+            //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
+            //     alpha_mode: AlphaMode::Blend,
+            // })),
+        )).id();
+
+        commands.entity(attachment_point_ent).add_child(wheel);
+        
+
+        commands.entity(attachment_point_ent).with_child(
+            RevoluteJoint::new(attachment_point_ent, wheel)
+                .with_compliance(0.0)
+                .with_angular_velocity_damping(0.0)
+                .with_linear_velocity_damping(0.0),
+        );
+   
     }
     
     pub fn spawn_crank(
@@ -199,19 +206,7 @@ impl BicyclePlugin {
         
     }
     
-    pub fn spawn_bicycle(
-        _trigger: Trigger<SpawnBicycleEvent>,
-        mut commands: Commands,
-    ) {
-        commands.spawn((
-            Bicycle,
-            Name::new("Bicycle"),
-            // RigidBody::Dynamic,
-            // GlobalTransform::default(),
-            Transform::default(),
-            InheritedVisibility::default()
-        ));           
-    }
+    
 
     pub fn spin_wheel(
         mut wheel_query: Query<(&BicycleWheel, &mut ExternalTorque), With<BicycleWheel>>,
