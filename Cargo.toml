@@ -7,6 +7,7 @@ edition = "2021"
 avian2d = { git = "https://github.com/Jondolf/avian.git", branch = "main", default-features = false, features = ["2d", "f64", "parry-f64", "debug-plugin"] }
 bevy = { version = "0.15" }
 bevy_egui = "0.31.1"
+bevy-inspector-egui = "0.28"
 # bevy-parallax = {git = "https://github.com/Corrosive-Games/bevy-parallax.git"}
 
 # Enable max optimizations for dependencies, but not for our code:

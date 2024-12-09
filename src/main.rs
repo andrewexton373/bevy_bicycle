@@ -15,6 +15,7 @@ use bevy::{
     sprite::{Material2d, Material2dPlugin},
 };
 use bevy_egui::EguiPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 // use bevy_parallax::ParallaxPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
@@ -38,6 +39,7 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
             EguiPlugin,
+            WorldInspectorPlugin::new(),
             // ParallaxPlugin,
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
@@ -56,7 +58,7 @@ fn main() {
 
 // This struct defines the data that will be passed to your shader
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-struct CustomMaterial {
+pub struct CustomMaterial {
     #[uniform(0)]
     color: LinearRgba,
     #[texture(1)]

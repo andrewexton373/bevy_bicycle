@@ -12,9 +12,7 @@ impl Plugin for BicyclePlugin {
             GroupsetPlugin
         ))
             .add_systems(Startup, BicyclePlugin::initialize)
-            .add_systems(Update, (
-                BicyclePlugin::spawn_bicycle,
-            ))
+            .add_observer(BicyclePlugin::spawn_bicycle)
             .add_observer(BicyclePlugin::spawn_frame)
             .add_observer(BicyclePlugin::spawn_wheel)
             .add_observer(BicyclePlugin::spawn_crank)

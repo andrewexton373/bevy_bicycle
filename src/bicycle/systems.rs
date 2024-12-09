@@ -43,14 +43,14 @@ pub enum AttachmentPoint {
 
 impl BicyclePlugin {
 
-    pub fn initialize(mut evt_writer: EventWriter<SpawnBicycleEvent>) {
-        evt_writer.send(SpawnBicycleEvent);
+    pub fn initialize(mut commands: Commands) {
+        commands.trigger(SpawnBicycleEvent);
     }
 
     pub fn spawn_wheel(
         trigger: Trigger<SpawnWheelEvent>,
         mut commands: Commands,
-        attachment_points: Query<(Entity, &AttachmentPoint, &Transform)>,
+        attachment_points: Query<(Entity, &AttachmentPoint)>,
         mut meshes: ResMut<Assets<Mesh>>,
         mut custom_materials: ResMut<Assets<CustomMaterial>>,
         asset_server: Res<AssetServer>,
@@ -58,13 +58,14 @@ impl BicyclePlugin {
 
         let evt = trigger.event();
 
-        let (attachment_point_ent, _, t) =  match evt.wheel {
-            BicycleWheel::Front => attachment_points.iter().find(|(_, attachment_point, _)| *attachment_point == &AttachmentPoint::FrontWheelFork).unwrap(),
-            BicycleWheel::Back => attachment_points.iter().find(|(_, attachment_point, _)| *attachment_point == &AttachmentPoint::RearWheelFork).unwrap(),
+        let (attachment_point_ent, _) =  match evt.wheel {
+            BicycleWheel::Front => attachment_points.iter().find(|(_, attachment_point)| *attachment_point == &AttachmentPoint::FrontWheelFork).unwrap(),
+            BicycleWheel::Back => attachment_points.iter().find(|(_, attachment_point)| *attachment_point == &AttachmentPoint::RearWheelFork).unwrap(),
         };
 
-        let wheel_ent = commands.entity(attachment_point_ent).with_child((
+        let wheel = commands.spawn((
             evt.wheel,
+            Name::new("Wheel"),
             RigidBody::Dynamic,
             Collider::circle(BicycleWheel::size() as f64),
             CollisionMargin(1.0),
@@ -78,11 +79,13 @@ impl BicyclePlugin {
                 color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
                 alpha_mode: AlphaMode::Blend,
             })),
-            t.clone()
         )).id();
 
+        commands.entity(attachment_point_ent).add_child(wheel);
+        
+
         commands.entity(attachment_point_ent).with_child(
-            RevoluteJoint::new(attachment_point_ent, wheel_ent)
+            RevoluteJoint::new(attachment_point_ent, wheel)
                 // .with_local_anchor_1(attachment_points.front_hub)
                 .with_compliance(0.0)
                 .with_angular_velocity_damping(0.0)
@@ -96,11 +99,9 @@ impl BicyclePlugin {
     pub fn spawn_frame(
         trigger: Trigger<OnAdd, Bicycle>,
         mut commands: Commands,
-        // mut crank_evt_writer: EventWriter<SpawnCrankEvent>
     ) {
 
         let bicycle_ent = trigger.entity();
-
 
         let rear_hub = Vec2::new(-40.0, 0.0);
         let front_hub = Vec2::new(35.0, 0.0);
@@ -118,22 +119,31 @@ impl BicyclePlugin {
         let frame_collider =
             Collider::convex_decomposition(frame_points_all_dvec2, frame_points_all_indicies);
 
-        let frame_id = commands.entity(bicycle_ent)
-            .with_child((
-                Frame,
-                RigidBody::Dynamic,
-                frame_collider,
-                Sensor,
-                MassPropertiesBundle {
-                    mass: Mass::new(10.0),
-                    ..default()
-                },
-            )).with_children(|frame| {
-                frame.spawn((AttachmentPoint::BottomBracket, Sensor, Transform::from_translation(bottom_bracket.extend(0.0))));
-                frame.spawn((AttachmentPoint::FrontWheelFork, Sensor, Transform::from_translation(front_hub.extend(0.0))));
-                frame.spawn((AttachmentPoint::RearWheelFork, Sensor, Transform::from_translation(rear_hub.extend(0.0))));
-            })
-            .id();
+
+        let frame_id = commands.spawn((
+            Frame,
+            Name::new("Frame"),
+            Transform::default(),
+            RigidBody::Dynamic,
+            Visibility::Inherited,
+            frame_collider,
+            Sensor,
+            MassPropertiesBundle {
+                mass: Mass::new(10.0),
+                ..default()
+            },
+        )).with_children(|frame| {
+            let id1 = frame.spawn((AttachmentPoint::BottomBracket, Name::new("Bottom Bracket"), RigidBody::Dynamic, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(bottom_bracket.extend(0.0)))).id();
+            let id2 = frame.spawn((AttachmentPoint::FrontWheelFork, Name::new("Front Wheel Fork"), RigidBody::Dynamic, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(front_hub.extend(0.0)))).id();
+            let id3 = frame.spawn((AttachmentPoint::RearWheelFork, Name::new("Rear Wheel Fork"), RigidBody::Dynamic, Collider::circle(1.0), Visibility::Inherited, Transform::from_translation(rear_hub.extend(0.0)))).id();
+            
+            frame.spawn(FixedJoint::new(frame.parent_entity(), id1).with_local_anchor_1(bottom_bracket.as_dvec2()));
+            frame.spawn(FixedJoint::new(frame.parent_entity(), id2).with_local_anchor_1(front_hub.as_dvec2()));
+            frame.spawn(FixedJoint::new(frame.parent_entity(), id3).with_local_anchor_1(rear_hub.as_dvec2()));
+
+        }).id();
+
+        commands.entity(bicycle_ent).add_child(frame_id);
 
         commands.trigger(SpawnWheelEvent {
             frame_id,
@@ -147,21 +157,13 @@ impl BicyclePlugin {
 
         commands.trigger(SpawnCrankEvent);
 
-        // crank_evt_writer.send(
-        //     SpawnCrankEvent
-        // );
-
     }
     
     pub fn spawn_crank(
         _trigger: Trigger<SpawnCrankEvent>,
         mut commands: Commands,
-        // mut evt_reader: EventReader<SpawnCrankEvent>,
         attachment_points: Query<(Entity, &AttachmentPoint)>,
     ) {
-
-        // for _evt in evt_reader.read() {
-        println!("{:?}", attachment_points.iter().len());
 
         let (attachment_point_ent, _) =  attachment_points.iter().find(|(_, attachment_point)| *attachment_point == &AttachmentPoint::BottomBracket).unwrap();
 
@@ -173,7 +175,8 @@ impl BicyclePlugin {
             vec![[0, 1]].into(),
         );
 
-        let crank_ent = commands.entity(attachment_point_ent).with_child((
+        let crank_ent = commands.spawn((
+            Name::new("Crank"),
             RigidBody::Dynamic,
             crank_collider,
             Sensor,
@@ -184,24 +187,30 @@ impl BicyclePlugin {
             },
         )).id();
 
+        commands.entity(attachment_point_ent).add_child(crank_ent);
+
+
         commands.entity(attachment_point_ent).with_child(
         RevoluteJoint::new(attachment_point_ent, crank_ent)
             .with_compliance(0.0)
             .with_angular_velocity_damping(0.0)
             .with_linear_velocity_damping(0.0),
         );
-        // }
-        
         
     }
     
     pub fn spawn_bicycle(
+        _trigger: Trigger<SpawnBicycleEvent>,
         mut commands: Commands,
-        mut evt_reader: EventReader<SpawnBicycleEvent>,
     ) {
-        for _evt in evt_reader.read() {
-            commands.spawn((Bicycle, GlobalTransform::default())).id();
-        }                
+        commands.spawn((
+            Bicycle,
+            Name::new("Bicycle"),
+            // RigidBody::Dynamic,
+            // GlobalTransform::default(),
+            Transform::default(),
+            InheritedVisibility::default()
+        ));           
     }
 
     pub fn spin_wheel(
