@@ -46,15 +46,7 @@ impl GroupsetPlugin {
         match attachment_point {
             AttachmentPoint::BottomBracket => {
                 let front_chainring = commands.spawn(GroupsetPlugin::front_chainring(meshes, color_materials, t)).id();
-                // commands.entity(front_chainring).with_child(
-                //     (
-                //         Name::new("Bottom Bracket / Chainring Revolute Joint"),
-                //         RevoluteJoint::new(ent, front_chainring)
-                //             .with_angular_velocity_damping(0.0)
-                //             .with_linear_velocity_damping(0.0)
-                //     )
-                // );
-
+                
                 commands.spawn(
                     (
                         Name::new("Bottom Bracket / Chainring Revolute Joint"),
@@ -66,13 +58,6 @@ impl GroupsetPlugin {
             },
             AttachmentPoint::RearWheelFork => {
                 let rear_cassette = commands.spawn(GroupsetPlugin::rear_cassette(meshes, color_materials, t)).id();
-
-                // commands.entity(rear_cassette).with_child((
-                //     Name::new("Rear Wheel Fork / Cassette Revolute Joint"),
-                //     RevoluteJoint::new(ent, rear_cassette)
-                //         .with_angular_velocity_damping(0.0)
-                //         .with_linear_velocity_damping(0.0)
-                // ));
 
                 commands.spawn((
                     Name::new("Rear Wheel Fork / Cassette Revolute Joint"),
@@ -98,7 +83,7 @@ impl GroupsetPlugin {
             wheel_radius,
             RigidBody::Dynamic,
             Collider::circle(wheel_radius.0 as f64),
-            CollisionMargin(1.0),
+            CollisionMargin(0.1),
             Mass::new(1.0),
             Friction::new(0.99),
             Restitution::new(0.0),
@@ -126,9 +111,9 @@ impl GroupsetPlugin {
                 MouseScrollUnit::Line => {
                     for (cog, mut ang_vel) in cogs.iter_mut() {
                         if let Cog::FrontChainring = cog {
-                            ang_vel.0 += -1.0_f64 * (evt.y as f64);
+                            ang_vel.0 += -2.0_f64 * (evt.y as f64);
                             // ang_vel.0 += -10.0 as f64 * evt.y as f64;
-                            println!("ang_vel {}", ang_vel.0);
+                            println!("TURN CRANK: ang_vel {}", ang_vel.0);
                         }
                     }
                 }
@@ -152,7 +137,7 @@ impl GroupsetPlugin {
             wheel_radius,
             RigidBody::Dynamic,
             Collider::circle(wheel_radius.0 as f64),
-            CollisionMargin(1.0),
+            CollisionMargin(0.1),
             Mass::new(1.0),
             Friction::new(0.99),
             Restitution::new(0.0),

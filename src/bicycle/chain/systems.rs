@@ -27,7 +27,7 @@ impl ChainPlugin {
 
                 let larger_disc = Disc {
                     center: Point {x: transform.x as f64, y: transform.y as f64},
-                    radius: radius.0 as f64 + 0.001
+                    radius: radius.0 as f64 + 0.25
                 };
 
                 let poly = larger_disc.simplify_disc_as_polygon(40).iter().map(|point| {
@@ -52,7 +52,7 @@ impl ChainPlugin {
     }
 
     pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
-        let link_radius = 0.05;
+        let link_radius = 0.01;
         let r = links[0].distance(&links[1]);
         let compliance: f64 = 0.0000000001;
 
