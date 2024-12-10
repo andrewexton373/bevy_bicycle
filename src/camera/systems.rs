@@ -11,7 +11,7 @@ use bevy::{
 //     ParallaxMoveEvent, RepeatStrategy,
 // };
 
-use crate::bicycle::components::BicycleWheel;
+use crate::bicycle::wheel::components::BicycleWheel;
 
 use super::{components::FollowCamera, plugin::CameraPlugin};
 

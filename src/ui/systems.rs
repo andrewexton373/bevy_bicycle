@@ -2,7 +2,8 @@ use avian2d::prelude::AngularVelocity;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
-use crate::bicycle::components::BicycleWheel;
+
+use crate::bicycle::wheel::components::BicycleWheel;
 
 use super::plugin::UIPlugin;
 

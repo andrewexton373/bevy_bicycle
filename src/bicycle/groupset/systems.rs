@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{color::palettes::css::{GREEN, RED, WHEAT}, ecs::entity, input::mouse::{MouseScrollUnit, MouseWheel}, prelude::*, state::commands};
+use bevy::{color::palettes::css::{GREEN, RED, WHEAT}, ecs::entity, input::{keyboard::KeyboardInput, mouse::{MouseScrollUnit, MouseWheel}}, prelude::*, state::commands};
 
 use crate::{bicycle::{groupset::events::SpawnAttachedEvent, systems::{AttachmentPoint, GameLayer}}, CustomMaterial};
 
@@ -117,10 +117,9 @@ impl GroupsetPlugin {
         )
     }
 
-    pub fn spin_front_chainring(
+    pub fn turn_crank(
         mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>,
         mut mouse_wheel_evt: EventReader<MouseWheel>,
-
     ) {
         for &evt in mouse_wheel_evt.read() {
             match &evt.unit {

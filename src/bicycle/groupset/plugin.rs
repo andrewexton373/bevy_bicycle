@@ -7,7 +7,7 @@ impl Plugin for GroupsetPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app
             .add_systems(Update, (
-                GroupsetPlugin::spin_front_chainring
+                GroupsetPlugin::turn_crank
             ))
             .add_observer(GroupsetPlugin::init_groupset)
             .add_observer(GroupsetPlugin::handle_spawn_component)

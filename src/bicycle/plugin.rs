@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{chain::plugin::ChainPlugin, groupset::plugin::GroupsetPlugin, sprocket::plugin::SprocketPlugin, systems::{SpawnBicycleEvent, SpawnCrankEvent, SpawnFrameEvent, SpawnWheelEvent}, wheel::plugin::WheelPlugin};
+use super::{chain::plugin::ChainPlugin, events::SpawnBicycleEvent, groupset::plugin::GroupsetPlugin, sprocket::plugin::SprocketPlugin, wheel::plugin::WheelPlugin};
 
 pub struct BicyclePlugin;
 
