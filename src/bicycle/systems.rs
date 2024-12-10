@@ -94,8 +94,12 @@ impl BicyclePlugin {
                 Transform::from_translation(pos.extend(0.0)),
             )).id();
 
-            commands.spawn(FixedJoint::new(frame_id, attachment_ent). with_local_anchor_1(pos.as_dvec2()));
-
+            commands.spawn(
+                RevoluteJoint::new(frame_id, attachment_ent)
+                    .with_local_anchor_1(pos.as_dvec2())
+                    .with_angular_velocity_damping(0.0)
+                    .with_linear_velocity_damping(0.0)
+            );
         }
 
         commands.entity(bicycle_ent).add_child(frame_id);

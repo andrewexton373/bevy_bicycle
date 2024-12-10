@@ -12,12 +12,18 @@ impl ChainPlugin {
     pub fn reset_chain(
         mut commands: Commands,
         // axles: Query<(&Axle, Option<&Disc>, &Transform)>,
+        mut chain: Query<(Entity, &Chain)>,
         cogs: Query<(&Cog, &Radius, &Position)>,
 
         keys: Res<ButtonInput<KeyCode>>,
 
     ) {
         if keys.just_pressed(KeyCode::KeyR) {
+
+            if let Some(chain) = chain.get_single_mut().ok() {
+                commands.entity(chain.0).despawn_recursive();
+            }
+
             let mut point_set = vec![];
 
             // R(eset) was pressed
@@ -27,7 +33,7 @@ impl ChainPlugin {
 
                 let larger_disc = Disc {
                     center: Point {x: transform.x as f64, y: transform.y as f64},
-                    radius: radius.0 as f64 + 0.25
+                    radius: radius.0 as f64 + 0.8
                 };
 
                 let poly = larger_disc.simplify_disc_as_polygon(40).iter().map(|point| {
@@ -52,9 +58,9 @@ impl ChainPlugin {
     }
 
     pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
-        let link_radius = 0.01;
+        let link_radius = 0.5;
         let r = links[0].distance(&links[1]);
-        let compliance: f64 = 0.0000000001;
+        let compliance: f64 = 0.0;
 
         commands.spawn((Chain, GlobalTransform::default())).with_children(|parent| {
             let mut previous_link = None;
@@ -68,7 +74,7 @@ impl ChainPlugin {
                                 RigidBody::Dynamic,
                                 Collider::circle(link_radius),
                                 SweptCcd::default(),
-                                Friction::new(0.99),
+                                Friction::new(1.0),
                                 LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
                                 MassPropertiesBundle {
                                     mass: Mass::new(0.01),
