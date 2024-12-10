@@ -5,13 +5,19 @@ use bevy::prelude::Component;
 #[derive(Component)]
 pub struct Groupset;
 
-#[derive(Component, PartialEq)]
+#[derive(Component, PartialEq, Debug)]
 pub enum Axle {
     FRONT,
-    REAR
+    REAR,
 }
 
-#[derive(Component)]
+#[derive(Component, PartialEq, Debug)]
+pub enum Cog {
+    FrontChainring,
+    RearCassette,
+}
+
+#[derive(Component, Clone, Copy)]
 pub struct Radius(pub f32);
 
 // Define a struct for a 2D point

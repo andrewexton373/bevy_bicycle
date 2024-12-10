@@ -3,7 +3,7 @@ use core::f64;
 use avian2d::prelude::*;
 use bevy::{math::vec3, prelude::*};
 
-use crate::bicycle::{groupset::components::{Axle, Disc, Point, Radius}, systems::GameLayer};
+use crate::bicycle::{groupset::components::{Axle, Cog, Disc, Point, Radius}, systems::GameLayer};
 
 use super::{components::Chain, plugin::ChainPlugin};
 
@@ -12,7 +12,7 @@ impl ChainPlugin {
     pub fn reset_chain(
         mut commands: Commands,
         // axles: Query<(&Axle, Option<&Disc>, &Transform)>,
-        axles: Query<(&Axle, &Radius, &Transform)>,
+        cogs: Query<(&Cog, &Radius, &GlobalTransform)>,
 
         keys: Res<ButtonInput<KeyCode>>,
 
@@ -20,23 +20,22 @@ impl ChainPlugin {
         if keys.just_pressed(KeyCode::KeyR) {
             let mut point_set = vec![];
 
-            
+            // R(eset) was pressed
+            for (cog, radius, transform) in cogs.iter() {
 
-            // Space was pressed
-            for (axle, radius, transform) in axles.iter() {
+                println!("{:?}", cog);
 
-                // if let Some(disc) = disc {
+                let larger_disc = Disc {
+                    center: Point {x: transform.translation().x as f64, y: transform.translation().y as f64},
+                    radius: radius.0 as f64 + 0.001
+                };
 
-                    let larger_disc = Disc {
-                        center: Point {x: transform.translation.x as f64, y: transform.translation.y as f64},
-                        radius: radius.0 as f64 + 3.0
-                    };
+                
 
-                    let poly = larger_disc.simplify_disc_as_polygon(20).iter().map(|point| {
-                        Point {x: point.x + transform.translation.x as f64, y: point.y + transform.translation.y as f64}
-                    }).collect::<Vec<Point>>();
-                    point_set.extend(poly);
-                // }
+                let poly = larger_disc.simplify_disc_as_polygon(40).iter().map(|point| {
+                    Point {x: point.x + transform.translation().x as f64, y: point.y + transform.translation().y as f64}
+                }).collect::<Vec<Point>>();
+                point_set.extend(poly);
 
             }
 

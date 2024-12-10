@@ -3,13 +3,13 @@ use bevy::{color::palettes::css::{GREEN, RED, WHEAT}, ecs::entity, input::mouse:
 
 use crate::{bicycle::{groupset::events::SpawnAttachedEvent, systems::{AttachmentPoint, GameLayer}}, CustomMaterial};
 
-use super::{components::{Axle, Disc, Groupset, Point, Radius}, events::SpawnGroupsetEvent, plugin::GroupsetPlugin};
+use super::{components::{Axle, Cog, Disc, Groupset, Point, Radius}, events::SpawnGroupsetEvent, plugin::GroupsetPlugin};
 
 impl GroupsetPlugin {
 
     pub fn init_groupset(
         trigger: Trigger<SpawnGroupsetEvent>,
-        attachment_points: Query<(Entity, &AttachmentPoint, &Transform)>,
+        attachment_points: Query<(Entity, &AttachmentPoint)>,
         mut commands: Commands
     ) {
 
@@ -19,10 +19,8 @@ impl GroupsetPlugin {
         )).id();
 
 
-        for (ent, attachment_point, t) in attachment_points.iter() {
+        for (ent, attachment_point) in attachment_points.iter() {
             match attachment_point {
-                // AttachmentPoint::FrontWheelFork => todo!(),
-                // AttachmentPoint::RearWheelFork => todo!(),
                 AttachmentPoint::BottomBracket | AttachmentPoint::RearWheelFork => {
                     commands.entity(ent).trigger(SpawnAttachedEvent);
                 },
@@ -43,69 +41,69 @@ impl GroupsetPlugin {
     ) {
         let (ent, attachment_point, t) = attachment_points.get(trigger.entity()).unwrap();
 
+        println!("{:?}", attachment_point);
+
         match attachment_point {
             AttachmentPoint::BottomBracket => {
-                let front_axel = commands.spawn(GroupsetPlugin::front_axle(meshes, color_materials, t)).id();
-                commands.entity(front_axel).with_child(
-                    (
-                        Name::new("Bottom Bracket / Chainring Revolute Joint"),
-                        RevoluteJoint::new(ent, front_axel)
-                            // .with_local_anchor_1(t.translation.xy().as_dvec2())
-                            .with_angular_velocity_damping(0.0)
-                            .with_linear_velocity_damping(0.0)
-                    )
-                );
-
-                
-                // commands.entity(ent).add_child(id);
-                // commands.entity(ent).with_child(
+                let front_chainring = commands.spawn(GroupsetPlugin::front_chainring(meshes, color_materials, t)).id();
+                // commands.entity(front_chainring).with_child(
                 //     (
                 //         Name::new("Bottom Bracket / Chainring Revolute Joint"),
-                //         RevoluteJoint::new(ent, id)
-                //             .with_local_anchor_1(t.translation.xy().as_dvec2())
+                //         RevoluteJoint::new(ent, front_chainring)
                 //             .with_angular_velocity_damping(0.0)
                 //             .with_linear_velocity_damping(0.0)
                 //     )
                 // );
+
+                commands.spawn(
+                    (
+                        Name::new("Bottom Bracket / Chainring Revolute Joint"),
+                        RevoluteJoint::new(ent, front_chainring)
+                            .with_angular_velocity_damping(0.0)
+                            .with_linear_velocity_damping(0.0)
+                    )
+                );
             },
             AttachmentPoint::RearWheelFork => {
-                let rear_wheel_fork = commands.spawn(GroupsetPlugin::back_axle(meshes, color_materials, t)).id();
+                let rear_cassette = commands.spawn(GroupsetPlugin::rear_cassette(meshes, color_materials, t)).id();
 
-                commands.entity(rear_wheel_fork).with_child((
+                // commands.entity(rear_cassette).with_child((
+                //     Name::new("Rear Wheel Fork / Cassette Revolute Joint"),
+                //     RevoluteJoint::new(ent, rear_cassette)
+                //         .with_angular_velocity_damping(0.0)
+                //         .with_linear_velocity_damping(0.0)
+                // ));
+
+                commands.spawn((
                     Name::new("Rear Wheel Fork / Cassette Revolute Joint"),
-                    RevoluteJoint::new(ent, rear_wheel_fork)
-                        // .with_local_anchor_1(t.translation.xy().as_dvec2())
+                    RevoluteJoint::new(ent, rear_cassette)
                         .with_angular_velocity_damping(0.0)
                         .with_linear_velocity_damping(0.0)
                 ));
             }
-            _ => {}
+            _ => {println!("HIT!");}
         }
     }
 
-    pub fn front_axle(
+    pub fn front_chainring(
         mut meshes: ResMut<Assets<Mesh>>,
         mut color_materials: ResMut<Assets<ColorMaterial>>,
         t: &Transform
     ) -> impl Bundle {
-        let wheel_size = 5.0;
-
+        let wheel_radius = Radius(5.0);
         (
-            Axle::FRONT,
-            Name::new("Front Axel (Chainring)"),
-            Disc {
-                center: Point {x: 0.0, y: 0.0},
-                radius: wheel_size
-            },
-            Radius(wheel_size as f32),
+            // Axle::FRONT,
+            Cog::FrontChainring,
+            Name::new("Front Chainring"),
+            wheel_radius,
             RigidBody::Dynamic,
-            Collider::circle(wheel_size as f64),
+            Collider::circle(wheel_radius.0 as f64),
             CollisionMargin(1.0),
             Mass::new(1.0),
             Friction::new(0.99),
             Restitution::new(0.0),
             SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
-            Mesh2d(meshes.add(Circle::new(wheel_size as f32)).into()),
+            Mesh2d(meshes.add(Circle::new(wheel_radius.0 as f32)).into()),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
             //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
@@ -113,22 +111,22 @@ impl GroupsetPlugin {
             // })),
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(GREEN))),
             CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset),
-
+            // GlobalTransform::default(),
             t.clone()
 
         )
     }
 
-    pub fn spin_front_axle(
-        mut axles: Query<(&Axle, &mut AngularVelocity), With<Axle>>,
+    pub fn spin_front_chainring(
+        mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>,
         mut mouse_wheel_evt: EventReader<MouseWheel>,
 
     ) {
         for &evt in mouse_wheel_evt.read() {
             match &evt.unit {
                 MouseScrollUnit::Line => {
-                    for (axle, mut ang_vel) in axles.iter_mut() {
-                        if let Axle::FRONT = axle {
+                    for (cog, mut ang_vel) in cogs.iter_mut() {
+                        if let Cog::FrontChainring = cog {
                             ang_vel.0 += -1.0_f64 * (evt.y as f64);
                             // ang_vel.0 += -10.0 as f64 * evt.y as f64;
                             println!("ang_vel {}", ang_vel.0);
@@ -140,30 +138,27 @@ impl GroupsetPlugin {
         }
     }
 
-    pub fn back_axle(
+    pub fn rear_cassette(
         mut meshes: ResMut<Assets<Mesh>>,
         mut color_materials: ResMut<Assets<ColorMaterial>>,
         t: &Transform
     ) -> impl Bundle {
 
-        let wheel_size = 4.0;
+        let wheel_radius = Radius(10.0);
 
         (
-            Axle::REAR,
-            Name::new("Rear Axel (Cassette)"),
-            Disc {
-                center: Point {x: 0.0, y: 0.0},
-                radius: wheel_size
-            },
-            Radius(wheel_size as f32),
+            // Axle::REAR,
+            Cog::RearCassette,
+            Name::new("Rear Cassette"),
+            wheel_radius,
             RigidBody::Dynamic,
-            Collider::circle(wheel_size as f64),
+            Collider::circle(wheel_radius.0 as f64),
             CollisionMargin(1.0),
             Mass::new(1.0),
             Friction::new(0.99),
             Restitution::new(0.0),
             SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
-            Mesh2d(meshes.add(Circle::new(wheel_size as f32)).into()),
+            Mesh2d(meshes.add(Circle::new(wheel_radius.0 as f32)).into()),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
             //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
@@ -171,6 +166,7 @@ impl GroupsetPlugin {
             // })),
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(RED))),
             CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset),
+            // GlobalTransform::default(),
 
             t.clone()
         )
