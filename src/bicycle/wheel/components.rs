@@ -1,6 +1,6 @@
 use bevy::prelude::Component;
 
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BicycleWheel {
     Front,
     Back,

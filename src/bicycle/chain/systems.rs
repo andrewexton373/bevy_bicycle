@@ -12,7 +12,7 @@ impl ChainPlugin {
     pub fn reset_chain(
         mut commands: Commands,
         // axles: Query<(&Axle, Option<&Disc>, &Transform)>,
-        cogs: Query<(&Cog, &Radius, &GlobalTransform)>,
+        cogs: Query<(&Cog, &Radius, &Position)>,
 
         keys: Res<ButtonInput<KeyCode>>,
 
@@ -26,14 +26,12 @@ impl ChainPlugin {
                 println!("{:?}", cog);
 
                 let larger_disc = Disc {
-                    center: Point {x: transform.translation().x as f64, y: transform.translation().y as f64},
+                    center: Point {x: transform.x as f64, y: transform.y as f64},
                     radius: radius.0 as f64 + 0.001
                 };
 
-                
-
                 let poly = larger_disc.simplify_disc_as_polygon(40).iter().map(|point| {
-                    Point {x: point.x + transform.translation().x as f64, y: point.y + transform.translation().y as f64}
+                    Point {x: point.x as f64, y: point.y as f64}
                 }).collect::<Vec<Point>>();
                 point_set.extend(poly);
 
@@ -54,9 +52,9 @@ impl ChainPlugin {
     }
 
     pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
-        let link_radius = 0.01;
+        let link_radius = 0.05;
         let r = links[0].distance(&links[1]);
-        let compliance: f64 = 0.000000000001;
+        let compliance: f64 = 0.0000000001;
 
         commands.spawn((Chain, GlobalTransform::default())).with_children(|parent| {
             let mut previous_link = None;

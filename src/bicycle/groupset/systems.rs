@@ -110,7 +110,7 @@ impl GroupsetPlugin {
             //     alpha_mode: AlphaMode::Blend,
             // })),
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(GREEN))),
-            CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset),
+            CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset.to_bits() | GameLayer::World.to_bits()),
             // GlobalTransform::default(),
             t.clone()
 
@@ -165,7 +165,7 @@ impl GroupsetPlugin {
             //     alpha_mode: AlphaMode::Blend,
             // })),
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(RED))),
-            CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset),
+            CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset.to_bits() | GameLayer::World.to_bits()),
             // GlobalTransform::default(),
 
             t.clone()

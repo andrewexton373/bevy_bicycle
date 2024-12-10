@@ -2,7 +2,7 @@ use std::iter::Map;
 
 use avian2d::prelude::*;
 use bevy::{
-    color::palettes::css::{BLACK, GREEN}, ecs::system::{ExclusiveSystemParamFunction, RunSystemOnce, SystemState}, input::mouse::{MouseScrollUnit, MouseWheel}, math::{dvec2, DVec2}, prelude::*, sprite::MaterialMesh2dBundle, state::commands, utils::hashbrown::HashMap
+    color::palettes::css::{BLACK, BLUE, GREEN, PINK}, ecs::system::{ExclusiveSystemParamFunction, RunSystemOnce, SystemState}, input::mouse::{MouseScrollUnit, MouseWheel}, math::{dvec2, DVec2}, prelude::*, sprite::MaterialMesh2dBundle, state::commands, utils::hashbrown::HashMap
 };
 
 use crate::CustomMaterial;
@@ -42,7 +42,8 @@ pub enum GameLayer {
 pub enum AttachmentPoint {
     FrontWheelFork,
     RearWheelFork,
-    BottomBracket
+    BottomBracket,
+    WheelCassette
 }
 
 impl AttachmentPoint {
@@ -51,6 +52,7 @@ impl AttachmentPoint {
             AttachmentPoint::FrontWheelFork => "Front Wheel Fork".to_string(),
             AttachmentPoint::RearWheelFork => "Rear Wheel Fork".to_string(),
             AttachmentPoint::BottomBracket => "Bottom Bracket".to_string(),
+            AttachmentPoint::WheelCassette => "Wheel Cassette".to_string()
         }
     }
 }
@@ -94,6 +96,8 @@ impl BicycleFrame {
         attachment_points.insert(AttachmentPoint::BottomBracket, self.bottom_bracket);
         attachment_points.insert(AttachmentPoint::FrontWheelFork, self.front_hub);
         attachment_points.insert(AttachmentPoint::RearWheelFork, self.rear_hub);
+        attachment_points.insert(AttachmentPoint::WheelCassette, self.rear_hub);
+
         
         attachment_points.clone()
     }
@@ -106,6 +110,7 @@ impl BicyclePlugin {
     ) {
         commands.spawn((
             Bicycle,
+            RigidBody::Dynamic,
             Name::new("Bicycle"),
             Transform::default(),
             InheritedVisibility::default()
@@ -131,7 +136,6 @@ impl BicyclePlugin {
             RigidBody::Dynamic,
             Visibility::Inherited,
             frame_collider,
-            // Sensor,
             MassPropertiesBundle {
                 mass: Mass::new(10.0),
                 ..default()
@@ -143,18 +147,20 @@ impl BicyclePlugin {
             let attachment_ent = commands.spawn((
                 *attachment_point,
                 Name::new(attachment_point.name()),
-                Sensor,
+                RigidBody::Dynamic,
                 Collider::circle(2.0),
-                DebugRender::default().with_collider_color(GREEN.into()),
+                DebugRender::default().with_collider_color(BLUE.into()),
                 Visibility::Inherited,
                 Transform::from_translation(pos.extend(0.0)),
             )).id();
 
-            commands.entity(frame_id).add_child(attachment_ent);
+            // commands.entity(frame_id).add_child(attachment_ent);
+
+            commands.spawn(FixedJoint::new(frame_id, attachment_ent).with_local_anchor_1(pos.as_dvec2()));
 
         }
 
-        commands.entity(bicycle_ent).add_child(frame_id);
+        // commands.entity(bicycle_ent).add_child(frame_id);
 
         commands.trigger(SpawnWheelEvent {
             wheel: BicycleWheel::Front
@@ -203,7 +209,7 @@ impl BicyclePlugin {
         let wheel = commands.spawn((
             evt.wheel,
             Name::new("Wheel"),
-            RigidBody::Kinematic,
+            RigidBody::Dynamic,
             Collider::circle(BicycleWheel::size() as f64),
             DebugRender::default().with_collider_color(BLACK.into()),
             CollisionMargin(1.0),

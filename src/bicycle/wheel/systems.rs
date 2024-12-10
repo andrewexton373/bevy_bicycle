@@ -26,7 +26,7 @@ impl WheelPlugin {
         let wheel = commands.spawn((
             evt.wheel,
             Name::new("Wheel"),
-            RigidBody::Kinematic,
+            RigidBody::Dynamic,
             Collider::circle(BicycleWheel::size() as f64),
             DebugRender::default().with_collider_color(BLACK.into()),
             CollisionMargin(1.0),
