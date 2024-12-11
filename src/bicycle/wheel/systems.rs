@@ -58,6 +58,11 @@ impl WheelPlugin {
         if evt.wheel ==  BicycleWheel::Back {
             commands.spawn((
                 Name::new("Wheel Joint"),
+
+                // FixedJoint::new(cassette_ent, wheel)
+                //     .with_angular_velocity_damping(0.0)
+                //     .with_linear_velocity_damping(0.0),
+
                 RevoluteJoint::new(cassette_ent, wheel)
                     .with_compliance(0.0)
                     .with_angular_velocity_damping(0.0)

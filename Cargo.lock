@@ -378,7 +378,9 @@ dependencies = [
  "avian2d",
  "bevy",
  "bevy-inspector-egui",
+ "bevy_dylib",
  "bevy_egui",
+ "itertools",
 ]
 
 [[package]]
@@ -639,6 +641,15 @@ dependencies = [
  "bevy_utils",
  "const-fnv1a-hash",
  "sysinfo",
+]
+
+[[package]]
+name = "bevy_dylib"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2b0c60e568493ac23c001d22f47b99818efe1e992253e2ab3fdb69603b2aa1c"
+dependencies = [
+ "bevy_internal",
 ]
 
 [[package]]

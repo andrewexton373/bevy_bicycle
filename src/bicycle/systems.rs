@@ -9,8 +9,6 @@ use crate::CustomMaterial;
 
 use super::{components::{Bicycle, BicycleFrame, Frame}, groupset::events::SpawnGroupsetEvent, plugin::BicyclePlugin, wheel::{components::BicycleWheel, events::SpawnWheelEvent}};
 
-
-
 #[derive(PhysicsLayer, Default)]
 pub enum GameLayer {
     #[default]
@@ -20,8 +18,6 @@ pub enum GameLayer {
     AttachmentPoints,
     Groupset
 }
-
-
 
 #[derive(Component, PartialEq, Eq, Hash, Debug, Clone, Copy)]
 pub enum AttachmentPoint {

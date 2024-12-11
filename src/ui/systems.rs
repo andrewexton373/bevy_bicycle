@@ -18,5 +18,6 @@ impl UIPlugin {
                 ui.label(format!("RPM {:?} {:.2}", wheel, rpm));
             }
         });
+        
     }
 }

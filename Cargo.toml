@@ -8,6 +8,8 @@ avian2d = { git = "https://github.com/Jondolf/avian.git", branch = "main", defau
 bevy = { version = "0.15" }
 bevy_egui = "0.31.1"
 bevy-inspector-egui = "0.28"
+bevy_dylib = "0.15.0"
+itertools = "0.13.0"
 # bevy-parallax = {git = "https://github.com/Corrosive-Games/bevy-parallax.git"}
 
 # Enable max optimizations for dependencies, but not for our code:
