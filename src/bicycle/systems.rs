@@ -1,19 +1,9 @@
-use std::iter::Map;
 
 use avian2d::prelude::*;
-use bevy::{
-    color::palettes::css::{BLACK, GREEN},
-    ecs::system::{ExclusiveSystemParamFunction, RunSystemOnce, SystemState},
-    input::mouse::{MouseScrollUnit, MouseWheel},
-    math::{dvec2, DVec2},
-    prelude::*,
-    sprite::MaterialMesh2dBundle,
-    state::commands,
-    utils::hashbrown::HashMap,
-};
+use bevy::prelude::*;
 
 use super::{
-    components::{Bicycle, BicycleFrame, Frame},
+    components::{Bicycle, BicycleFrame},
     groupset::events::SpawnGroupsetEvent,
     plugin::BicyclePlugin,
     wheel::{components::BicycleWheel, events::SpawnWheelEvent},

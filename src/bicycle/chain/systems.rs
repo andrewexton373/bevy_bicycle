@@ -18,7 +18,7 @@ impl ChainPlugin {
         keys: Res<ButtonInput<KeyCode>>,
     ) {
         if keys.just_pressed(KeyCode::KeyR) {
-            if let Some(chain) = chain.get_single_mut().ok() {
+            if let Ok(chain) = chain.get_single_mut() {
                 commands.entity(chain.0).despawn_recursive();
             }
 
@@ -30,8 +30,8 @@ impl ChainPlugin {
 
                 let larger_disc = Disc {
                     center: Point {
-                        x: transform.x as f64,
-                        y: transform.y as f64,
+                        x: transform.x,
+                        y: transform.y,
                     },
                     radius: radius.0 as f64 + 0.8,
                 };
@@ -40,8 +40,8 @@ impl ChainPlugin {
                     .simplify_disc_as_polygon(40)
                     .iter()
                     .map(|point| Point {
-                        x: point.x as f64,
-                        y: point.y as f64,
+                        x: point.x,
+                        y: point.y,
                     })
                     .collect::<Vec<Point>>();
                 point_set.extend(poly);
@@ -53,10 +53,10 @@ impl ChainPlugin {
     }
 
     pub fn generate_chain_link_points_from_point_set(points: &Vec<Point>) -> Vec<Point> {
-        let convex_hull = gift_wrapping(&points);
-        let equidistant_points = equidistant_points_on_polygon(&convex_hull, 50);
+        let convex_hull = gift_wrapping(points);
+        
 
-        equidistant_points
+        equidistant_points_on_polygon(&convex_hull, 50)
     }
 
     pub fn generate_link(pos: &Point) -> impl Bundle {
@@ -99,7 +99,7 @@ impl ChainPlugin {
                     if previous_link.is_some() {
                         parent.spawn(
                             DistanceJoint::new(previous_link.unwrap(), current_link)
-                                .with_rest_length(r as f64)
+                                .with_rest_length(r)
                                 .with_compliance(compliance),
                         );
                     }
@@ -109,7 +109,7 @@ impl ChainPlugin {
                 // Complete the Loop
                 parent.spawn(
                     DistanceJoint::new(*link_ents.first().unwrap(), *link_ents.last().unwrap())
-                        .with_rest_length(r as f64)
+                        .with_rest_length(r)
                         .with_compliance(compliance),
                 );
             });

@@ -5,7 +5,7 @@ pub mod world;
 
 use avian2d::{
     math::Vector,
-    prelude::{Gravity, Joint, Physics, PhysicsDebugPlugin, SubstepCount},
+    prelude::{Gravity, Joint, PhysicsDebugPlugin, SubstepCount},
     PhysicsPlugins,
 };
 use bevy::{

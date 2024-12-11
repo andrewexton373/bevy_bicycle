@@ -1,27 +1,19 @@
 use avian2d::prelude::*;
 use bevy::{
-    color::palettes::css::{GREEN, RED, WHEAT},
-    ecs::entity,
-    input::{
-        keyboard::KeyboardInput,
-        mouse::{MouseScrollUnit, MouseWheel},
-    },
+    color::palettes::css::{GREEN, RED},
+    input::mouse::{MouseScrollUnit, MouseWheel},
     prelude::*,
-    state::commands,
 };
 
-use crate::{
-    bicycle::{
+use crate::bicycle::{
         components::{BicycleFrame, FrameGeometry},
         groupset::events::SpawnAttachedEvent,
         systems::GameLayer,
         wheel::components::BicycleWheel,
-    },
-    CustomMaterial,
-};
+    };
 
 use super::{
-    components::{Axle, Cog, Disc, Groupset, Point, Radius},
+    components::{Cog, Radius},
     events::SpawnGroupsetEvent,
     plugin::GroupsetPlugin,
 };
@@ -141,7 +133,7 @@ impl GroupsetPlugin {
             Friction::new(1.0),
             Restitution::new(0.0),
             SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
-            Mesh2d(meshes.add(Circle::new(wheel_radius.0 as f32)).into()),
+            Mesh2d(meshes.add(Circle::new(wheel_radius.0))),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
             //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
@@ -153,7 +145,7 @@ impl GroupsetPlugin {
                 GameLayer::Groupset.to_bits() | GameLayer::World.to_bits(),
             ),
             // GlobalTransform::default(),
-            t.clone(),
+            *t,
         )
     }
 
@@ -196,7 +188,7 @@ impl GroupsetPlugin {
             Friction::new(1.0),
             Restitution::new(0.0),
             SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
-            Mesh2d(meshes.add(Circle::new(wheel_radius.0 as f32)).into()),
+            Mesh2d(meshes.add(Circle::new(wheel_radius.0))),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
             //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
@@ -208,7 +200,7 @@ impl GroupsetPlugin {
                 GameLayer::Groupset.to_bits() | GameLayer::World.to_bits(),
             ),
             // GlobalTransform::default(),
-            t.clone(),
+            *t,
         )
     }
 }

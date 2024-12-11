@@ -1,6 +1,5 @@
 use bevy::app::Plugin;
 
-use crate::bicycle::plugin::BicyclePlugin;
 
 use super::events::SpawnWheelEvent;
 

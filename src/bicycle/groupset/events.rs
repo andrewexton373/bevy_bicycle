@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, Event};
+use bevy::prelude::Event;
 
 use super::components::Cog;
 

@@ -1,11 +1,9 @@
-use itertools::Itertools;
-use std::{collections::BTreeMap, iter::Map}; // itertools = "0.8"
+use std::collections::BTreeMap; // itertools = "0.8"
 
 use avian2d::prelude::Collider;
 use bevy::{
-    math::{DVec2, Vec2},
+    math::Vec2,
     prelude::Component,
-    utils::HashMap,
 };
 
 // use super::systems::AttachmentPoint;
@@ -28,6 +26,12 @@ pub enum FrameGeometry {
 #[derive(Component)]
 pub struct BicycleFrame {
     pub gemometry: BTreeMap<FrameGeometry, Vec2>,
+}
+
+impl Default for BicycleFrame {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl BicycleFrame {
@@ -94,9 +98,8 @@ impl BicycleFrame {
             stem_clamp_to_front_hub,
         ];
 
-        let frame_collider =
-            Collider::convex_decomposition(frame_points_all_dvec2, frame_points_all_indicies);
+        
 
-        frame_collider
+        Collider::convex_decomposition(frame_points_all_dvec2, frame_points_all_indicies)
     }
 }

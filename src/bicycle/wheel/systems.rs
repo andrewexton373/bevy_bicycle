@@ -1,14 +1,12 @@
 use avian2d::prelude::*;
 use bevy::{
     color::palettes::css::BLACK,
-    input::mouse::{MouseScrollUnit, MouseWheel},
     prelude::*,
 };
 
 use crate::{
     bicycle::{
         components::{BicycleFrame, FrameGeometry},
-        groupset::components::Cog,
         systems::GameLayer,
     },
     CustomMaterial,
@@ -53,7 +51,7 @@ impl WheelPlugin {
                 Friction::new(1.0),
                 Restitution::new(0.0),
                 SweptCcd::default(),
-                Mesh2d(meshes.add(Circle::new(BicycleWheel::size())).into()),
+                Mesh2d(meshes.add(Circle::new(BicycleWheel::size()))),
                 MeshMaterial2d(custom_materials.add(CustomMaterial {
                     color: LinearRgba::WHITE,
                     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),

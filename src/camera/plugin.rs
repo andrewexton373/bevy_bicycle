@@ -1,4 +1,3 @@
-use avian2d::prelude::*;
 use bevy::prelude::*;
 // use bevy_parallax::ParallaxSystems;
 
