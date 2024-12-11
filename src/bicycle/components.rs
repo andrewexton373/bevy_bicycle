@@ -6,8 +6,6 @@ use bevy::{math::{DVec2, Vec2}, prelude::Component, utils::HashMap};
 
 // use super::systems::AttachmentPoint;
 
-
-
 #[derive(Component)]
 pub struct Bicycle;
 

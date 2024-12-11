@@ -3,7 +3,7 @@ use core::f64;
 use avian2d::prelude::*;
 use bevy::{math::vec3, prelude::*};
 
-use crate::bicycle::{groupset::components::{Axle, Cog, Disc, Point, Radius}, systems::GameLayer};
+use crate::bicycle::{groupset::components::{Cog, Disc, Point, Radius}, systems::GameLayer};
 
 use super::{components::Chain, plugin::ChainPlugin};
 
@@ -11,12 +11,9 @@ impl ChainPlugin {
 
     pub fn reset_chain(
         mut commands: Commands,
-        // axles: Query<(&Axle, Option<&Disc>, &Transform)>,
         mut chain: Query<(Entity, &Chain)>,
         cogs: Query<(&Cog, &Radius, &Position)>,
-
         keys: Res<ButtonInput<KeyCode>>,
-
     ) {
         if keys.just_pressed(KeyCode::KeyR) {
 
