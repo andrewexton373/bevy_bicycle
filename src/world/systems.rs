@@ -18,9 +18,11 @@ impl WorldPlugin {
             Friction::new(0.95),
             Restitution::new(0.0),
             SweptCcd::default(),
-            Mesh2d(meshes
-                .add(Rectangle::new(width as f32, height as f32))
-                .into()),
+            Mesh2d(
+                meshes
+                    .add(Rectangle::new(width as f32, height as f32))
+                    .into(),
+            ),
             MeshMaterial2d(materials.add(ColorMaterial::from_color(GRAY))),
             Transform::from_xyz(0.0, -200.0, 10.0),
         ));

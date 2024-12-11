@@ -46,7 +46,7 @@ impl Point {
 #[derive(Component, PartialEq, Debug, Clone, Copy)]
 pub struct Disc {
     pub center: Point,
-    pub radius: f64
+    pub radius: f64,
 }
 
 impl Disc {

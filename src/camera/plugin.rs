@@ -9,13 +9,13 @@ impl Plugin for CameraPlugin {
         app.add_systems(Startup, CameraPlugin::setup_camera)
             .add_systems(Update, CameraPlugin::zoom_scale);
 
-            // .add_systems(
-            //     PostUpdate,(
-            //     CameraPlugin::camera_follow
-            //         .after(PhysicsSet::Sync)
-            //         .before(TransformSystem::TransformPropagate)
-            //         // .before(ParallaxSystems),
-            
-            // ));
+        // .add_systems(
+        //     PostUpdate,(
+        //     CameraPlugin::camera_follow
+        //         .after(PhysicsSet::Sync)
+        //         .before(TransformSystem::TransformPropagate)
+        //         // .before(ParallaxSystems),
+
+        // ));
     }
 }

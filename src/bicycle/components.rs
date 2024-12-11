@@ -1,8 +1,12 @@
-use std::{collections::BTreeMap, iter::Map};
-use itertools::Itertools;  // itertools = "0.8"
+use itertools::Itertools;
+use std::{collections::BTreeMap, iter::Map}; // itertools = "0.8"
 
 use avian2d::prelude::Collider;
-use bevy::{math::{DVec2, Vec2}, prelude::Component, utils::HashMap};
+use bevy::{
+    math::{DVec2, Vec2},
+    prelude::Component,
+    utils::HashMap,
+};
 
 // use super::systems::AttachmentPoint;
 
@@ -18,7 +22,7 @@ pub enum FrameGeometry {
     FrontHub = 2,
     BottomBracket = 3,
     SeatClamp = 4,
-    StemClamp = 5
+    StemClamp = 5,
 }
 
 #[derive(Component)]
@@ -45,29 +49,54 @@ impl BicycleFrame {
         let frame_points_all: Vec<Vec2> = self.gemometry.iter().map(|item| *item.1).collect();
         let frame_points_all_dvec2 = frame_points_all.iter().map(|v| v.as_dvec2()).collect();
 
-        let key_index = |key: &FrameGeometry| {
-            self.gemometry.keys().enumerate().find_map(|(i, k)| {
-                if k == key {
-                    Some(i as u32)
-                } else {
-                    None
-                }
-            })
-        };
+        let key_index =
+            |key: &FrameGeometry| {
+                self.gemometry.keys().enumerate().find_map(|(i, k)| {
+                    if k == key {
+                        Some(i as u32)
+                    } else {
+                        None
+                    }
+                })
+            };
 
-        let rear_hub_to_bottom_bracket = [key_index(&FrameGeometry::RearHub).unwrap(), key_index(&FrameGeometry::BottomBracket).unwrap()];
-        let bottom_bracket_to_seat_clamp = [key_index(&FrameGeometry::BottomBracket).unwrap(), key_index(&FrameGeometry::SeatClamp).unwrap()];
-        let bottom_bracket_to_stem_clamp = [key_index(&FrameGeometry::BottomBracket).unwrap(), key_index(&FrameGeometry::StemClamp).unwrap()];
-        let seat_clamp_to_rear_hub = [key_index(&FrameGeometry::SeatClamp).unwrap(), key_index(&FrameGeometry::RearHub).unwrap()];
-        let seat_clamp_to_stem_clamp = [key_index(&FrameGeometry::SeatClamp).unwrap(), key_index(&FrameGeometry::StemClamp).unwrap()];
-        let stem_clamp_to_front_hub = [key_index(&FrameGeometry::StemClamp).unwrap(), key_index(&FrameGeometry::FrontHub).unwrap()];
+        let rear_hub_to_bottom_bracket = [
+            key_index(&FrameGeometry::RearHub).unwrap(),
+            key_index(&FrameGeometry::BottomBracket).unwrap(),
+        ];
+        let bottom_bracket_to_seat_clamp = [
+            key_index(&FrameGeometry::BottomBracket).unwrap(),
+            key_index(&FrameGeometry::SeatClamp).unwrap(),
+        ];
+        let bottom_bracket_to_stem_clamp = [
+            key_index(&FrameGeometry::BottomBracket).unwrap(),
+            key_index(&FrameGeometry::StemClamp).unwrap(),
+        ];
+        let seat_clamp_to_rear_hub = [
+            key_index(&FrameGeometry::SeatClamp).unwrap(),
+            key_index(&FrameGeometry::RearHub).unwrap(),
+        ];
+        let seat_clamp_to_stem_clamp = [
+            key_index(&FrameGeometry::SeatClamp).unwrap(),
+            key_index(&FrameGeometry::StemClamp).unwrap(),
+        ];
+        let stem_clamp_to_front_hub = [
+            key_index(&FrameGeometry::StemClamp).unwrap(),
+            key_index(&FrameGeometry::FrontHub).unwrap(),
+        ];
 
-        let frame_points_all_indicies: Vec<[u32; 2]> = vec![rear_hub_to_bottom_bracket, bottom_bracket_to_seat_clamp, seat_clamp_to_rear_hub, seat_clamp_to_stem_clamp, bottom_bracket_to_stem_clamp, stem_clamp_to_front_hub];
+        let frame_points_all_indicies: Vec<[u32; 2]> = vec![
+            rear_hub_to_bottom_bracket,
+            bottom_bracket_to_seat_clamp,
+            seat_clamp_to_rear_hub,
+            seat_clamp_to_stem_clamp,
+            bottom_bracket_to_stem_clamp,
+            stem_clamp_to_front_hub,
+        ];
 
         let frame_collider =
             Collider::convex_decomposition(frame_points_all_dvec2, frame_points_all_indicies);
 
         frame_collider
     }
-
 }

@@ -6,10 +6,7 @@ use crate::bicycle::sprocket::components::{Sprocket, SprocketOptions};
 use super::{components::SprocketInfo, plugin::SprocketPlugin};
 
 impl SprocketPlugin {
-    pub fn setup_sproket(
-        mut commands: Commands,
-        sprocket_info: ResMut<SprocketInfo>
-    ) {
+    pub fn setup_sproket(mut commands: Commands, sprocket_info: ResMut<SprocketInfo>) {
         let sproket = Sprocket::new(SprocketOptions {
             size: 3.0,
             teeth: 32,
@@ -30,7 +27,7 @@ impl SprocketPlugin {
                 Transform {
                     translation: Vec3::new(0.0, 100.0, 0.0),
                     ..default()
-                }
+                },
             ))
             .id();
     }

@@ -2,7 +2,6 @@ use avian2d::prelude::AngularVelocity;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
-
 use crate::bicycle::wheel::components::BicycleWheel;
 
 use super::plugin::UIPlugin;
@@ -18,6 +17,5 @@ impl UIPlugin {
                 ui.label(format!("RPM {:?} {:.2}", wheel, rpm));
             }
         });
-        
     }
 }

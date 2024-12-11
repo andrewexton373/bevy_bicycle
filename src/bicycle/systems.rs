@@ -2,11 +2,22 @@ use std::iter::Map;
 
 use avian2d::prelude::*;
 use bevy::{
-    color::palettes::css::{BLACK, GREEN}, ecs::system::{ExclusiveSystemParamFunction, RunSystemOnce, SystemState}, input::mouse::{MouseScrollUnit, MouseWheel}, math::{dvec2, DVec2}, prelude::*, sprite::MaterialMesh2dBundle, state::commands, utils::hashbrown::HashMap
+    color::palettes::css::{BLACK, GREEN},
+    ecs::system::{ExclusiveSystemParamFunction, RunSystemOnce, SystemState},
+    input::mouse::{MouseScrollUnit, MouseWheel},
+    math::{dvec2, DVec2},
+    prelude::*,
+    sprite::MaterialMesh2dBundle,
+    state::commands,
+    utils::hashbrown::HashMap,
 };
 
-
-use super::{components::{Bicycle, BicycleFrame, Frame}, groupset::events::SpawnGroupsetEvent, plugin::BicyclePlugin, wheel::{components::BicycleWheel, events::SpawnWheelEvent}};
+use super::{
+    components::{Bicycle, BicycleFrame, Frame},
+    groupset::events::SpawnGroupsetEvent,
+    plugin::BicyclePlugin,
+    wheel::{components::BicycleWheel, events::SpawnWheelEvent},
+};
 
 #[derive(PhysicsLayer, Default)]
 pub enum GameLayer {
@@ -15,61 +26,53 @@ pub enum GameLayer {
     Frame,
     Wheels,
     AttachmentPoints,
-    Groupset
+    Groupset,
 }
 
 impl BicyclePlugin {
-
-    pub fn init_bicycle(
-        mut commands: Commands,
-    ) {
+    pub fn init_bicycle(mut commands: Commands) {
         commands.spawn((
             Bicycle,
             Name::new("Bicycle"),
             Transform::default(),
-            InheritedVisibility::default()
-        ));           
+            InheritedVisibility::default(),
+        ));
     }
 
-    pub fn spawn_frame(
-        trigger: Trigger<OnAdd, Bicycle>,
-        mut commands: Commands,
-    ) {
-
+    pub fn spawn_frame(trigger: Trigger<OnAdd, Bicycle>, mut commands: Commands) {
         let bicycle_ent = trigger.entity();
 
         let bicycle_frame = BicycleFrame::new();
         let frame_collider = bicycle_frame.collider();
 
-        let frame_id = commands.spawn((
-            BicycleFrame::new(),
-            Name::new("Frame"),
-            Transform::default(),
-            RigidBody::Dynamic,
-            Visibility::Inherited,
-            frame_collider,
-            CollisionLayers::new(GameLayer::Frame, GameLayer::World),
-            // Sensor,
-            MassPropertiesBundle {
-                mass: Mass::new(10.0),
-                ..default()
-            },
-        )).id();
+        let frame_id = commands
+            .spawn((
+                BicycleFrame::new(),
+                Name::new("Frame"),
+                Transform::default(),
+                RigidBody::Dynamic,
+                Visibility::Inherited,
+                frame_collider,
+                CollisionLayers::new(GameLayer::Frame, GameLayer::World),
+                // Sensor,
+                MassPropertiesBundle {
+                    mass: Mass::new(10.0),
+                    ..default()
+                },
+            ))
+            .id();
 
         commands.trigger(SpawnWheelEvent {
-            wheel: BicycleWheel::Front
+            wheel: BicycleWheel::Front,
         });
 
         commands.trigger(SpawnWheelEvent {
-            wheel: BicycleWheel::Back
+            wheel: BicycleWheel::Back,
         });
 
         commands.trigger(SpawnGroupsetEvent);
 
-
         // commands.trigger(SpawnCrankEvent);
-
-
     }
 
     // pub fn spawn_crank(
@@ -110,7 +113,6 @@ impl BicyclePlugin {
     //     )).id();
 
     //     commands.entity(attachment_point_ent).add_child(joint);
-        
+
     // }
-    
 }

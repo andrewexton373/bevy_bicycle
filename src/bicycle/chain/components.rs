@@ -5,4 +5,3 @@ pub struct ChainPivot;
 
 #[derive(Component)]
 pub struct Chain;
-
