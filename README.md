@@ -1,6 +1,6 @@
 # Bevy Bicycle
 
-Bevy Bicycle is an attempt at using Bevy and Bevy Avian to create a 2D Bicyle Sandbox.
+Bevy Bicycle is an attempt at using Bevy and Bevy Avian to create a 2D Bicycle Sandbox.
 
 In the Future, I'd like to implement the ability to alter both the chainring and cassette cog sizes using a gui.
 
