@@ -4,7 +4,7 @@ use itertools::Itertools;  // itertools = "0.8"
 use avian2d::prelude::Collider;
 use bevy::{math::{DVec2, Vec2}, prelude::Component, utils::HashMap};
 
-use super::systems::AttachmentPoint;
+// use super::systems::AttachmentPoint;
 
 
 
@@ -72,19 +72,4 @@ impl BicycleFrame {
         frame_collider
     }
 
-    pub fn attachment_points(&self) -> HashMap<AttachmentPoint, Vec2> {
-        let mut attachment_points = HashMap::new();
-        attachment_points.insert(AttachmentPoint::BottomBracket, *self.gemometry.get(&FrameGeometry::BottomBracket).unwrap());
-        attachment_points.insert(AttachmentPoint::FrontWheelFork, *self.gemometry.get(&FrameGeometry::FrontHub).unwrap());
-        attachment_points.insert(AttachmentPoint::RearWheelFork, *self.gemometry.get(&FrameGeometry::RearHub).unwrap());
-        
-        attachment_points.clone()
-    }
-}
-
-#[derive(Component)]
-pub struct AttachmentPoints {
-    bottom_bracket: DVec2,
-    front_hub: DVec2,
-    rear_hub: DVec2
 }

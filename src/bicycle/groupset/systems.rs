@@ -1,22 +1,16 @@
 use avian2d::prelude::*;
 use bevy::{color::palettes::css::{GREEN, RED, WHEAT}, ecs::entity, input::{keyboard::KeyboardInput, mouse::{MouseScrollUnit, MouseWheel}}, prelude::*, state::commands};
 
-use crate::{bicycle::{components::{BicycleFrame, FrameGeometry}, groupset::events::SpawnAttachedEvent, systems::{AttachmentPoint, GameLayer}, wheel::components::BicycleWheel}, CustomMaterial};
+use crate::{bicycle::{components::{BicycleFrame, FrameGeometry}, groupset::events::SpawnAttachedEvent, systems::{GameLayer}, wheel::components::BicycleWheel}, CustomMaterial};
 
 use super::{components::{Axle, Cog, Disc, Groupset, Point, Radius}, events::SpawnGroupsetEvent, plugin::GroupsetPlugin};
 
 impl GroupsetPlugin {
 
     pub fn init_groupset(
-        trigger: Trigger<SpawnGroupsetEvent>,
-        attachment_points: Query<(Entity, &AttachmentPoint)>,
+        _: Trigger<SpawnGroupsetEvent>,
         mut commands: Commands
     ) {
-
-        // let groupset = commands.spawn((
-        //     Groupset,
-        //     Name::new("Groupset")
-        // )).id();
 
         commands.trigger(SpawnAttachedEvent {
             cog: Cog::FrontChainring
@@ -31,17 +25,14 @@ impl GroupsetPlugin {
     pub fn handle_spawn_component(
         trigger: Trigger<SpawnAttachedEvent>,
         mut commands: Commands,
-        // attachment_points: Query<(Entity, &AttachmentPoint, &Transform)>,
         frame: Query<(Entity, &BicycleFrame)>,
         wheels: Query<(Entity, &BicycleWheel)>,
 
         meshes: ResMut<Assets<Mesh>>,
         color_materials: ResMut<Assets<ColorMaterial>>,
     ) {
-        // let (ent, attachment_point, t) = attachment_points.get(trigger.entity()).unwrap();
 
         let cog = trigger.event().cog;
-
         let (frame_ent, frame) = frame.single();
 
         match cog {

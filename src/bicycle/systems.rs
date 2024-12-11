@@ -5,7 +5,6 @@ use bevy::{
     color::palettes::css::{BLACK, GREEN}, ecs::system::{ExclusiveSystemParamFunction, RunSystemOnce, SystemState}, input::mouse::{MouseScrollUnit, MouseWheel}, math::{dvec2, DVec2}, prelude::*, sprite::MaterialMesh2dBundle, state::commands, utils::hashbrown::HashMap
 };
 
-use crate::CustomMaterial;
 
 use super::{components::{Bicycle, BicycleFrame, Frame}, groupset::events::SpawnGroupsetEvent, plugin::BicyclePlugin, wheel::{components::BicycleWheel, events::SpawnWheelEvent}};
 
@@ -19,25 +18,6 @@ pub enum GameLayer {
     Groupset
 }
 
-#[derive(Component, PartialEq, Eq, Hash, Debug, Clone, Copy)]
-pub enum AttachmentPoint {
-    FrontWheelFork,
-    RearWheelFork,
-    BottomBracket
-}
-
-impl AttachmentPoint {
-    pub fn name(&self) -> String {
-        match self {
-            AttachmentPoint::FrontWheelFork => "Front Wheel Fork".to_string(),
-            AttachmentPoint::RearWheelFork => "Rear Wheel Fork".to_string(),
-            AttachmentPoint::BottomBracket => "Bottom Bracket".to_string(),
-        }
-    }
-}
-
-
-
 impl BicyclePlugin {
 
     pub fn init_bicycle(
@@ -50,8 +30,6 @@ impl BicyclePlugin {
             InheritedVisibility::default()
         ));           
     }
-
-    
 
     pub fn spawn_frame(
         trigger: Trigger<OnAdd, Bicycle>,
@@ -78,30 +56,6 @@ impl BicyclePlugin {
             },
         )).id();
 
-        // for (attachment_point, pos) in bicycle_frame.attachment_points().iter() {
-
-        //     let attachment_ent = commands.spawn((
-        //         *attachment_point,
-        //         Name::new(attachment_point.name()),
-        //         RigidBody::Dynamic,
-        //         Collider::circle(2.0),
-        //         DebugRender::default().with_collider_color(GREEN.into()),
-        //         Visibility::Inherited,
-        //         Transform::from_translation(pos.extend(0.0)),
-        //     )).id();
-
-        //     commands.spawn(
-        //         RevoluteJoint::new(frame_id, attachment_ent)
-        //             .with_local_anchor_1(pos.as_dvec2())
-        //             .with_angular_velocity_damping(0.0)
-        //             .with_linear_velocity_damping(0.0)
-        //     );
-        // }
-
-        commands.entity(bicycle_ent).add_child(frame_id);
-
-
-
         commands.trigger(SpawnWheelEvent {
             wheel: BicycleWheel::Front
         });
@@ -117,20 +71,6 @@ impl BicyclePlugin {
 
 
     }
-
-    // pub fn attachment_point(
-    //     attachment_point
-    // ) -> impl Bundle {
-    //     (
-    //         AttachmentPoint::BottomBracket,
-    //         Name::new("Bottom Bracket"),
-    //         RigidBody::Dynamic,
-    //         Sensor,
-    //         Collider::circle(1.0),
-    //         Visibility::Inherited,
-    //         Transform::from_translation(bottom_bracket.extend(0.0))
-    //     )
-    // }
 
     // pub fn spawn_crank(
     //     _trigger: Trigger<SpawnCrankEvent>,
