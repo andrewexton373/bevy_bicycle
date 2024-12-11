@@ -57,35 +57,40 @@ impl ChainPlugin {
         equidistant_points
     }
 
+    pub fn generate_link(pos: &Point) -> impl Bundle {
+        let link_radius: f64 = 0.5;
+        
+        (
+            RigidBody::Dynamic,
+            Collider::circle(link_radius),
+            SweptCcd::default(),
+            Friction::new(1.0),
+            LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
+            MassPropertiesBundle {
+                mass: Mass::new(0.01),
+                ..default()
+            },
+            Transform {
+                translation: vec3(pos.x as f32, pos.y as f32, 0.0),
+                ..default()
+            },
+            CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset)
+        )
+    }
+
     pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
-        let link_radius = 0.5;
         let r = links[0].distance(&links[1]);
-        let compliance: f64 = 0.0;
+        let compliance: f64 = 0.000001;
 
         commands.spawn((Chain, GlobalTransform::default())).with_children(|parent| {
             let mut previous_link = None;
 
             let mut link_ents = vec![];
     
-            for link in links[0..].iter() {
+            for pos in links[0..].iter() {
     
                 let current_link = parent
-                            .spawn((
-                                RigidBody::Dynamic,
-                                Collider::circle(link_radius),
-                                SweptCcd::default(),
-                                Friction::new(1.0),
-                                LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
-                                MassPropertiesBundle {
-                                    mass: Mass::new(0.01),
-                                    ..default()
-                                },
-                                Transform {
-                                    translation: vec3(link.x as f32, link.y as f32, 0.0),
-                                    ..default()
-                                },
-                                CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset)
-                            ))
+                            .spawn(ChainPlugin::generate_link(pos))
                             .id();
     
                     link_ents.push(current_link);
@@ -94,6 +99,7 @@ impl ChainPlugin {
                     parent.spawn(
                         DistanceJoint::new(previous_link.unwrap(), current_link)
                             .with_rest_length(r as f64)
+                            .with_compliance(compliance),
                     );
                 }
                 previous_link = Some(current_link);
