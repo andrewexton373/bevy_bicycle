@@ -11,7 +11,7 @@ pub enum Axle {
     REAR,
 }
 
-#[derive(Component, PartialEq, Debug)]
+#[derive(Component, PartialEq, Debug, Clone, Copy)]
 pub enum Cog {
     FrontChainring,
     RearCassette,

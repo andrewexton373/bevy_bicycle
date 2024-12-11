@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::{color::palettes::css::{GREEN, RED, WHEAT}, ecs::entity, input::{keyboard::KeyboardInput, mouse::{MouseScrollUnit, MouseWheel}}, prelude::*, state::commands};
 
-use crate::{bicycle::{groupset::events::SpawnAttachedEvent, systems::{AttachmentPoint, GameLayer}}, CustomMaterial};
+use crate::{bicycle::{components::{BicycleFrame, FrameGeometry}, groupset::events::SpawnAttachedEvent, systems::{AttachmentPoint, GameLayer}, wheel::components::BicycleWheel}, CustomMaterial};
 
 use super::{components::{Axle, Cog, Disc, Groupset, Point, Radius}, events::SpawnGroupsetEvent, plugin::GroupsetPlugin};
 
@@ -13,67 +13,84 @@ impl GroupsetPlugin {
         mut commands: Commands
     ) {
 
-        let groupset = commands.spawn((
-            Groupset,
-            Name::new("Groupset")
-        )).id();
+        // let groupset = commands.spawn((
+        //     Groupset,
+        //     Name::new("Groupset")
+        // )).id();
 
+        commands.trigger(SpawnAttachedEvent {
+            cog: Cog::FrontChainring
+        });
 
-        for (ent, attachment_point) in attachment_points.iter() {
-            match attachment_point {
-                AttachmentPoint::BottomBracket | AttachmentPoint::RearWheelFork => {
-                    commands.entity(ent).trigger(SpawnAttachedEvent);
-                },
-                _ => {
-
-                }
-            }
-        }
+        commands.trigger(SpawnAttachedEvent {
+            cog: Cog::RearCassette
+        });
 
     }
 
     pub fn handle_spawn_component(
         trigger: Trigger<SpawnAttachedEvent>,
         mut commands: Commands,
-        attachment_points: Query<(Entity, &AttachmentPoint, &Transform)>,
+        // attachment_points: Query<(Entity, &AttachmentPoint, &Transform)>,
+        frame: Query<(Entity, &BicycleFrame)>,
+        wheels: Query<(Entity, &BicycleWheel)>,
+
         meshes: ResMut<Assets<Mesh>>,
         color_materials: ResMut<Assets<ColorMaterial>>,
     ) {
-        let (ent, attachment_point, t) = attachment_points.get(trigger.entity()).unwrap();
+        // let (ent, attachment_point, t) = attachment_points.get(trigger.entity()).unwrap();
 
-        println!("{:?}", attachment_point);
+        let cog = trigger.event().cog;
 
-        match attachment_point {
-            AttachmentPoint::BottomBracket => {
-                let front_chainring = commands.spawn(GroupsetPlugin::front_chainring(meshes, color_materials, t)).id();
+        let (frame_ent, frame) = frame.single();
+
+        match cog {
+            Cog::FrontChainring => {
+                let pos = frame.gemometry.get(&FrameGeometry::BottomBracket).unwrap().as_dvec2();
+                let front_chainring = commands.spawn(GroupsetPlugin::front_chainring(meshes, color_materials, &Position::from(pos))).id();
                 
                 commands.spawn(
                     (
                         Name::new("Bottom Bracket / Chainring Revolute Joint"),
-                        RevoluteJoint::new(ent, front_chainring)
+                        RevoluteJoint::new(frame_ent, front_chainring)
+                            .with_local_anchor_1(frame.gemometry.get(&FrameGeometry::BottomBracket).unwrap().as_dvec2())
                             .with_angular_velocity_damping(0.0)
                             .with_linear_velocity_damping(0.0)
                     )
                 );
             },
-            AttachmentPoint::RearWheelFork => {
-                let rear_cassette = commands.spawn(GroupsetPlugin::rear_cassette(meshes, color_materials, t)).id();
+            Cog::RearCassette => {
+                let pos = frame.gemometry.get(&FrameGeometry::BottomBracket).unwrap().as_dvec2();
+
+                let rear_cassette = commands.spawn(GroupsetPlugin::rear_cassette(meshes, color_materials, &Position::from(pos))).id();
 
                 commands.spawn((
                     Name::new("Rear Wheel Fork / Cassette Revolute Joint"),
-                    RevoluteJoint::new(ent, rear_cassette)
+                    RevoluteJoint::new(frame_ent, rear_cassette)
+                    .with_local_anchor_1(frame.gemometry.get(&FrameGeometry::RearHub).unwrap().as_dvec2())
                         .with_angular_velocity_damping(0.0)
                         .with_linear_velocity_damping(0.0)
                 ));
-            }
-            _ => {println!("HIT!");}
+
+                let (wheel_ent, wheel) = wheels.iter().find(|item| item.1 == &BicycleWheel::Back).unwrap();
+
+
+                commands.spawn((
+                    Name::new("Rear Wheel / Cassette Fixed Joint"),
+                    FixedJoint::new(wheel_ent, rear_cassette)
+                    // .with_local_anchor_1(frame.gemometry.get(&FrameGeometry::RearHub).unwrap().as_dvec2())
+                        .with_angular_velocity_damping(0.0)
+                        .with_linear_velocity_damping(0.0)
+                ));
+            },
         }
+
     }
 
     pub fn front_chainring(
         mut meshes: ResMut<Assets<Mesh>>,
         mut color_materials: ResMut<Assets<ColorMaterial>>,
-        t: &Transform
+        t: &Position
     ) -> impl Bundle {
         let wheel_radius = Radius(5.0);
         (
@@ -111,7 +128,7 @@ impl GroupsetPlugin {
                 MouseScrollUnit::Line => {
                     for (cog, mut ang_vel) in cogs.iter_mut() {
                         if let Cog::FrontChainring = cog {
-                            ang_vel.0 += -2.0_f64 * (evt.y as f64);
+                            ang_vel.0 += -1.0_f64 * (evt.y as f64);
                             // ang_vel.0 += -10.0 as f64 * evt.y as f64;
                             println!("TURN CRANK: ang_vel {}", ang_vel.0);
                         }
@@ -125,7 +142,7 @@ impl GroupsetPlugin {
     pub fn rear_cassette(
         mut meshes: ResMut<Assets<Mesh>>,
         mut color_materials: ResMut<Assets<ColorMaterial>>,
-        t: &Transform
+        t: &Position
     ) -> impl Bundle {
 
         let wheel_radius = Radius(10.0);

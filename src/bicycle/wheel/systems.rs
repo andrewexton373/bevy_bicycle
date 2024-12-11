@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::{color::palettes::css::BLACK, input::mouse::{MouseScrollUnit, MouseWheel}, prelude::*};
 
-use crate::{bicycle::{groupset::components::Cog, systems::{AttachmentPoint, GameLayer}}, CustomMaterial};
+use crate::{bicycle::{components::{BicycleFrame, FrameGeometry}, groupset::components::Cog, systems::{AttachmentPoint, GameLayer}}, CustomMaterial};
 
 use super::{components::BicycleWheel, events::SpawnWheelEvent, plugin::WheelPlugin};
 
@@ -11,6 +11,7 @@ impl WheelPlugin {
         trigger: Trigger<SpawnWheelEvent>,
         mut commands: Commands,
         attachment_points: Query<(Entity, &AttachmentPoint, &Transform)>,
+        frame: Query<(Entity, &BicycleFrame)>,
         cogs: Query<(Entity, &Cog)>,
         mut meshes: ResMut<Assets<Mesh>>,
         mut custom_materials: ResMut<Assets<CustomMaterial>>,
@@ -18,11 +19,23 @@ impl WheelPlugin {
     ) {
     
         let evt = trigger.event();
-    
-        let (attachment_point_ent, _, t) =  match evt.wheel {
-            BicycleWheel::Front => attachment_points.iter().find(|(_, attachment_point, _)| *attachment_point == &AttachmentPoint::FrontWheelFork).unwrap(),
-            BicycleWheel::Back => attachment_points.iter().find(|(_, attachment_point, _)| *attachment_point == &AttachmentPoint::RearWheelFork).unwrap(),
+        
+        let (frame_ent, frame) = frame.single();
+
+        
+
+        let mounting_point = match evt.wheel {
+            BicycleWheel::Front => frame.gemometry.get_key_value(&FrameGeometry::FrontHub).unwrap(),
+            BicycleWheel::Back => frame.gemometry.get_key_value(&FrameGeometry::RearHub).unwrap(),
         };
+
+
+
+    
+        // let (attachment_point_ent, _, t) =  match evt.wheel {
+        //     BicycleWheel::Front => attachment_points.iter().find(|(_, attachment_point, _)| *attachment_point == &AttachmentPoint::FrontWheelFork).unwrap(),
+        //     BicycleWheel::Back => attachment_points.iter().find(|(_, attachment_point, _)| *attachment_point == &AttachmentPoint::RearWheelFork).unwrap(),
+        // };
     
         let wheel = commands.spawn((
             evt.wheel,
@@ -42,33 +55,18 @@ impl WheelPlugin {
                 color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
                 alpha_mode: AlphaMode::Blend,
             })),
-            t.clone()
+            Position::from(mounting_point.1.as_dvec2())
+            // t.clone()
         )).id();
     
         let joint = commands.spawn((
             Name::new("Wheel Joint"),
-            RevoluteJoint::new(attachment_point_ent, wheel)
+            RevoluteJoint::new(frame_ent, wheel)
+                .with_local_anchor_1(mounting_point.1.as_dvec2())
                 .with_compliance(0.0)
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(0.0),
         )).id();
-
-        let (cassette_ent, _) = cogs.iter().find(|item| item.1 == &Cog::RearCassette).unwrap();
-
-        if evt.wheel ==  BicycleWheel::Back {
-            commands.spawn((
-                Name::new("Wheel Joint"),
-
-                // FixedJoint::new(cassette_ent, wheel)
-                //     .with_angular_velocity_damping(0.0)
-                //     .with_linear_velocity_damping(0.0),
-
-                RevoluteJoint::new(cassette_ent, wheel)
-                    .with_compliance(0.0)
-                    .with_angular_velocity_damping(0.0)
-                    .with_linear_velocity_damping(0.0)
-            ));
-        }
     
     }
 

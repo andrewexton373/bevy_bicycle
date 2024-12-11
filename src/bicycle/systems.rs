@@ -64,7 +64,7 @@ impl BicyclePlugin {
         let frame_collider = bicycle_frame.collider();
 
         let frame_id = commands.spawn((
-            Frame,
+            BicycleFrame::new(),
             Name::new("Frame"),
             Transform::default(),
             RigidBody::Dynamic,
@@ -78,29 +78,28 @@ impl BicyclePlugin {
             },
         )).id();
 
-        for (attachment_point, pos) in bicycle_frame.attachment_points().iter() {
+        // for (attachment_point, pos) in bicycle_frame.attachment_points().iter() {
 
-            let attachment_ent = commands.spawn((
-                *attachment_point,
-                Name::new(attachment_point.name()),
-                RigidBody::Dynamic,
-                Collider::circle(2.0),
-                DebugRender::default().with_collider_color(GREEN.into()),
-                Visibility::Inherited,
-                Transform::from_translation(pos.extend(0.0)),
-            )).id();
+        //     let attachment_ent = commands.spawn((
+        //         *attachment_point,
+        //         Name::new(attachment_point.name()),
+        //         RigidBody::Dynamic,
+        //         Collider::circle(2.0),
+        //         DebugRender::default().with_collider_color(GREEN.into()),
+        //         Visibility::Inherited,
+        //         Transform::from_translation(pos.extend(0.0)),
+        //     )).id();
 
-            commands.spawn(
-                RevoluteJoint::new(frame_id, attachment_ent)
-                    .with_local_anchor_1(pos.as_dvec2())
-                    .with_angular_velocity_damping(0.0)
-                    .with_linear_velocity_damping(0.0)
-            );
-        }
+        //     commands.spawn(
+        //         RevoluteJoint::new(frame_id, attachment_ent)
+        //             .with_local_anchor_1(pos.as_dvec2())
+        //             .with_angular_velocity_damping(0.0)
+        //             .with_linear_velocity_damping(0.0)
+        //     );
+        // }
 
         commands.entity(bicycle_ent).add_child(frame_id);
 
-        commands.trigger(SpawnGroupsetEvent);
 
 
         commands.trigger(SpawnWheelEvent {
@@ -110,6 +109,9 @@ impl BicyclePlugin {
         commands.trigger(SpawnWheelEvent {
             wheel: BicycleWheel::Back
         });
+
+        commands.trigger(SpawnGroupsetEvent);
+
 
         // commands.trigger(SpawnCrankEvent);
 
