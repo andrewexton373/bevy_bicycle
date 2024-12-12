@@ -51,7 +51,7 @@ fn main() {
         ))
         .insert_resource(ClearColor(Color::from(BLUE_400)))
         .insert_resource(Gravity(Vector::NEG_Y * 100.0))
-        .insert_resource(SubstepCount(50))
+        .insert_resource(SubstepCount(120))
         .run();
 }
 

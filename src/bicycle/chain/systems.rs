@@ -8,16 +8,25 @@ use crate::bicycle::{
     systems::GameLayer,
 };
 
-use super::{components::Chain, plugin::ChainPlugin};
+use super::{components::Chain, events::ResetChainEvent, plugin::ChainPlugin};
 
 impl ChainPlugin {
+
+    pub fn reset_chain_on_press_r(
+        keys: Res<ButtonInput<KeyCode>>,
+        mut commands: Commands,
+    ) {
+        if keys.just_pressed(KeyCode::KeyR) {
+            commands.trigger(ResetChainEvent);
+        }
+    }
+
     pub fn reset_chain(
+        _trigger: Trigger<ResetChainEvent>,
         mut commands: Commands,
         mut chain: Query<(Entity, &Chain)>,
         cogs: Query<(&Cog, &Radius, &Position)>,
-        keys: Res<ButtonInput<KeyCode>>,
     ) {
-        if keys.just_pressed(KeyCode::KeyR) {
             if let Ok(chain) = chain.get_single_mut() {
                 commands.entity(chain.0).despawn_recursive();
             }
@@ -33,11 +42,11 @@ impl ChainPlugin {
                         x: transform.x,
                         y: transform.y,
                     },
-                    radius: radius.0 as f64 + 1.0,
+                    radius: radius.0 as f64 + 1.35,
                 };
 
                 let poly = larger_disc
-                    .simplify_disc_as_polygon(30)
+                    .simplify_disc_as_polygon(60)
                     .iter()
                     .map(|point| Point {
                         x: point.x,
@@ -49,14 +58,14 @@ impl ChainPlugin {
 
             let chain_links = ChainPlugin::generate_chain_link_points_from_point_set(&point_set);
             ChainPlugin::setup_chain(&mut commands, chain_links);
-        }
+        
     }
 
     pub fn generate_chain_link_points_from_point_set(points: &Vec<Point>) -> Vec<Point> {
         let convex_hull = gift_wrapping(points);
         
 
-        equidistant_points_on_polygon(&convex_hull, 30)
+        equidistant_points_on_polygon(&convex_hull, 60)
     }
 
     pub fn generate_link(pos: &Point) -> impl Bundle {
@@ -66,7 +75,8 @@ impl ChainPlugin {
             RigidBody::Dynamic,
             Collider::circle(link_radius),
             SweptCcd::new_with_mode(SweepMode::NonLinear),
-            Friction::new(1.0),
+            CollisionMargin(0.05),
+            Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
             MassPropertiesBundle {
                 mass: Mass::new(0.01),
@@ -99,8 +109,8 @@ impl ChainPlugin {
                     if previous_link.is_some() {
                         parent.spawn(
                             DistanceJoint::new(previous_link.unwrap(), current_link)
-                                .with_angular_velocity_damping(0.99)
-                                .with_linear_velocity_damping(0.99)
+                                .with_angular_velocity_damping(0.01)
+                                .with_linear_velocity_damping(0.01)
 
                                 .with_rest_length(r)
                                 .with_compliance(compliance),
@@ -112,8 +122,8 @@ impl ChainPlugin {
                 // Complete the Loop
                 parent.spawn(
                     DistanceJoint::new(*link_ents.first().unwrap(), *link_ents.last().unwrap())
-                        .with_angular_velocity_damping(0.99)
-                        .with_linear_velocity_damping(0.99)
+                        .with_angular_velocity_damping(0.01)
+                        .with_linear_velocity_damping(0.01)
                         .with_rest_length(r)
                         .with_compliance(compliance),
                 );

@@ -1,12 +1,20 @@
 use avian2d::prelude::AngularVelocity;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
+use iyes_perf_ui::prelude::PerfUiDefaultEntries;
 
 use crate::bicycle::{groupset::components::Cog, wheel::components::BicycleWheel};
 
 use super::plugin::UIPlugin;
 
 impl UIPlugin {
+
+    pub fn performance_ui(
+        mut commands: Commands
+    ) {
+        commands.spawn(PerfUiDefaultEntries::default());
+    }
+
     pub fn ui_system(
         mut contexts: EguiContexts,
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,

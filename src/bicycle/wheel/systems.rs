@@ -50,7 +50,7 @@ impl WheelPlugin {
                 Mass::new(0.001),
                 Friction::new(1.0),
                 Restitution::new(0.001),
-                SweptCcd::default(),
+                SweptCcd::new_with_mode(SweepMode::NonLinear),
                 Mesh2d(meshes.add(Circle::new(BicycleWheel::size()))),
                 MeshMaterial2d(custom_materials.add(CustomMaterial {
                     color: LinearRgba::WHITE,

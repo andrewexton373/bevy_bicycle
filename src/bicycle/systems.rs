@@ -3,10 +3,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use super::{
-    components::{Bicycle, BicycleFrame},
-    groupset::events::SpawnGroupsetEvent,
-    plugin::BicyclePlugin,
-    wheel::{components::BicycleWheel, events::SpawnWheelEvent},
+    chain::events::ResetChainEvent, components::{Bicycle, BicycleFrame}, groupset::events::SpawnGroupsetEvent, plugin::BicyclePlugin, wheel::{components::BicycleWheel, events::SpawnWheelEvent}
 };
 
 #[derive(PhysicsLayer, Default)]
@@ -41,13 +38,12 @@ impl BicyclePlugin {
                 BicycleFrame::new(),
                 Name::new("Frame"),
                 Transform::default(),
-                RigidBody::Dynamic,
+                RigidBody::Kinematic,
                 Visibility::Inherited,
                 frame_collider,
                 CollisionLayers::new(GameLayer::Frame, GameLayer::World),
-                // Sensor,
                 MassPropertiesBundle {
-                    mass: Mass::new(10.0),
+                    mass: Mass::new(1.0),
                     ..default()
                 },
             ))

@@ -6,10 +6,7 @@ use bevy::{
 };
 
 use crate::bicycle::{
-        components::{BicycleFrame, FrameGeometry},
-        groupset::events::SpawnAttachedEvent,
-        systems::GameLayer,
-        wheel::components::BicycleWheel,
+        chain::events::ResetChainEvent, components::{BicycleFrame, FrameGeometry}, groupset::events::SpawnAttachedEvent, systems::GameLayer, wheel::components::BicycleWheel
     };
 
 use super::{
@@ -27,6 +24,9 @@ impl GroupsetPlugin {
         commands.trigger(SpawnAttachedEvent {
             cog: Cog::RearCassette,
         });
+
+        // commands.trigger(ResetChainEvent);
+
     }
 
     pub fn handle_spawn_component(
@@ -132,12 +132,12 @@ impl GroupsetPlugin {
             wheel_radius,
             RigidBody::Dynamic,
             Collider::circle(wheel_radius.0 as f64),
-            CollisionMargin(0.1),
+            CollisionMargin(1.0),
             AngularVelocity::default(),
             Mass::new(1.0),
-            Friction::new(1.0),
+            Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             Restitution::new(0.0),
-            SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
+            // SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
             Mesh2d(meshes.add(Circle::new(wheel_radius.0))),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
@@ -160,32 +160,59 @@ impl GroupsetPlugin {
         for (cog, mut ang_vel) in cogs.iter_mut() {
             if cog == &Cog::FrontChainring {
 
-                let ang_vel_to_rpm = |ang_vel: f64| { -ang_vel * 60.0 / (2.0 * std::f64::consts::PI) };
-                let rpm_to_ang_vel = |rpm: f64| { rpm / 60.0 * (2.0 * std::f64::consts::PI) };
-
+                
             }
         }
+    }
+
+    pub fn ang_vel_to_rpm(ang_vel: f64) -> f64 {
+        -ang_vel * 60.0 / (2.0 * std::f64::consts::PI)
+    }
+
+    pub fn rpm_to_ang_vel(rpm: f64) -> f64 {
+        rpm / 60.0 * (2.0 * std::f64::consts::PI)
     }
 
     pub fn turn_crank(
         mut cogs: Query<(&Cog, &mut AngularVelocity, &mut ExternalTorque), With<Cog>>,
         mut mouse_wheel_evt: EventReader<MouseWheel>,
     ) {
-        for &evt in mouse_wheel_evt.read() {
-            match &evt.unit {
-                MouseScrollUnit::Line => {
-                    for (cog, mut ang_vel, mut torque) in cogs.iter_mut() {
-                        if let Cog::FrontChainring = cog {
-                            ang_vel.0 += -1.0_f64 * (evt.y as f64);
-                            // torque.apply_torque(1000.0 * (evt.y as f64));
-                            // ang_vel.0 += -10.0 as f64 * evt.y as f64;
-                            println!("TURN CRANK: ang_vel {}", ang_vel.0);
-                        }
-                    }
+
+        for (cog, mut ang_vel, mut torque) in cogs.iter_mut() {
+
+            if let Cog::FrontChainring = cog {
+                // torque.clear();
+
+                // for &evt in mouse_wheel_evt.read() {
+                //     match &evt.unit {
+                //         MouseScrollUnit::Line => {
+                //             // ang_vel.0 += -0.1_f64 * (evt.y as f64);
+                //             println!("evt {:?}", evt.y);
+
+                //             // if GroupsetPlugin::ang_vel_to_rpm(ang_vel.0).abs() > 90.0 {
+                //                 torque.apply_torque(8000.0 * (evt.y as f64));
+                //                 // *torque = *torque.with_persistence(true).apply_torque(200000.0 * (evt.y as f64));
+                //                 println!("Torqeing: {:?}", torque);
+                //             // }
+                            
+                //             // ang_vel.0 += -1.0 as f64 * evt.y as f64;
+                //             println!("TURN CRANK: ang_vel {}", ang_vel.0);
+                //         }
+                //         MouseScrollUnit::Pixel => {}
+                //     }
+                // }
+
+                if GroupsetPlugin::ang_vel_to_rpm(ang_vel.0).abs() > 90.0 {
+                    torque.clear();
+                    // println!("MAXRPM!");
+                } else {
+                    torque.apply_torque(-8000.0 as f64);
                 }
-                MouseScrollUnit::Pixel => {}
+
             }
+
         }
+
     }
 
     pub fn rear_cassette(
@@ -204,11 +231,11 @@ impl GroupsetPlugin {
             wheel_radius,
             RigidBody::Dynamic,
             Collider::circle(wheel_radius.0 as f64),
-            CollisionMargin(0.1),
-            Mass::new(1.0),
-            Friction::new(1.0),
+            CollisionMargin(1.0),
+            Mass::new(0.2),
+            Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             Restitution::new(0.0),
-            SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
+            // SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
             Mesh2d(meshes.add(Circle::new(wheel_radius.0))),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
