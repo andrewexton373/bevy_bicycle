@@ -37,7 +37,7 @@ impl ChainPlugin {
                 };
 
                 let poly = larger_disc
-                    .simplify_disc_as_polygon(40)
+                    .simplify_disc_as_polygon(30)
                     .iter()
                     .map(|point| Point {
                         x: point.x,
@@ -82,7 +82,7 @@ impl ChainPlugin {
 
     pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
         let r = links[0].distance(&links[1]);
-        let compliance: f64 = 0.000001;
+        let compliance: f64 = 0.0;
 
         commands
             .spawn((Chain, GlobalTransform::default()))
