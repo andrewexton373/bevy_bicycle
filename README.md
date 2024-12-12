@@ -2,10 +2,10 @@
 
 Bevy Bicycle is an attempt at using Bevy and Bevy Avian to create a 2D Bicycle Sandbox.
 
-In the Future, I'd like to implement the ability to alter both the chainring and cassette cog sizes using a gui.
+Using Bevy Egui, you can change both the chainring and the cassette radius.
 
 ## Controls
 
-Press R to setup the chain.
+Press R to reset the chain.
 
-![image info](./screenshots/Screenshot_20241209_230904.png)
+![image info](./screencaps/chain-stability.gif)
