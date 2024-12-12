@@ -104,8 +104,8 @@ impl ChainPlugin {
                     if previous_link.is_some() {
                         parent.spawn(
                             DistanceJoint::new(previous_link.unwrap(), current_link)
-                                .with_angular_velocity_damping(0.01)
-                                .with_linear_velocity_damping(0.01)
+                                .with_angular_velocity_damping(0.0)
+                                .with_linear_velocity_damping(0.0)
                                 .with_rest_length(r)
                                 .with_compliance(compliance),
                         );
@@ -116,8 +116,8 @@ impl ChainPlugin {
                 // Complete the Loop
                 parent.spawn(
                     DistanceJoint::new(*link_ents.first().unwrap(), *link_ents.last().unwrap())
-                        .with_angular_velocity_damping(0.01)
-                        .with_linear_velocity_damping(0.01)
+                        .with_angular_velocity_damping(0.0)
+                        .with_linear_velocity_damping(0.0)
                         .with_rest_length(r)
                         .with_compliance(compliance),
                 );
