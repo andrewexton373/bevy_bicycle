@@ -49,7 +49,7 @@ impl UIPlugin {
         mut contexts: EguiContexts,
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
         chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
-        mut chainring_radius: ResMut<ChainringRadius>,
+        chainring_radius: ResMut<ChainringRadius>,
     ) {
         egui::Window::new("Bicyle Statistics").show(contexts.ctx_mut(), |ui| {
             for (wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {

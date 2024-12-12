@@ -1,7 +1,7 @@
-use avian2d::{parry::na::clamp, prelude::*};
+use avian2d::prelude::*;
 use bevy::{
     color::palettes::css::{GREEN, RED},
-    input::mouse::{MouseScrollUnit, MouseWheel},
+    input::mouse::MouseWheel,
     prelude::*,
 };
 
@@ -205,7 +205,7 @@ impl GroupsetPlugin {
     }
 
     pub fn limit_crank_rpm(mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>) {
-        for (cog, mut ang_vel) in cogs.iter_mut() {
+        for (cog, ang_vel) in cogs.iter_mut() {
             if cog == &Cog::FrontChainring {}
         }
     }
@@ -220,9 +220,9 @@ impl GroupsetPlugin {
 
     pub fn turn_crank(
         mut cogs: Query<(&Cog, &mut AngularVelocity, &mut ExternalTorque), With<Cog>>,
-        mut mouse_wheel_evt: EventReader<MouseWheel>,
+        mouse_wheel_evt: EventReader<MouseWheel>,
     ) {
-        for (cog, mut ang_vel, mut torque) in cogs.iter_mut() {
+        for (cog, ang_vel, mut torque) in cogs.iter_mut() {
             if let Cog::FrontChainring = cog {
                 // torque.clear();
 
@@ -249,7 +249,7 @@ impl GroupsetPlugin {
                     torque.clear();
                     // println!("MAXRPM!");
                 } else {
-                    torque.apply_torque(-8000.0 as f64);
+                    torque.apply_torque(-8000.0_f64);
                 }
             }
         }

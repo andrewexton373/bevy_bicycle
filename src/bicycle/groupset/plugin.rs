@@ -1,8 +1,7 @@
 use avian2d::prelude::PhysicsSet;
 use bevy::{
-    app::{Plugin, PostUpdate, Update},
+    app::{Plugin, PostUpdate},
     prelude::IntoSystemConfigs,
-    text::cosmic_text::ttf_parser::gsub::Sequence,
 };
 
 use super::{

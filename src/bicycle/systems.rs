@@ -2,7 +2,6 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use super::{
-    chain::events::ResetChainEvent,
     components::{Bicycle, BicycleFrame},
     groupset::events::SpawnGroupsetEvent,
     plugin::BicyclePlugin,

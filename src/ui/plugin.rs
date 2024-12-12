@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_egui::egui::TextureHandle;
 use iyes_perf_ui::PerfUiPlugin;
 
 use super::systems::UiState;

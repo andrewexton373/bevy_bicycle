@@ -10,12 +10,9 @@ impl Plugin for CameraPlugin {
             .add_systems(Update, CameraPlugin::zoom_scale)
             .add_systems(
                 PostUpdate,
-                (
-                    CameraPlugin::camera_follow
+                CameraPlugin::camera_follow
                         .after(PhysicsSet::Sync)
-                        .before(TransformSystem::TransformPropagate)
-                    // .before(ParallaxSystems),
-                ),
+                        .before(TransformSystem::TransformPropagate),
             );
     }
 }
