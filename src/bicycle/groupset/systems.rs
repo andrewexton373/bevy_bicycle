@@ -1,4 +1,4 @@
-use avian2d::prelude::*;
+use avian2d::{parry::na::clamp, prelude::*};
 use bevy::{
     color::palettes::css::{GREEN, RED},
     input::mouse::{MouseScrollUnit, MouseWheel},
@@ -15,7 +15,7 @@ use crate::bicycle::{
 use super::{
     components::{Cog, Radius},
     events::SpawnGroupsetEvent,
-    plugin::GroupsetPlugin,
+    plugin::GroupsetPlugin, resources::{CassetteRadius, ChainringRadius},
 };
 
 impl GroupsetPlugin {
@@ -34,7 +34,8 @@ impl GroupsetPlugin {
         mut commands: Commands,
         frame: Query<(Entity, &BicycleFrame)>,
         wheels: Query<(Entity, &BicycleWheel)>,
-
+        cassette_radius: Res<CassetteRadius>,
+        chainring_radius: Res<ChainringRadius>,
         meshes: ResMut<Assets<Mesh>>,
         color_materials: ResMut<Assets<ColorMaterial>>,
     ) {
@@ -52,6 +53,7 @@ impl GroupsetPlugin {
                     .spawn(GroupsetPlugin::front_chainring(
                         meshes,
                         color_materials,
+                        chainring_radius,
                         &Position::from(pos),
                     ))
                     .id();
@@ -81,6 +83,7 @@ impl GroupsetPlugin {
                     .spawn(GroupsetPlugin::rear_cassette(
                         meshes,
                         color_materials,
+                        cassette_radius,
                         &Position::from(pos),
                     ))
                     .id();
@@ -118,9 +121,10 @@ impl GroupsetPlugin {
     pub fn front_chainring(
         mut meshes: ResMut<Assets<Mesh>>,
         mut color_materials: ResMut<Assets<ColorMaterial>>,
+        chainring_radius: Res<ChainringRadius>,
         t: &Position,
     ) -> impl Bundle {
-        let wheel_radius = Radius(5.0);
+        let wheel_radius = Radius(chainring_radius.0);
         (
             // Axle::FRONT,
             Cog::FrontChainring,
@@ -129,6 +133,7 @@ impl GroupsetPlugin {
             RigidBody::Dynamic,
             Collider::circle(wheel_radius.0 as f64),
             CollisionMargin(0.1),
+            AngularVelocity::default(),
             Mass::new(1.0),
             Friction::new(1.0),
             Restitution::new(0.0),
@@ -142,23 +147,37 @@ impl GroupsetPlugin {
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(GREEN))),
             CollisionLayers::new(
                 GameLayer::Groupset,
-                GameLayer::Groupset.to_bits() | GameLayer::World.to_bits(),
+                GameLayer::Groupset.to_bits() | GameLayer::World.to_bits() | GameLayer::Chain.to_bits(),
             ),
             // GlobalTransform::default(),
             *t,
         )
     }
 
-    pub fn turn_crank(
+    pub fn limit_crank_rpm(
         mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>,
+    ) {
+        for (cog, mut ang_vel) in cogs.iter_mut() {
+            if cog == &Cog::FrontChainring {
+
+                let ang_vel_to_rpm = |ang_vel: f64| { -ang_vel * 60.0 / (2.0 * std::f64::consts::PI) };
+                let rpm_to_ang_vel = |rpm: f64| { rpm / 60.0 * (2.0 * std::f64::consts::PI) };
+
+            }
+        }
+    }
+
+    pub fn turn_crank(
+        mut cogs: Query<(&Cog, &mut AngularVelocity, &mut ExternalTorque), With<Cog>>,
         mut mouse_wheel_evt: EventReader<MouseWheel>,
     ) {
         for &evt in mouse_wheel_evt.read() {
             match &evt.unit {
                 MouseScrollUnit::Line => {
-                    for (cog, mut ang_vel) in cogs.iter_mut() {
+                    for (cog, mut ang_vel, mut torque) in cogs.iter_mut() {
                         if let Cog::FrontChainring = cog {
                             ang_vel.0 += -1.0_f64 * (evt.y as f64);
+                            // torque.apply_torque(1000.0 * (evt.y as f64));
                             // ang_vel.0 += -10.0 as f64 * evt.y as f64;
                             println!("TURN CRANK: ang_vel {}", ang_vel.0);
                         }
@@ -172,9 +191,11 @@ impl GroupsetPlugin {
     pub fn rear_cassette(
         mut meshes: ResMut<Assets<Mesh>>,
         mut color_materials: ResMut<Assets<ColorMaterial>>,
+        cassette_radius: Res<CassetteRadius>,
+
         t: &Position,
     ) -> impl Bundle {
-        let wheel_radius = Radius(10.0);
+        let wheel_radius = Radius(cassette_radius.0);
 
         (
             // Axle::REAR,
@@ -197,7 +218,7 @@ impl GroupsetPlugin {
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(RED))),
             CollisionLayers::new(
                 GameLayer::Groupset,
-                GameLayer::Groupset.to_bits() | GameLayer::World.to_bits(),
+                GameLayer::Groupset.to_bits() | GameLayer::World.to_bits() | GameLayer::Chain.to_bits(),
             ),
             // GlobalTransform::default(),
             *t,

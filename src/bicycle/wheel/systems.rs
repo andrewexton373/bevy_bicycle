@@ -49,7 +49,7 @@ impl WheelPlugin {
                 CollisionMargin(1.0),
                 Mass::new(0.001),
                 Friction::new(1.0),
-                Restitution::new(0.0),
+                Restitution::new(0.001),
                 SweptCcd::default(),
                 Mesh2d(meshes.add(Circle::new(BicycleWheel::size()))),
                 MeshMaterial2d(custom_materials.add(CustomMaterial {

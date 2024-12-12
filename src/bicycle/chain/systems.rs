@@ -33,7 +33,7 @@ impl ChainPlugin {
                         x: transform.x,
                         y: transform.y,
                     },
-                    radius: radius.0 as f64 + 0.8,
+                    radius: radius.0 as f64 + 1.0,
                 };
 
                 let poly = larger_disc
@@ -56,7 +56,7 @@ impl ChainPlugin {
         let convex_hull = gift_wrapping(points);
         
 
-        equidistant_points_on_polygon(&convex_hull, 50)
+        equidistant_points_on_polygon(&convex_hull, 30)
     }
 
     pub fn generate_link(pos: &Point) -> impl Bundle {
@@ -65,7 +65,7 @@ impl ChainPlugin {
         (
             RigidBody::Dynamic,
             Collider::circle(link_radius),
-            SweptCcd::default(),
+            SweptCcd::new_with_mode(SweepMode::NonLinear),
             Friction::new(1.0),
             LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
             MassPropertiesBundle {
@@ -76,7 +76,7 @@ impl ChainPlugin {
                 translation: vec3(pos.x as f32, pos.y as f32, 0.0),
                 ..default()
             },
-            CollisionLayers::new(GameLayer::Groupset, GameLayer::Groupset),
+            CollisionLayers::new(GameLayer::Chain, GameLayer::Groupset.to_bits() | GameLayer::Chain.to_bits()),
         )
     }
 
@@ -99,6 +99,9 @@ impl ChainPlugin {
                     if previous_link.is_some() {
                         parent.spawn(
                             DistanceJoint::new(previous_link.unwrap(), current_link)
+                                .with_angular_velocity_damping(0.99)
+                                .with_linear_velocity_damping(0.99)
+
                                 .with_rest_length(r)
                                 .with_compliance(compliance),
                         );
@@ -109,6 +112,8 @@ impl ChainPlugin {
                 // Complete the Loop
                 parent.spawn(
                     DistanceJoint::new(*link_ents.first().unwrap(), *link_ents.last().unwrap())
+                        .with_angular_velocity_damping(0.99)
+                        .with_linear_velocity_damping(0.99)
                         .with_rest_length(r)
                         .with_compliance(compliance),
                 );

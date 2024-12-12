@@ -17,6 +17,7 @@ pub enum GameLayer {
     Wheels,
     AttachmentPoints,
     Groupset,
+    Chain
 }
 
 impl BicyclePlugin {
