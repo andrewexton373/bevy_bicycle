@@ -1,6 +1,5 @@
 use bevy::app::Plugin;
 
-
 use super::events::SpawnWheelEvent;
 
 pub struct WheelPlugin;

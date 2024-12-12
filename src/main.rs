@@ -5,7 +5,7 @@ pub mod world;
 
 use avian2d::{
     math::Vector,
-    prelude::{Gravity, Joint, PhysicsDebugPlugin, SubstepCount},
+    prelude::{Gravity, PhysicsDebugPlugin, SubstepCount},
     PhysicsPlugins,
 };
 use bevy::{
@@ -15,8 +15,6 @@ use bevy::{
     sprite::{Material2d, Material2dPlugin},
 };
 use bevy_egui::EguiPlugin;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
-// use bevy_parallax::ParallaxPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
 use ui::plugin::UIPlugin;
@@ -39,8 +37,6 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
             EguiPlugin,
-            WorldInspectorPlugin::new(),
-            // ParallaxPlugin,
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
             Material2dPlugin::<CustomMaterial>::default(),

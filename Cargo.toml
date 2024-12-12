@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 avian2d = { git = "https://github.com/Jondolf/avian.git", branch = "main", default-features = false, features = ["2d", "f64", "parry-f64", "debug-plugin"] }
 bevy = { version = "0.15", features=["wayland"]}
+bevy_ui = { version= "0.15", feature=["bevy_ui_widgets"] }
 bevy_egui = "0.31.1"
 bevy-inspector-egui = "0.28"
 bevy_dylib = "0.15.0"

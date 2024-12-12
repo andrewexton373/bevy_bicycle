@@ -1,8 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{
-    color::palettes::css::BLACK,
-    prelude::*,
-};
+use bevy::{color::palettes::css::BLACK, prelude::*};
 
 use crate::{
     bicycle::{

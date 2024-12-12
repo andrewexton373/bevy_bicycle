@@ -6,13 +6,18 @@ use bevy::{
 };
 
 use crate::bicycle::{
-        chain::events::ResetChainEvent, components::{BicycleFrame, FrameGeometry}, groupset::events::SpawnAttachedEvent, systems::GameLayer, wheel::components::BicycleWheel
-    };
+    chain::events::ResetChainEvent,
+    components::{BicycleFrame, FrameGeometry},
+    groupset::events::SpawnAttachedEvent,
+    systems::GameLayer,
+    wheel::components::BicycleWheel,
+};
 
 use super::{
     components::{Cog, Radius},
     events::SpawnGroupsetEvent,
-    plugin::GroupsetPlugin, resources::{CassetteRadius, ChainringRadius},
+    plugin::GroupsetPlugin,
+    resources::{CassetteRadius, ChainringRadius},
 };
 
 impl GroupsetPlugin {
@@ -26,7 +31,50 @@ impl GroupsetPlugin {
         });
 
         // commands.trigger(ResetChainEvent);
+    }
 
+    pub fn update_chainring_size(
+        mut commands: Commands,
+        mut meshes: ResMut<Assets<Mesh>>,
+        chainring_radius: Res<ChainringRadius>,
+        mut chainring: Query<(Entity, &Cog)>,
+    ) {
+        if chainring_radius.is_changed() {
+            if let Some((ent, _)) = chainring
+                .iter_mut()
+                .find(|item| item.1 == &Cog::FrontChainring)
+            {
+                commands.entity(ent).insert(Radius(chainring_radius.0));
+                commands
+                    .entity(ent)
+                    .insert(Collider::circle(chainring_radius.0 as f64));
+                commands
+                    .entity(ent)
+                    .insert(Mesh2d(meshes.add(Circle::new(chainring_radius.0))));
+
+                commands.trigger(ResetChainEvent);
+            }
+        }
+    }
+
+    pub fn update_cassette_size(
+        mut commands: Commands,
+        mut meshes: ResMut<Assets<Mesh>>,
+        cassette_radius: Res<CassetteRadius>,
+        mut cogs: Query<(Entity, &Cog)>,
+    ) {
+        if cassette_radius.is_changed() {
+            if let Some((ent, _)) = cogs.iter_mut().find(|item| item.1 == &Cog::RearCassette) {
+                commands.entity(ent).insert(Radius(cassette_radius.0));
+                commands
+                    .entity(ent)
+                    .insert(Collider::circle(cassette_radius.0 as f64));
+                commands
+                    .entity(ent)
+                    .insert(Mesh2d(meshes.add(Circle::new(cassette_radius.0))));
+                commands.trigger(ResetChainEvent);
+            }
+        }
     }
 
     pub fn handle_spawn_component(
@@ -147,21 +195,18 @@ impl GroupsetPlugin {
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(GREEN))),
             CollisionLayers::new(
                 GameLayer::Groupset,
-                GameLayer::Groupset.to_bits() | GameLayer::World.to_bits() | GameLayer::Chain.to_bits(),
+                GameLayer::Groupset.to_bits()
+                    | GameLayer::World.to_bits()
+                    | GameLayer::Chain.to_bits(),
             ),
             // GlobalTransform::default(),
             *t,
         )
     }
 
-    pub fn limit_crank_rpm(
-        mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>,
-    ) {
+    pub fn limit_crank_rpm(mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>) {
         for (cog, mut ang_vel) in cogs.iter_mut() {
-            if cog == &Cog::FrontChainring {
-
-                
-            }
+            if cog == &Cog::FrontChainring {}
         }
     }
 
@@ -177,9 +222,7 @@ impl GroupsetPlugin {
         mut cogs: Query<(&Cog, &mut AngularVelocity, &mut ExternalTorque), With<Cog>>,
         mut mouse_wheel_evt: EventReader<MouseWheel>,
     ) {
-
         for (cog, mut ang_vel, mut torque) in cogs.iter_mut() {
-
             if let Cog::FrontChainring = cog {
                 // torque.clear();
 
@@ -194,7 +237,7 @@ impl GroupsetPlugin {
                 //                 // *torque = *torque.with_persistence(true).apply_torque(200000.0 * (evt.y as f64));
                 //                 println!("Torqeing: {:?}", torque);
                 //             // }
-                            
+
                 //             // ang_vel.0 += -1.0 as f64 * evt.y as f64;
                 //             println!("TURN CRANK: ang_vel {}", ang_vel.0);
                 //         }
@@ -208,11 +251,8 @@ impl GroupsetPlugin {
                 } else {
                     torque.apply_torque(-8000.0 as f64);
                 }
-
             }
-
         }
-
     }
 
     pub fn rear_cassette(
@@ -245,7 +285,9 @@ impl GroupsetPlugin {
             MeshMaterial2d(color_materials.add(ColorMaterial::from_color(RED))),
             CollisionLayers::new(
                 GameLayer::Groupset,
-                GameLayer::Groupset.to_bits() | GameLayer::World.to_bits() | GameLayer::Chain.to_bits(),
+                GameLayer::Groupset.to_bits()
+                    | GameLayer::World.to_bits()
+                    | GameLayer::Chain.to_bits(),
             ),
             // GlobalTransform::default(),
             *t,

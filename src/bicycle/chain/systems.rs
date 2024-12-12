@@ -11,11 +11,7 @@ use crate::bicycle::{
 use super::{components::Chain, events::ResetChainEvent, plugin::ChainPlugin};
 
 impl ChainPlugin {
-
-    pub fn reset_chain_on_press_r(
-        keys: Res<ButtonInput<KeyCode>>,
-        mut commands: Commands,
-    ) {
+    pub fn reset_chain_on_press_r(keys: Res<ButtonInput<KeyCode>>, mut commands: Commands) {
         if keys.just_pressed(KeyCode::KeyR) {
             commands.trigger(ResetChainEvent);
         }
@@ -27,43 +23,39 @@ impl ChainPlugin {
         mut chain: Query<(Entity, &Chain)>,
         cogs: Query<(&Cog, &Radius, &Position)>,
     ) {
-            if let Ok(chain) = chain.get_single_mut() {
-                commands.entity(chain.0).despawn_recursive();
-            }
+        if let Ok(chain) = chain.get_single_mut() {
+            commands.entity(chain.0).despawn_recursive();
+        }
 
-            let mut point_set = vec![];
+        let mut point_set = vec![];
 
-            // R(eset) was pressed
-            for (cog, radius, transform) in cogs.iter() {
-                println!("{:?}", cog);
+        // R(eset) was pressed
+        for (cog, radius, transform) in cogs.iter() {
+            let larger_disc = Disc {
+                center: Point {
+                    x: transform.x,
+                    y: transform.y,
+                },
+                radius: radius.0 as f64 + 1.35,
+            };
 
-                let larger_disc = Disc {
-                    center: Point {
-                        x: transform.x,
-                        y: transform.y,
-                    },
-                    radius: radius.0 as f64 + 1.35,
-                };
+            let poly = larger_disc
+                .simplify_disc_as_polygon(60)
+                .iter()
+                .map(|point| Point {
+                    x: point.x,
+                    y: point.y,
+                })
+                .collect::<Vec<Point>>();
+            point_set.extend(poly);
+        }
 
-                let poly = larger_disc
-                    .simplify_disc_as_polygon(60)
-                    .iter()
-                    .map(|point| Point {
-                        x: point.x,
-                        y: point.y,
-                    })
-                    .collect::<Vec<Point>>();
-                point_set.extend(poly);
-            }
-
-            let chain_links = ChainPlugin::generate_chain_link_points_from_point_set(&point_set);
-            ChainPlugin::setup_chain(&mut commands, chain_links);
-        
+        let chain_links = ChainPlugin::generate_chain_link_points_from_point_set(&point_set);
+        ChainPlugin::setup_chain(&mut commands, chain_links);
     }
 
     pub fn generate_chain_link_points_from_point_set(points: &Vec<Point>) -> Vec<Point> {
         let convex_hull = gift_wrapping(points);
-        
 
         equidistant_points_on_polygon(&convex_hull, 60)
     }
@@ -74,7 +66,7 @@ impl ChainPlugin {
         (
             RigidBody::Dynamic,
             Collider::circle(link_radius),
-            SweptCcd::new_with_mode(SweepMode::NonLinear),
+            // SweptCcd::new_with_mode(SweepMode::NonLinear),
             CollisionMargin(0.05),
             Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
@@ -86,7 +78,10 @@ impl ChainPlugin {
                 translation: vec3(pos.x as f32, pos.y as f32, 0.0),
                 ..default()
             },
-            CollisionLayers::new(GameLayer::Chain, GameLayer::Groupset.to_bits() | GameLayer::Chain.to_bits()),
+            CollisionLayers::new(
+                GameLayer::Chain,
+                GameLayer::Groupset.to_bits() | GameLayer::Chain.to_bits(),
+            ),
         )
     }
 
@@ -111,7 +106,6 @@ impl ChainPlugin {
                             DistanceJoint::new(previous_link.unwrap(), current_link)
                                 .with_angular_velocity_damping(0.01)
                                 .with_linear_velocity_damping(0.01)
-
                                 .with_rest_length(r)
                                 .with_compliance(compliance),
                         );
