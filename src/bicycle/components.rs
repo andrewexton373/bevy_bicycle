@@ -1,7 +1,7 @@
 use std::collections::BTreeMap; // itertools = "0.8"
 
-use avian2d::prelude::Collider;
-use bevy::{math::Vec2, prelude::Component};
+use avian2d::prelude::{Collider, Position, Rotation};
+use bevy::{math::{DVec2, Vec2}, prelude::Component};
 
 // use super::systems::AttachmentPoint;
 
@@ -22,7 +22,7 @@ pub enum FrameGeometry {
 
 #[derive(Component)]
 pub struct BicycleFrame {
-    pub gemometry: BTreeMap<FrameGeometry, Vec2>,
+    pub geometry: BTreeMap<FrameGeometry, DVec2>,
 }
 
 impl Default for BicycleFrame {
@@ -34,12 +34,12 @@ impl Default for BicycleFrame {
 impl BicycleFrame {
     pub fn new() -> Self {
         BicycleFrame {
-            gemometry: vec![
-                (FrameGeometry::RearHub, Vec2::new(-40.0, 0.0)),
-                (FrameGeometry::BottomBracket, Vec2::new(0.0, 0.0)),
-                (FrameGeometry::SeatClamp, Vec2::new(-10.0, 20.0)),
-                (FrameGeometry::StemClamp, Vec2::new(30.0, 20.0)),
-                (FrameGeometry::FrontHub, Vec2::new(35.0, 0.0)),
+            geometry: vec![
+                (FrameGeometry::RearHub, DVec2::new(-40.0, 0.0)),
+                (FrameGeometry::BottomBracket, DVec2::new(0.0, 0.0)),
+                (FrameGeometry::SeatClamp, DVec2::new(-10.0, 20.0)),
+                (FrameGeometry::StemClamp, DVec2::new(30.0, 20.0)),
+                (FrameGeometry::FrontHub, DVec2::new(35.0, 0.0)),
             ]
             .into_iter()
             .collect(),
@@ -47,12 +47,11 @@ impl BicycleFrame {
     }
 
     pub fn collider(&self) -> Collider {
-        let frame_points_all: Vec<Vec2> = self.gemometry.iter().map(|item| *item.1).collect();
-        let frame_points_all_dvec2 = frame_points_all.iter().map(|v| v.as_dvec2()).collect();
+        let frame_points_all: Vec<DVec2> = self.geometry.iter().map(|item| *item.1).collect();
 
         let key_index =
             |key: &FrameGeometry| {
-                self.gemometry.keys().enumerate().find_map(|(i, k)| {
+                self.geometry.keys().enumerate().find_map(|(i, k)| {
                     if k == key {
                         Some(i as u32)
                     } else {
@@ -86,6 +85,16 @@ impl BicycleFrame {
             key_index(&FrameGeometry::FrontHub).unwrap(),
         ];
 
+        let compound_segment_collider = Collider::compound(vec![
+            (Position::default(), Rotation::default(), Collider::segment(*self.geometry.get(&FrameGeometry::RearHub).unwrap(), *self.geometry.get(&FrameGeometry::BottomBracket).unwrap())),
+            (Position::default(), Rotation::default(), Collider::segment(*self.geometry.get(&FrameGeometry::BottomBracket).unwrap(), *self.geometry.get(&FrameGeometry::SeatClamp).unwrap())),
+            (Position::default(), Rotation::default(), Collider::segment(*self.geometry.get(&FrameGeometry::BottomBracket).unwrap(), *self.geometry.get(&FrameGeometry::StemClamp).unwrap())),
+            (Position::default(), Rotation::default(), Collider::segment(*self.geometry.get(&FrameGeometry::SeatClamp).unwrap(), *self.geometry.get(&FrameGeometry::RearHub).unwrap())),
+            (Position::default(), Rotation::default(), Collider::segment(*self.geometry.get(&FrameGeometry::SeatClamp).unwrap(), *self.geometry.get(&FrameGeometry::StemClamp).unwrap())),
+            (Position::default(), Rotation::default(), Collider::segment(*self.geometry.get(&FrameGeometry::StemClamp).unwrap(), *self.geometry.get(&FrameGeometry::FrontHub).unwrap())),
+
+        ]);
+
         let frame_points_all_indicies: Vec<[u32; 2]> = vec![
             rear_hub_to_bottom_bracket,
             bottom_bracket_to_seat_clamp,
@@ -95,6 +104,9 @@ impl BicycleFrame {
             stem_clamp_to_front_hub,
         ];
 
-        Collider::convex_decomposition(frame_points_all_dvec2, frame_points_all_indicies)
+        let old_collider = Collider::convex_decomposition(frame_points_all, frame_points_all_indicies);
+
+        // compound_segment_collider
+        old_collider
     }
 }

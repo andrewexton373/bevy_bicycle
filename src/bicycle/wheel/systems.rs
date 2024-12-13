@@ -26,11 +26,11 @@ impl WheelPlugin {
 
         let mounting_point = match evt.wheel {
             BicycleWheel::Front => frame
-                .gemometry
+                .geometry
                 .get_key_value(&FrameGeometry::FrontHub)
                 .unwrap(),
             BicycleWheel::Back => frame
-                .gemometry
+                .geometry
                 .get_key_value(&FrameGeometry::RearHub)
                 .unwrap(),
         };
@@ -54,14 +54,14 @@ impl WheelPlugin {
                     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
                     alpha_mode: AlphaMode::Blend,
                 })),
-                Position::from(mounting_point.1.as_dvec2()),
+                Position::from(*mounting_point.1),
             ))
             .id();
 
         commands.spawn((
             Name::new("Wheel Joint"),
             RevoluteJoint::new(frame_ent, wheel)
-                .with_local_anchor_1(mounting_point.1.as_dvec2())
+                .with_local_anchor_1(*mounting_point.1)
                 .with_compliance(0.0)
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(0.0),

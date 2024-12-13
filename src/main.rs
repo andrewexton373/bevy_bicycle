@@ -15,6 +15,7 @@ use bevy::{
     sprite::{Material2d, Material2dPlugin},
 };
 use bevy_egui::EguiPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
 use ui::plugin::UIPlugin;
@@ -45,6 +46,7 @@ fn main() {
             CameraPlugin,
             BicyclePlugin,
         ))
+        .add_plugins(WorldInspectorPlugin::new())
         .insert_resource(ClearColor(Color::from(BLUE_400)))
         .insert_resource(Gravity(Vector::NEG_Y * 100.0))
         .insert_resource(SubstepCount(120))

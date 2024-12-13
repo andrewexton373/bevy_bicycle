@@ -64,11 +64,11 @@ impl UIPlugin {
 
             ui.label("Chainring Radius:");
 
-            ui.add(egui::Slider::new(&mut ui_state.chainring_radius, 2.0..=10.0).text("value"));
+            ui.add(egui::Slider::new(&mut ui_state.chainring_radius, 4.0..=15.0).text("value"));
 
             ui.label("Cassette Radius:");
 
-            ui.add(egui::Slider::new(&mut ui_state.cassette_radius, 2.0..=10.0).text("value"));
+            ui.add(egui::Slider::new(&mut ui_state.cassette_radius, 4.0..=15.0).text("value"));
         });
     }
 }

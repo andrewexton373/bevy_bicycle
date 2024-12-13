@@ -11,6 +11,8 @@ bevy_egui = "0.31.1"
 bevy-inspector-egui = "0.28"
 bevy_dylib = "0.15.0"
 itertools = "0.13.0"
+noise = "0.9"
+rand = "0.8.5"
 iyes_perf_ui = { git="https://github.com/IyesGames/iyes_perf_ui.git", branch = "main"}
 # bevy-parallax = {git = "https://github.com/Corrosive-Games/bevy-parallax.git"}
 
