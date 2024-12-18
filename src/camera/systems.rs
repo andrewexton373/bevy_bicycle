@@ -3,7 +3,9 @@ use bevy::{
     input::{
         keyboard::{Key, KeyboardInput},
         ButtonState,
-    }, math::VectorSpace, prelude::*
+    },
+    math::VectorSpace,
+    prelude::*,
 };
 
 use crate::bicycle::{components::BicycleFrame, wheel::components::BicycleWheel};
@@ -11,25 +13,13 @@ use crate::bicycle::{components::BicycleFrame, wheel::components::BicycleWheel};
 use super::{components::FollowCamera, plugin::CameraPlugin};
 
 impl CameraPlugin {
-    pub fn setup_camera(
-        mut commands: Commands,
-    ) {
-        commands
-            .spawn((
-                FollowCamera,
-                Camera2d,
-            ));
+    pub fn setup_camera(mut commands: Commands) {
+        commands.spawn((FollowCamera, Camera2d));
     }
 
     pub fn camera_follow(
-        frame_query: Query<
-            (&Transform),
-            (With<BicycleFrame>, Without<FollowCamera>),
-        >,
-        mut camera_query: Query<
-            (&mut Transform),
-            (With<FollowCamera>, Without<BicycleFrame>),
-        >,
+        frame_query: Query<(&Transform), (With<BicycleFrame>, Without<FollowCamera>)>,
+        mut camera_query: Query<(&mut Transform), (With<FollowCamera>, Without<BicycleFrame>)>,
     ) {
         // Follow the Bicycle Frame
         for frame_t in frame_query.iter() {
@@ -41,7 +31,7 @@ impl CameraPlugin {
     pub fn free_camera(
         mut camera: Query<&mut Transform, With<FollowCamera>>,
         keys: Res<ButtonInput<KeyCode>>,
-        time: Res<Time>
+        time: Res<Time>,
     ) {
         let mut movement_vector = Vec3::ZERO;
 
@@ -66,7 +56,6 @@ impl CameraPlugin {
             // info!("MOVEMENT_VEC: {:?}", movement_vector);
             // info!("CAMERA_T: {:?}", camera_t.translation);
         }
-
     }
 
     pub fn zoom_scale(

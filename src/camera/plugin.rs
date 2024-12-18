@@ -9,14 +9,15 @@ impl Plugin for CameraPlugin {
         app.add_systems(Startup, CameraPlugin::setup_camera)
             .add_systems(Update, CameraPlugin::zoom_scale)
             .add_systems(
-                PostUpdate, (
+                PostUpdate,
+                (
                     // CameraPlugin::camera_follow
                     //         .after(PhysicsSet::Sync)
                     //         .before(TransformSystem::TransformPropagate),
                     CameraPlugin::free_camera
-                            .after(PhysicsSet::Sync)
-                            .before(TransformSystem::TransformPropagate),
-                )
+                        .after(PhysicsSet::Sync)
+                        .before(TransformSystem::TransformPropagate),
+                ),
             );
     }
 }
