@@ -4,16 +4,25 @@ use bevy::{
         ButtonState,
     },
     math::VectorSpace,
-    prelude::*,
+    prelude::*, render::view::RenderLayers,
 };
+use bevy_infinite_grid::{InfiniteGrid, InfiniteGridBundle};
 
 use crate::bicycle::components::BicycleFrame;
 
 use super::{components::FollowCamera, plugin::CameraPlugin};
 
 impl CameraPlugin {
+
+    pub fn setup_infinite_grid(mut commands: Commands) {
+        commands.spawn((InfiniteGridBundle::default(), RenderLayers::layer(1)));
+    }
+
     pub fn setup_camera(mut commands: Commands) {
-        commands.spawn((FollowCamera, Camera2d));
+        commands.spawn((FollowCamera, Camera3dBundle {
+            projection: Projection::Orthographic(OrthographicProjection::default_3d()),
+            ..default()
+        }));
     }
 
     pub fn camera_follow(
@@ -23,7 +32,7 @@ impl CameraPlugin {
         // Follow the Bicycle Frame
         for frame_t in frame_query.iter() {
             let mut camera_t = camera_query.single_mut();
-            camera_t.translation = frame_t.translation;
+            camera_t.translation = frame_t.translation.truncate().extend(10.0);
         }
     }
 
@@ -58,19 +67,25 @@ impl CameraPlugin {
     }
 
     pub fn zoom_scale(
-        mut query_camera: Query<&mut OrthographicProjection, With<FollowCamera>>,
+        mut query_camera: Query<&mut Projection, With<FollowCamera>>,
         mut keyboard_input: EventReader<KeyboardInput>,
     ) {
         for event in keyboard_input.read() {
             if event.state == ButtonState::Pressed {
-                let mut projection: Mut<'_, OrthographicProjection> = query_camera.single_mut();
+
+                // assume orthographic. do nothing if perspective.
+                let Projection::Orthographic(ortho) = query_camera.single_mut().into_inner() else {
+                    return;
+                };
 
                 match event.logical_key {
                     Key::ArrowUp => {
-                        projection.scale /= 1.25;
+                        // zoom in
+                        ortho.scale /= 1.25;
                     }
                     Key::ArrowDown => {
-                        projection.scale *= 1.25;
+                        // zoom out
+                        ortho.scale *= 1.25;
                     }
                     _ => {}
                 }

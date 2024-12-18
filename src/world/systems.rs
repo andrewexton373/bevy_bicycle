@@ -88,7 +88,7 @@ impl WorldPlugin {
 
     pub fn terrain_height_sample(x_pos: f64, seed: u32) -> f64 {
         let perlin = Perlin::new(seed);
-        1000.0 * (perlin.get([0.0001 * x_pos as f64]) + 1.0)
+        100.0 * (perlin.get([0.0001 * x_pos as f64]) + 1.0)
     }
 
     pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> Collider {
@@ -143,8 +143,8 @@ impl WorldPlugin {
             .unwrap();
 
         // Get sector indicies min, and max for x and y values
-        let i_min = ((bottom_left.x / Self::CHUNK_WIDTH) as i128) - 2;
-        let i_max = ((top_right.x / Self::CHUNK_WIDTH) as i128) + 2;
+        let i_min = ((bottom_left.x / Self::CHUNK_WIDTH) as i128).wrapping_sub(2);
+        let i_max = ((top_right.x / Self::CHUNK_WIDTH) as i128).wrapping_add(2);
 
         info!("i_min: {}, i_max: {}", i_min, i_max);
 

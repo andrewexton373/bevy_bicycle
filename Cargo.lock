@@ -386,6 +386,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_dylib",
  "bevy_egui",
+ "bevy_infinite_grid",
  "bevy_ui",
  "itertools",
  "iyes_perf_ui",
@@ -861,6 +862,14 @@ dependencies = [
  "ruzstd",
  "serde",
  "wgpu",
+]
+
+[[package]]
+name = "bevy_infinite_grid"
+version = "0.13.1"
+source = "git+https://github.com/ForesightMiningSoftwareCorporation/bevy_infinite_grid?branch=main#1b27619cc5c44d4e939e63345cddc1954e4123db"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
