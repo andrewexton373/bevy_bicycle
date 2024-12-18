@@ -63,9 +63,8 @@ impl CameraPlugin {
 
         if let Ok(mut camera_t) = camera.get_single_mut() {
             camera_t.translation += movement_vector * 10000.0 * time.delta_secs();
-            info!("MOVEMENT_VEC: {:?}", movement_vector);
-
-            info!("CAMERA_T: {:?}", camera_t.translation);
+            // info!("MOVEMENT_VEC: {:?}", movement_vector);
+            // info!("CAMERA_T: {:?}", camera_t.translation);
         }
 
     }

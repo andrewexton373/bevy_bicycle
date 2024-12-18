@@ -4,6 +4,10 @@ pub struct WorldPlugin;
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, WorldPlugin::generate_surrounding_terrain_chunks);
+        app
+            .add_systems(Update, (
+                 WorldPlugin::generate_surrounding_terrain_chunks,
+                 WorldPlugin::remove_chunks_outside_viewport
+            ));
     }
 }

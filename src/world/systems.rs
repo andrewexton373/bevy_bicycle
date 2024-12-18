@@ -7,45 +7,13 @@ use crate::camera::components::FollowCamera;
 
 use super::plugin::WorldPlugin;
 
+#[derive(Component)]
+pub struct Terrain;
+
 #[derive(Component, PartialEq)]
 pub struct TerrainChunk(pub i128);
 
 impl WorldPlugin {
-
-    pub fn setup_ground(
-        mut commands: Commands,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<ColorMaterial>>,
-    ) {
-        let width: f64 = 10000.0;
-        let height: f64 = 300.0;
-
-        // commands.spawn((
-        //     RigidBody::Static,
-        //     Collider::rectangle(width, height),
-        //     Friction::new(0.95),
-        //     Restitution::new(0.0),
-        //     SweptCcd::default(),
-        //     Mesh2d(meshes.add(Rectangle::new(width as f32, height as f32))),
-        //     MeshMaterial2d(materials.add(ColorMaterial::from_color(GRAY))),
-        //     Transform::from_xyz(0.0, -200.0, 10.0),
-        // ));
-
-        let collider = WorldPlugin::generate_hilly_terrain_chunk(0, 0);
-
-        commands.spawn((
-            RigidBody::Static,
-            collider,
-            // DebugRender::all().with_mesh_visibility(true),
-            Friction::new(0.95),
-            Restitution::new(0.0),
-            SweptCcd::default(),
-
-            // Mesh2d(meshes.add(WorldPlugin::heightmap_to_bevy_mesh(collider.shape().as_heightfield().unwrap().heights(), Vec2::new(1.0, 1.0)))),
-            // MeshMaterial2d(materials.add(ColorMaterial::from_color(LIGHT_GREEN))),
-            Transform::from_xyz(-1000.0, -4050.0, 10.0),
-        ));
-    }
 
     const CHUNK_WIDTH: f32 = 2048.0;
     const WINDOW_SIZE: u128 = 16;
@@ -55,7 +23,8 @@ impl WorldPlugin {
         mut commands: Commands,
         camera: Query<&Transform, With<FollowCamera>>,
         terrain_chunks: Query<&TerrainChunk>,
-        mut seed: Local<Option<u32>>
+        mut seed: Local<Option<u32>>,
+        terrain: Query<(Entity, Option<&Children>), With<Terrain>>
     ) {
 
         if seed.is_none() {
@@ -64,45 +33,59 @@ impl WorldPlugin {
             *seed = Some(rng.next_u32());
         }
 
-        let camera_t = camera.single();
+        let mut terrain_id: Entity = Entity::PLACEHOLDER;
 
-        // info!("Camera_t: {:?}", camera_t);
+        if terrain.is_empty() {
+            info!("Spawning Terrain Parent");
+            terrain_id = commands.spawn((Terrain, Name::new("Terrain"), Transform::default())).id();
+        }
 
-        let camera_t_x = camera_t.translation.x;
-        let chunk_index = (camera_t_x / (WorldPlugin::CHUNK_WIDTH)) as i128;
+        if let Ok((terrain_id, terrain_chunks_query)) = terrain.get_single() {
+             
+            let camera_t = camera.single();
 
-        info!("Camera_t current chunk index: {:?}", chunk_index);
-        info!("Seed: {:?}", seed);
+            // info!("Camera_t: {:?}", camera_t);
+
+            let camera_t_x = camera_t.translation.x;
+            let chunk_index = (camera_t_x / (WorldPlugin::CHUNK_WIDTH)) as i128;
+
+            info!("Camera_t current chunk index: {:?}", chunk_index);
+            info!("Seed: {:?}", seed);
+
+            for index in chunk_index - Self::WINDOW_SIZE as i128 / 2 .. chunk_index + (Self::WINDOW_SIZE as i128 / 2) - 1 {
+                // If the chunk doesn't exist
+                if None == terrain_chunks.iter().find(|chunk| chunk.0 == chunk_index) {
+                    info!("Creating Chunk {:?}", chunk_index);
+
+                    let chunk_collider = WorldPlugin::generate_hilly_terrain_chunk(index, seed.unwrap());
+
+                    commands.entity(terrain_id).with_child((
+                        Name::new(format!("TerrainChunk({:?})", index)),
+                        TerrainChunk(chunk_index),
+                        RigidBody::Static,
+                        chunk_collider,
+                        // DebugRender::all().with_mesh_visibility(true),
+                        Friction::new(0.95),
+                        Restitution::new(0.0),
+                        SweptCcd::default(),
+            
+                        // Mesh2d(meshes.add(WorldPlugin::heightmap_to_bevy_mesh(collider.shape().as_heightfield().unwrap().heights(), Vec2::new(1.0, 1.0)))),
+                        // MeshMaterial2d(materials.add(ColorMaterial::from_color(LIGHT_GREEN))),
+            
+                        Transform::from_xyz(((index as f64 * Self::CHUNK_WIDTH as f64).floor() - (Self::CHUNK_WIDTH / 2.0) as f64) as f32, -4050.0, 10.0),
+                    ));
+
+                } else {
+                    // info!("Chunk {:?} exists!", chunk_index)
+                }       
+            }  
+
+
+        }
 
 
 
-        for index in chunk_index - Self::WINDOW_SIZE as i128 / 2 .. chunk_index + (Self::WINDOW_SIZE as i128 / 2) - 1 {
-            // If the chunk doesn't exist
-            if None == terrain_chunks.iter().find(|chunk| chunk.0 == chunk_index) {
-                info!("Creating Chunk {:?}", chunk_index);
-
-                let chunk_collider = WorldPlugin::generate_hilly_terrain_chunk(index, seed.unwrap());
-
-                commands.spawn((
-                    Name::new(format!("TerrainChunk({:?})", index)),
-                    TerrainChunk(chunk_index),
-                    RigidBody::Static,
-                    chunk_collider,
-                    // DebugRender::all().with_mesh_visibility(true),
-                    Friction::new(0.95),
-                    Restitution::new(0.0),
-                    SweptCcd::default(),
         
-                    // Mesh2d(meshes.add(WorldPlugin::heightmap_to_bevy_mesh(collider.shape().as_heightfield().unwrap().heights(), Vec2::new(1.0, 1.0)))),
-                    // MeshMaterial2d(materials.add(ColorMaterial::from_color(LIGHT_GREEN))),
-        
-                    Transform::from_xyz(((index as f64 * Self::CHUNK_WIDTH as f64).floor() - (Self::CHUNK_WIDTH / 2.0) as f64) as f32, -4050.0, 10.0),
-                ));
-
-            } else {
-                // info!("Chunk {:?} exists!", chunk_index)
-            }       
-        }  
 
     }
 
@@ -111,9 +94,6 @@ impl WorldPlugin {
         chunk_index:  i128,
         seed: u32
     ) -> Collider {
-
-        // let mut rng = rand::thread_rng();
-        // let seed: u32 = rng.next_u32();
 
         let perlin = Perlin::new(seed);
     
@@ -149,4 +129,44 @@ impl WorldPlugin {
 
         compound_collider
     }
+
+    pub fn remove_chunks_outside_viewport(
+        mut commands: Commands,
+        camera_viewport: Query<(&Camera, &GlobalTransform), With<FollowCamera>>,
+        terrain_chunks: Query<(Entity, &TerrainChunk), With<TerrainChunk>>,
+        terrain: Query<Entity, With<Terrain>>
+    ) {
+        let (camera, camera_gt) = camera_viewport.single();
+
+        // Get viewport bounds in worldspace
+        let bottom_left = camera
+            .ndc_to_world(camera_gt, Vec3::new(-1.0, -1.0, 0.0))
+            .unwrap();
+        let top_right = camera
+            .ndc_to_world(camera_gt, Vec3::new(1.0, 1.0, 0.0))
+            .unwrap();
+
+        // Get sector indicies min, and max for x and y values
+        let i_min = ((bottom_left.x / Self::CHUNK_WIDTH) as i128) - 1;
+        let i_max = ((top_right.x / Self::CHUNK_WIDTH) as i128) + 1;
+  
+        // Filter Invalid sectors to despawn
+        let invalid_sectors: Vec<(Entity, &TerrainChunk)> = terrain_chunks
+            .iter()
+            .filter(|(_, chunk)| {
+                chunk.0 < i_min || chunk.0 > i_max
+            })
+            .collect();
+
+        
+        if let Ok(terrain_id) = terrain.get_single() {
+            // Despawn each invalid sector
+            for (invalid_entity, _) in invalid_sectors {
+                commands.entity(terrain_id).remove_children(&[invalid_entity]);
+                commands.entity(invalid_entity).despawn_recursive();
+            }
+        }
+
+    }
+
 }
