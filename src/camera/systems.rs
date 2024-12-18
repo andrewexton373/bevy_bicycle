@@ -7,7 +7,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::bicycle::wheel::components::BicycleWheel;
+use crate::bicycle::{components::BicycleFrame, wheel::components::BicycleWheel};
 
 use super::{components::FollowCamera, plugin::CameraPlugin};
 
@@ -25,21 +25,19 @@ impl CameraPlugin {
 
     pub fn camera_follow(
         player_query: Query<
-            (&BicycleWheel, &Transform, &LinearVelocity),
-            (With<BicycleWheel>, Without<FollowCamera>),
+            (&BicycleFrame, &Transform),
+            (With<BicycleFrame>, Without<FollowCamera>),
         >,
         mut camera_query: Query<
             (Entity, &mut Transform),
-            (With<FollowCamera>, Without<BicycleWheel>),
+            (With<FollowCamera>, Without<BicycleFrame>),
         >,
         time: Res<Time>,
     ) {
-        // Follow the Front Circle
-        for (circle, circle_t, circle_v) in player_query.iter() {
-            if let BicycleWheel::Back = circle {
-                let (camera, mut camera_t) = camera_query.single_mut();
-                camera_t.translation = circle_t.translation;
-            }
+        // Follow the Bicycle Frame
+        for (frame, frame_t) in player_query.iter() {
+            let (camera, mut camera_t) = camera_query.single_mut();
+            camera_t.translation = frame_t.translation;
         }
     }
 
