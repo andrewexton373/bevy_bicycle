@@ -11,12 +11,12 @@ impl Plugin for CameraPlugin {
             .add_systems(
                 PostUpdate,
                 (
-                    // CameraPlugin::camera_follow
-                    //         .after(PhysicsSet::Sync)
-                    //         .before(TransformSystem::TransformPropagate),
-                    CameraPlugin::free_camera
-                        .after(PhysicsSet::Sync)
-                        .before(TransformSystem::TransformPropagate),
+                    CameraPlugin::camera_follow
+                            .after(PhysicsSet::Sync)
+                            .before(TransformSystem::TransformPropagate),
+                    // CameraPlugin::free_camera
+                    //     .after(PhysicsSet::Sync)
+                    //     .before(TransformSystem::TransformPropagate),
                 ),
             );
     }

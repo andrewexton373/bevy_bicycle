@@ -15,14 +15,14 @@ impl WheelPlugin {
     pub fn spawn_wheel(
         trigger: Trigger<SpawnWheelEvent>,
         mut commands: Commands,
-        frame: Query<(Entity, &BicycleFrame)>,
+        frame: Query<(Entity, &Transform, &BicycleFrame)>,
         mut meshes: ResMut<Assets<Mesh>>,
         mut custom_materials: ResMut<Assets<CustomMaterial>>,
         asset_server: Res<AssetServer>,
     ) {
         let evt = trigger.event();
 
-        let (frame_ent, frame) = frame.single();
+        let (frame_ent, transform, frame) = frame.single();
 
         let mounting_point = match evt.wheel {
             BicycleWheel::Front => frame
@@ -54,7 +54,7 @@ impl WheelPlugin {
                     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
                     alpha_mode: AlphaMode::Blend,
                 })),
-                Position::from(*mounting_point.1),
+                Position::from(*mounting_point.1 + transform.translation.truncate().as_dvec2()),
             ))
             .id();
 

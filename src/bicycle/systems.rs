@@ -1,11 +1,10 @@
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{input::keyboard::KeyboardInput, math::{DVec2, VectorSpace}, prelude::*};
+
+use crate::{camera::components::FollowCamera, world::{plugin::WorldPlugin, resources::TerrainSeed}};
 
 use super::{
-    components::{Bicycle, BicycleFrame},
-    groupset::events::SpawnGroupsetEvent,
-    plugin::BicyclePlugin,
-    wheel::{components::BicycleWheel, events::SpawnWheelEvent},
+    chain::{components::Chain, events::ResetChainEvent}, components::{Bicycle, BicycleFrame}, events::SpawnBicycleEvent, groupset::{components::Cog, events::SpawnGroupsetEvent}, plugin::BicyclePlugin, wheel::{components::BicycleWheel, events::SpawnWheelEvent}
 };
 
 #[derive(PhysicsLayer, Default)]
@@ -20,7 +19,33 @@ pub enum GameLayer {
 }
 
 impl BicyclePlugin {
-    pub fn init_bicycle(mut commands: Commands) {
+
+    pub fn spawn_bicycle_on_startup(
+        mut commands: Commands
+    ) {
+        commands.trigger(SpawnBicycleEvent);
+    }
+
+    pub fn handle_reset_bicycle_input (
+        mut commands: Commands,
+        keys: Res<ButtonInput<KeyCode>>
+    ) {
+        if keys.just_pressed(KeyCode::Enter) {
+            info!("RESETTING BICYCLE");
+            commands.trigger(SpawnBicycleEvent);
+        }
+    }
+
+    pub fn init_bicycle(
+        _trigger: Trigger<SpawnBicycleEvent>,
+        mut commands: Commands,
+        bicycle: Query<Entity, With<Bicycle>>
+    ) {
+        // Despawn Bicycle If It Already Exists to prepare to reinitialize.
+        if let Ok(bicycle_ent) = bicycle.get_single() {
+            commands.entity(bicycle_ent).despawn_recursive();
+        }
+
         commands.spawn((
             Bicycle,
             Name::new("Bicycle"),
@@ -29,17 +54,66 @@ impl BicyclePlugin {
         ));
     }
 
-    pub fn spawn_frame(trigger: Trigger<OnAdd, Bicycle>, mut commands: Commands) {
+    pub fn on_remove_bicyle(
+        _trigger: Trigger<OnRemove, Bicycle>,
+        mut commands: Commands,
+        frame: Query<Entity, With<BicycleFrame>>,
+        wheels: Query<Entity, With<BicycleWheel>>,
+        cogs: Query<Entity, With<Cog>>,
+        chain: Query<Entity, With<Chain>>,
+        rev_joints: Query<Entity, With<RevoluteJoint>>,
+        fixed_joints: Query<Entity, With<FixedJoint>>,
+    ) {
+        commands.entity(frame.single()).despawn_recursive();
+
+        for ent in wheels.iter() {
+            commands.entity(ent).despawn_recursive();
+        }
+
+        for ent in cogs.iter() {
+            commands.entity(ent).despawn_recursive();
+        }
+
+        if chain.iter().count() > 0 {
+            commands.entity(chain.single()).try_despawn_recursive();
+
+        }
+
+        for ent in rev_joints.iter() {
+            commands.entity(ent).despawn_recursive();
+        }
+
+        for ent in fixed_joints.iter() {
+            commands.entity(ent).despawn_recursive();
+        }
+
+    }
+
+    pub fn spawn_frame(
+            trigger: Trigger<OnAdd, Bicycle>,
+            mut commands: Commands,
+            terrain_seed: Res<TerrainSeed>,
+            camera_t: Query<&Transform, With<FollowCamera>>,
+        ) {
         let bicycle_ent = trigger.entity();
 
         let bicycle_frame = BicycleFrame::new();
         let frame_collider = bicycle_frame.collider();
 
+        let mut camera_pos = DVec2::ZERO;
+        if let Ok(camera_t) = camera_t.get_single() {
+            camera_pos = camera_t.translation.truncate().as_dvec2();
+        }
+
+        let spawn_height: f32 = 30.0 + WorldPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
+        
+        info!("SPAWN HEIGHT: {:?}", spawn_height);
+
         let frame_id = commands
             .spawn((
                 BicycleFrame::new(),
                 Name::new("Frame"),
-                Transform::default(),
+                Transform::from_xyz(camera_pos.x as f32, spawn_height, 0.0),
                 RigidBody::Dynamic,
                 Rotation::default(),
                 Visibility::Inherited,
@@ -61,6 +135,9 @@ impl BicyclePlugin {
         });
 
         commands.trigger(SpawnGroupsetEvent);
+
+        // commands.trigger(ResetChainEvent);
+
 
         // commands.trigger(SpawnCrankEvent);
     }

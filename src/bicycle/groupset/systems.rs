@@ -80,7 +80,7 @@ impl GroupsetPlugin {
     pub fn handle_spawn_component(
         trigger: Trigger<SpawnAttachedEvent>,
         mut commands: Commands,
-        frame: Query<(Entity, &BicycleFrame)>,
+        frame: Query<(Entity, &Transform, &BicycleFrame)>,
         wheels: Query<(Entity, &BicycleWheel)>,
         cassette_radius: Res<CassetteRadius>,
         chainring_radius: Res<ChainringRadius>,
@@ -88,7 +88,7 @@ impl GroupsetPlugin {
         color_materials: ResMut<Assets<ColorMaterial>>,
     ) {
         let cog = trigger.event().cog;
-        let (frame_ent, frame) = frame.single();
+        let (frame_ent, transform, frame) = frame.single();
 
         match cog {
             Cog::FrontChainring => {
@@ -98,7 +98,7 @@ impl GroupsetPlugin {
                         meshes,
                         color_materials,
                         chainring_radius,
-                        &Position::from(pos),
+                        &Position::from(pos + transform.translation.truncate().as_dvec2()),
                     ))
                     .id();
 
@@ -120,7 +120,7 @@ impl GroupsetPlugin {
                         meshes,
                         color_materials,
                         cassette_radius,
-                        &Position::from(pos),
+                        &Position::from(pos + transform.translation.truncate().as_dvec2()),
                     ))
                     .id();
 
