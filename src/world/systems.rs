@@ -1,17 +1,10 @@
 use avian2d::{
-    math::{Vector, PI},
-    parry::{na::geometry, shape::HeightField},
+    math::Vector,
     prelude::*,
 };
 use bevy::{
-    asset::RenderAssetUsages,
-    color::palettes::css::{GRAY, LIGHT_GREEN},
     math::DVec2,
     prelude::*,
-    render::{
-        camera,
-        mesh::{Indices, PrimitiveTopology},
-    },
 };
 use noise::{NoiseFn, Perlin};
 use rand::RngCore;
@@ -67,7 +60,7 @@ impl WorldPlugin {
                 ..chunk_index + (Self::WINDOW_SIZE as i128 / 2) - 1
             {
                 // If the chunk doesn't exist
-                if None == terrain_chunks.iter().find(|chunk| chunk.0 == chunk_index) {
+                if !terrain_chunks.iter().any(|chunk| chunk.0 == chunk_index) {
                     info!("Creating Chunk {:?}", chunk_index);
 
                     let chunk_collider =
@@ -125,7 +118,9 @@ impl WorldPlugin {
         // let left_segment_collider = Collider::segment(origin, origin + DVec2::new(0.0, sample(0.0)));
         // let right_segment_collider = Collider::segment(origin + DVec2::new(Self::CHUNK_WIDTH as f64, 0.0), origin + DVec2::new(Self::CHUNK_WIDTH as f64, sample(Self::CHUNK_WIDTH as f64)));
 
-        let compound_collider = Collider::compound(vec![
+        
+
+        Collider::compound(vec![
             (
                 Position::new(DVec2::new(Self::CHUNK_WIDTH as f64 / 2.0, 0.0)),
                 Rotation::default(),
@@ -134,9 +129,7 @@ impl WorldPlugin {
             // (Position::default(), Rotation::default(), bottom_segment_collider),
             // (Position::default(), Rotation::default(), left_segment_collider),
             // (Position::default(), Rotation::default(), right_segment_collider),
-        ]);
-
-        compound_collider
+        ])
     }
 
     pub fn remove_chunks_outside_viewport(

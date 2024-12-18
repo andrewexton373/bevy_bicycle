@@ -2,7 +2,7 @@ use std::collections::BTreeMap; // itertools = "0.8"
 
 use avian2d::prelude::{Collider, Position, Rotation};
 use bevy::{
-    math::{DVec2, Vec2},
+    math::DVec2,
     prelude::Component,
 };
 
@@ -148,10 +148,9 @@ impl BicycleFrame {
             stem_clamp_to_front_hub,
         ];
 
-        let old_collider =
-            Collider::convex_decomposition(frame_points_all, frame_points_all_indicies);
+        
 
         // compound_segment_collider
-        old_collider
+        Collider::convex_decomposition(frame_points_all, frame_points_all_indicies)
     }
 }

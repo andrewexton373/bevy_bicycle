@@ -1,4 +1,3 @@
-use avian2d::prelude::LinearVelocity;
 use bevy::{
     input::{
         keyboard::{Key, KeyboardInput},
@@ -8,7 +7,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::bicycle::{components::BicycleFrame, wheel::components::BicycleWheel};
+use crate::bicycle::components::BicycleFrame;
 
 use super::{components::FollowCamera, plugin::CameraPlugin};
 
@@ -18,8 +17,8 @@ impl CameraPlugin {
     }
 
     pub fn camera_follow(
-        frame_query: Query<(&Transform), (With<BicycleFrame>, Without<FollowCamera>)>,
-        mut camera_query: Query<(&mut Transform), (With<FollowCamera>, Without<BicycleFrame>)>,
+        frame_query: Query<&Transform, (With<BicycleFrame>, Without<FollowCamera>)>,
+        mut camera_query: Query<&mut Transform, (With<FollowCamera>, Without<BicycleFrame>)>,
     ) {
         // Follow the Bicycle Frame
         for frame_t in frame_query.iter() {
