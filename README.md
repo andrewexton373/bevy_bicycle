@@ -8,9 +8,9 @@ Their is terrain generation based on a seed value. The terrain is generated in c
 
 ## Controls
 
-Key R: Reset Chain
-Key Enter: Reset Bicycle
-Arrow UP -> Zoom In
-Arrow DOWN -> Zoom Out
+- Key R: Reset Chain
+- Key Enter: Reset Bicycle
+- Arrow UP -> Zoom In
+- Arrow DOWN -> Zoom Out
 
 ![image info](./screencaps/gameplay.gif)
