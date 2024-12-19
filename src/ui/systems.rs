@@ -6,12 +6,17 @@ use bevy_egui::{
 };
 use iyes_perf_ui::prelude::PerfUiDefaultEntries;
 
-use crate::{bicycle::{
-    components::BicycleFrame, groupset::{
-        components::Cog,
-        resources::{CassetteRadius, ChainringRadius},
-    }, wheel::components::BicycleWheel
-}, world::resources::TerrainSeed};
+use crate::{
+    bicycle::{
+        components::BicycleFrame,
+        groupset::{
+            components::Cog,
+            resources::{CassetteRadius, ChainringRadius},
+        },
+        wheel::components::BicycleWheel,
+    },
+    world::resources::TerrainSeed,
+};
 
 use super::plugin::UIPlugin;
 
@@ -50,15 +55,17 @@ impl UIPlugin {
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
         chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
         chainring_radius: ResMut<ChainringRadius>,
-        terrain_seed: Res<TerrainSeed>
+        terrain_seed: Res<TerrainSeed>,
     ) {
         egui::Window::new("Bicyle Simulator Information").show(contexts.ctx_mut(), |ui| {
             ui.label(format!("Terrain Seed: {:?}", terrain_seed.0));
-            
+
             let rotation = frame.single();
 
-            ui.label(format!("Frame Grade: {:.1}", 100.0 * rotation.sin / rotation.cos));
-
+            ui.label(format!(
+                "Frame Grade: {:.1}",
+                100.0 * rotation.sin / rotation.cos
+            ));
 
             for (wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {
                 let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);

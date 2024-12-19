@@ -4,25 +4,37 @@ use bevy::{
         ButtonState,
     },
     math::VectorSpace,
-    prelude::*, render::view::RenderLayers,
+    prelude::*,
+    render::view::RenderLayers,
 };
-use bevy_infinite_grid::{InfiniteGrid, InfiniteGridBundle};
+use bevy_infinite_grid::{InfiniteGrid, InfiniteGridBundle, InfiniteGridSettings};
 
 use crate::bicycle::components::BicycleFrame;
 
 use super::{components::FollowCamera, plugin::CameraPlugin};
 
 impl CameraPlugin {
-
     pub fn setup_infinite_grid(mut commands: Commands) {
-        commands.spawn((InfiniteGridBundle::default(), RenderLayers::layer(1)));
+        commands.spawn((
+            InfiniteGridBundle {
+                settings: InfiniteGridSettings {
+                    fadeout_distance: 1000000.0,
+                    ..default()
+                },
+                ..default()
+            },
+            Name::new("Infinite Grid"),
+        ));
     }
 
     pub fn setup_camera(mut commands: Commands) {
-        commands.spawn((FollowCamera, Camera3dBundle {
-            projection: Projection::Orthographic(OrthographicProjection::default_3d()),
-            ..default()
-        }));
+        commands.spawn((
+            FollowCamera,
+            Camera3dBundle {
+                projection: Projection::Orthographic(OrthographicProjection::default_3d()),
+                ..default()
+            },
+        ));
     }
 
     pub fn camera_follow(
@@ -72,7 +84,6 @@ impl CameraPlugin {
     ) {
         for event in keyboard_input.read() {
             if event.state == ButtonState::Pressed {
-
                 // assume orthographic. do nothing if perspective.
                 let Projection::Orthographic(ortho) = query_camera.single_mut().into_inner() else {
                     return;

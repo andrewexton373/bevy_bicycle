@@ -1,10 +1,22 @@
 use avian2d::prelude::*;
-use bevy::{input::keyboard::KeyboardInput, math::{DVec2, VectorSpace}, prelude::*};
+use bevy::{
+    input::keyboard::KeyboardInput,
+    math::{DVec2, VectorSpace},
+    prelude::*,
+};
 
-use crate::{camera::components::FollowCamera, world::{plugin::WorldPlugin, resources::TerrainSeed}};
+use crate::{
+    camera::components::FollowCamera,
+    world::{plugin::WorldPlugin, resources::TerrainSeed},
+};
 
 use super::{
-    chain::{components::Chain, events::ResetChainEvent}, components::{Bicycle, BicycleFrame}, events::SpawnBicycleEvent, groupset::{components::Cog, events::SpawnGroupsetEvent}, plugin::BicyclePlugin, wheel::{components::BicycleWheel, events::SpawnWheelEvent}
+    chain::{components::Chain, events::ResetChainEvent},
+    components::{Bicycle, BicycleFrame},
+    events::SpawnBicycleEvent,
+    groupset::{components::Cog, events::SpawnGroupsetEvent},
+    plugin::BicyclePlugin,
+    wheel::{components::BicycleWheel, events::SpawnWheelEvent},
 };
 
 #[derive(PhysicsLayer, Default)]
@@ -19,17 +31,11 @@ pub enum GameLayer {
 }
 
 impl BicyclePlugin {
-
-    pub fn spawn_bicycle_on_startup(
-        mut commands: Commands
-    ) {
+    pub fn spawn_bicycle_on_startup(mut commands: Commands) {
         commands.trigger(SpawnBicycleEvent);
     }
 
-    pub fn handle_reset_bicycle_input (
-        mut commands: Commands,
-        keys: Res<ButtonInput<KeyCode>>
-    ) {
+    pub fn handle_reset_bicycle_input(mut commands: Commands, keys: Res<ButtonInput<KeyCode>>) {
         if keys.just_pressed(KeyCode::Enter) {
             info!("RESETTING BICYCLE");
             commands.trigger(SpawnBicycleEvent);
@@ -39,7 +45,7 @@ impl BicyclePlugin {
     pub fn init_bicycle(
         _trigger: Trigger<SpawnBicycleEvent>,
         mut commands: Commands,
-        bicycle: Query<Entity, With<Bicycle>>
+        bicycle: Query<Entity, With<Bicycle>>,
     ) {
         // Despawn Bicycle If It Already Exists to prepare to reinitialize.
         if let Ok(bicycle_ent) = bicycle.get_single() {
@@ -76,7 +82,6 @@ impl BicyclePlugin {
 
         if chain.iter().count() > 0 {
             commands.entity(chain.single()).try_despawn_recursive();
-
         }
 
         for ent in rev_joints.iter() {
@@ -86,15 +91,14 @@ impl BicyclePlugin {
         for ent in fixed_joints.iter() {
             commands.entity(ent).despawn_recursive();
         }
-
     }
 
     pub fn spawn_frame(
-            trigger: Trigger<OnAdd, Bicycle>,
-            mut commands: Commands,
-            terrain_seed: Res<TerrainSeed>,
-            camera_t: Query<&Transform, With<FollowCamera>>,
-        ) {
+        trigger: Trigger<OnAdd, Bicycle>,
+        mut commands: Commands,
+        terrain_seed: Res<TerrainSeed>,
+        camera_t: Query<&Transform, With<FollowCamera>>,
+    ) {
         let bicycle_ent = trigger.entity();
 
         let bicycle_frame = BicycleFrame::new();
@@ -105,8 +109,9 @@ impl BicyclePlugin {
             camera_pos = camera_t.translation.truncate().as_dvec2();
         }
 
-        let spawn_height: f32 = 30.0 + WorldPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
-        
+        let spawn_height: f32 =
+            30.0 + WorldPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
+
         info!("SPAWN HEIGHT: {:?}", spawn_height);
 
         let frame_id = commands
@@ -137,7 +142,6 @@ impl BicyclePlugin {
         commands.trigger(SpawnGroupsetEvent);
 
         // commands.trigger(ResetChainEvent);
-
 
         // commands.trigger(SpawnCrankEvent);
     }

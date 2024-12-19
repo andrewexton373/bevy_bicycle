@@ -1,11 +1,5 @@
-use avian2d::{
-    math::Vector,
-    prelude::*,
-};
-use bevy::{
-    math::DVec2,
-    prelude::*,
-};
+use avian2d::{math::Vector, prelude::*};
+use bevy::{math::DVec2, prelude::*};
 use noise::{NoiseFn, Perlin, Simplex};
 use rand::RngCore;
 
@@ -30,7 +24,6 @@ impl WorldPlugin {
         terrain: Query<(Entity, Option<&Children>), With<Terrain>>,
         terrain_seed: Res<TerrainSeed>,
     ) {
-
         let mut terrain_id: Entity = Entity::PLACEHOLDER;
 
         if terrain.is_empty() {
@@ -79,12 +72,10 @@ impl WorldPlugin {
                         ),
                     ));
                 } else {
-                    
                 }
             }
         }
     }
-
 
     pub fn terrain_height_sample(x_pos: f64, seed: u32) -> f64 {
         let perlin = Perlin::new(seed);
@@ -99,8 +90,9 @@ impl WorldPlugin {
         let mut geometry = vec![];
 
         // Sample Points on Function
-        for i in -substep_count/2..substep_count/2 {
-            let x = (chunk_index as f64 * Self::CHUNK_WIDTH as f64).floor()  + substep_width * i as f64;
+        for i in -substep_count / 2..substep_count / 2 {
+            let x =
+                (chunk_index as f64 * Self::CHUNK_WIDTH as f64).floor() + substep_width * i as f64;
             let sample_point = Self::terrain_height_sample(x, seed);
 
             geometry.push(sample_point);
