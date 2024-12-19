@@ -11,7 +11,8 @@ impl Plugin for UIPlugin {
             .add_plugins(PerfUiPlugin)
             .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
             .add_systems(Startup, UIPlugin::performance_ui)
-            .add_systems(Update, UIPlugin::ui_system)
+            .add_systems(Update, UIPlugin::top_panel_ui)
+            .add_systems(Update, UIPlugin::bottom_panel_ui)
             .add_systems(Update, UIPlugin::update_resources);
     }
 }
