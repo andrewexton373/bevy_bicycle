@@ -1,6 +1,5 @@
 use avian2d::prelude::*;
 use bevy::{
-    input::keyboard::KeyboardInput,
     math::{DVec2, VectorSpace},
     prelude::*,
 };
@@ -11,7 +10,7 @@ use crate::{
 };
 
 use super::{
-    chain::{components::Chain, events::ResetChainEvent},
+    chain::components::Chain,
     components::{Bicycle, BicycleFrame},
     events::SpawnBicycleEvent,
     groupset::{components::Cog, events::SpawnGroupsetEvent},

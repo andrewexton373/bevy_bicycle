@@ -1,4 +1,4 @@
-use avian2d::prelude::{AngularVelocity, Rotation};
+use avian2d::prelude::{AngularVelocity, LinearVelocity, Rotation};
 use bevy::prelude::*;
 use bevy_egui::{
     egui::{self, TextureHandle},
@@ -15,7 +15,7 @@ use crate::{
         },
         wheel::components::BicycleWheel,
     },
-    world::resources::TerrainSeed,
+    world::resources::{MaxTerrainChunkCount, TerrainSeed},
 };
 
 use super::plugin::UIPlugin;
@@ -29,6 +29,7 @@ pub struct UiState {
     is_window_open: bool,
     chainring_radius: f32,
     cassette_radius: f32,
+    max_terrain_chunk_count: u8,
 }
 
 impl UIPlugin {
@@ -40,10 +41,13 @@ impl UIPlugin {
         ui_state: ResMut<UiState>,
         mut chainring_radius: ResMut<ChainringRadius>,
         mut cassette_radius: ResMut<CassetteRadius>,
+        mut max_terrain_chunk_count: ResMut<MaxTerrainChunkCount>,
     ) {
         if ui_state.is_changed() && !ui_state.is_added() {
             chainring_radius.replace_if_neq(ChainringRadius(ui_state.chainring_radius));
             cassette_radius.replace_if_neq(CassetteRadius(ui_state.cassette_radius));
+            max_terrain_chunk_count
+                .replace_if_neq(MaxTerrainChunkCount(ui_state.max_terrain_chunk_count));
         }
     }
 
@@ -51,7 +55,7 @@ impl UIPlugin {
         mut ui_state: ResMut<UiState>,
 
         mut contexts: EguiContexts,
-        frame: Query<&Rotation, With<BicycleFrame>>,
+        frame: Query<(&LinearVelocity, &Rotation), With<BicycleFrame>>,
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
         chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
         chainring_radius: ResMut<ChainringRadius>,
@@ -60,12 +64,14 @@ impl UIPlugin {
         egui::Window::new("Bicyle Simulator Information").show(contexts.ctx_mut(), |ui| {
             ui.label(format!("Terrain Seed: {:?}", terrain_seed.0));
 
-            let rotation = frame.single();
+            let (lin_vel, rotation) = frame.single();
 
             ui.label(format!(
                 "Frame Grade: {:.1}",
                 100.0 * rotation.sin / rotation.cos
             ));
+
+            ui.label(format!("Bicycle Speed: {:.1}", lin_vel.length().abs()));
 
             for (wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {
                 let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
@@ -84,6 +90,10 @@ impl UIPlugin {
             ui.label("Cassette Radius:");
 
             ui.add(egui::Slider::new(&mut ui_state.cassette_radius, 4.0..=15.0).text("value"));
+
+            ui.label("Terrain Chunk Count:");
+
+            ui.add(egui::Slider::new(&mut ui_state.max_terrain_chunk_count, 4..=128).text("value"));
         });
     }
 }

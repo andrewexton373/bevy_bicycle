@@ -5,9 +5,8 @@ use bevy::{
     },
     math::VectorSpace,
     prelude::*,
-    render::view::RenderLayers,
 };
-use bevy_infinite_grid::{InfiniteGrid, InfiniteGridBundle, InfiniteGridSettings};
+use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridSettings};
 
 use crate::bicycle::components::BicycleFrame;
 

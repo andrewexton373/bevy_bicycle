@@ -1,11 +1,13 @@
 use avian2d::{math::Vector, prelude::*};
 use bevy::{math::DVec2, prelude::*};
-use noise::{NoiseFn, Perlin, Simplex};
-use rand::RngCore;
+use noise::{NoiseFn, Perlin};
 
 use crate::camera::components::FollowCamera;
 
-use super::{plugin::WorldPlugin, resources::TerrainSeed};
+use super::{
+    plugin::WorldPlugin,
+    resources::{MaxTerrainChunkCount, TerrainSeed},
+};
 
 #[derive(Component)]
 pub struct Terrain;
@@ -15,7 +17,10 @@ pub struct TerrainChunk(pub i128);
 
 impl WorldPlugin {
     const CHUNK_WIDTH: f32 = 2048.0;
-    const WINDOW_SIZE: u128 = 8;
+
+    pub fn x_pos_to_chunk_index(pos: f64) -> i128 {
+        (pos / Self::CHUNK_WIDTH as f64).round() as i128
+    }
 
     pub fn generate_surrounding_terrain_chunks(
         mut commands: Commands,
@@ -23,6 +28,7 @@ impl WorldPlugin {
         terrain_chunks: Query<&TerrainChunk>,
         terrain: Query<(Entity, Option<&Children>), With<Terrain>>,
         terrain_seed: Res<TerrainSeed>,
+        terrain_chunk_count: Res<MaxTerrainChunkCount>,
     ) {
         let mut terrain_id: Entity = Entity::PLACEHOLDER;
 
@@ -39,13 +45,13 @@ impl WorldPlugin {
             // info!("Camera_t: {:?}", camera_t);
 
             let camera_t_x = camera_t.translation.x;
-            let chunk_index = (camera_t_x / (WorldPlugin::CHUNK_WIDTH)) as i128;
+            let chunk_index = Self::x_pos_to_chunk_index(camera_t_x as f64);
 
             // info!("Camera_t current chunk index: {:?}", chunk_index);
             // info!("Seed: {:?}", terrain_seed.0);
 
-            for index in chunk_index - Self::WINDOW_SIZE as i128 / 2
-                ..chunk_index + (Self::WINDOW_SIZE as i128 / 2) - 1
+            for index in chunk_index - terrain_chunk_count.0 as i128 / 2
+                ..chunk_index + (terrain_chunk_count.0 as i128 / 2)
             {
                 // If the chunk doesn't exist
                 if !terrain_chunks.iter().any(|chunk| chunk.0 == index) {
@@ -65,13 +71,8 @@ impl WorldPlugin {
                         SweptCcd::default(),
                         // Mesh2d(meshes.add(WorldPlugin::heightmap_to_bevy_mesh(collider.shape().as_heightfield().unwrap().heights(), Vec2::new(1.0, 1.0)))),
                         // MeshMaterial2d(materials.add(ColorMaterial::from_color(LIGHT_GREEN))),
-                        Transform::from_xyz(
-                            ((index as f32).round() * Self::CHUNK_WIDTH as f32),
-                            0.0,
-                            10.0,
-                        ),
+                        Transform::from_xyz((index as f32).round() * Self::CHUNK_WIDTH, 0.0, 10.0),
                     ));
-                } else {
                 }
             }
         }
@@ -79,7 +80,7 @@ impl WorldPlugin {
 
     pub fn terrain_height_sample(x_pos: f64, seed: u32) -> f64 {
         let perlin = Perlin::new(seed);
-        100.0 * (perlin.get([0.0001 * x_pos as f64]) + 1.0)
+        100.0 * (perlin.get([0.0001 * x_pos]) + 1.0)
     }
 
     pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> Collider {
@@ -123,22 +124,32 @@ impl WorldPlugin {
         camera_viewport: Query<(&Camera, &GlobalTransform), With<FollowCamera>>,
         terrain_chunks: Query<(Entity, &TerrainChunk), With<TerrainChunk>>,
         terrain: Query<Entity, With<Terrain>>,
+        terrain_chunk_count: Res<MaxTerrainChunkCount>,
     ) {
         let (camera, camera_gt) = camera_viewport.single();
 
         // Get viewport bounds in worldspace
-        let bottom_left = camera
-            .ndc_to_world(camera_gt, Vec3::new(-1.0, -1.0, 0.0))
+        let left_bound = camera
+            .ndc_to_world(camera_gt, Vec3::new(-1.0, 0.0, 0.0))
             .unwrap();
-        let top_right = camera
-            .ndc_to_world(camera_gt, Vec3::new(1.0, 1.0, 0.0))
+        let right_bound = camera
+            .ndc_to_world(camera_gt, Vec3::new(1.0, 0.0, 0.0))
             .unwrap();
+
+        let current_chunk_index = Self::x_pos_to_chunk_index(camera_gt.translation().x as f64);
+        let i_min = current_chunk_index.wrapping_sub(terrain_chunk_count.0 as i128 / 2);
+        let i_max = current_chunk_index.wrapping_add(terrain_chunk_count.0 as i128 / 2);
 
         // Get sector indicies min, and max for x and y values
-        let i_min = ((bottom_left.x / Self::CHUNK_WIDTH) as i128).wrapping_sub(2);
-        let i_max = ((top_right.x / Self::CHUNK_WIDTH) as i128).wrapping_add(2);
+        //let i_min = ((left_bound.x / Self::CHUNK_WIDTH) as i128)
+        //    .wrapping_sub(terrain_chunk_count.0 as i128 / 2);
+        //let i_max = ((right_bound.x / Self::CHUNK_WIDTH) as i128)
+        //    .wrapping_add(terrain_chunk_count.0 as i128 / 2);
 
-        info!("i_min: {}, i_max: {}", i_min, i_max);
+        //info!(
+        //    "current: {}, i_min: {}, i_max: {}",
+        //    current_chunk_index, i_min, i_max
+        //);
 
         // Filter Invalid sectors to despawn
         let invalid_sectors: Vec<(Entity, &TerrainChunk)> = terrain_chunks
@@ -148,8 +159,8 @@ impl WorldPlugin {
 
         if let Ok(terrain_id) = terrain.get_single() {
             // Despawn each invalid sector
-            for (invalid_entity, _) in invalid_sectors {
-                info!("Removing Terrain Chunk: {:?}", invalid_entity);
+            for (invalid_entity, chunk) in invalid_sectors {
+                info!("Removing Terrain Chunk: {:?}", chunk.0);
 
                 commands
                     .entity(terrain_id)

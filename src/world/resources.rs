@@ -10,3 +10,12 @@ impl Default for TerrainSeed {
         TerrainSeed(rng.next_u32())
     }
 }
+
+#[derive(Resource, PartialEq)]
+pub struct MaxTerrainChunkCount(pub u8);
+
+impl Default for MaxTerrainChunkCount {
+    fn default() -> Self {
+        MaxTerrainChunkCount(4)
+    }
+}
