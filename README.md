@@ -13,4 +13,4 @@ Key Enter: Reset Bicycle
 Arrow UP -> Zoom In
 Arrow DOWN -> Zoom Out
 
-![image info](./screencaps/chain-stability.gif)
+![image info](./screencaps/gameplay.gif)
