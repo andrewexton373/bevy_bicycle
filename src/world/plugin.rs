@@ -2,16 +2,16 @@ use bevy::prelude::*;
 
 use super::resources::{MaxTerrainChunkCount, TerrainSeed};
 
-pub struct WorldPlugin;
+pub struct WorldTerrainPlugin;
 
-impl Plugin for WorldPlugin {
+impl Plugin for WorldTerrainPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TerrainSeed>()
             .add_systems(
                 Update,
                 (
-                    WorldPlugin::generate_surrounding_terrain_chunks,
-                    WorldPlugin::remove_chunks_outside_viewport,
+                    WorldTerrainPlugin::generate_surrounding_terrain_chunks,
+                    WorldTerrainPlugin::remove_chunks_outside_viewport,
                 ),
             )
             .init_resource::<MaxTerrainChunkCount>();

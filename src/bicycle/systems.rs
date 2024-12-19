@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::{
     camera::components::FollowCamera,
-    world::{plugin::WorldPlugin, resources::TerrainSeed},
+    world::{plugin::WorldTerrainPlugin, resources::TerrainSeed},
 };
 
 use super::{
@@ -109,7 +109,7 @@ impl BicyclePlugin {
         }
 
         let spawn_height: f32 =
-            30.0 + WorldPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
+            30.0 + WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
 
         info!("SPAWN HEIGHT: {:?}", spawn_height);
 

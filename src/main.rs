@@ -19,7 +19,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
 use ui::plugin::UIPlugin;
-use world::plugin::WorldPlugin;
+use world::plugin::WorldTerrainPlugin;
 
 fn main() {
     let primary_window = Window {
@@ -42,7 +42,7 @@ fn main() {
             PhysicsDebugPlugin::default(),
             Material2dPlugin::<CustomMaterial>::default(),
             UIPlugin,
-            WorldPlugin,
+            WorldTerrainPlugin,
             CameraPlugin,
             BicyclePlugin,
         ))

@@ -5,7 +5,7 @@ use noise::{NoiseFn, Perlin};
 use crate::camera::components::FollowCamera;
 
 use super::{
-    plugin::WorldPlugin,
+    plugin::WorldTerrainPlugin,
     resources::{MaxTerrainChunkCount, TerrainSeed},
 };
 
@@ -15,7 +15,7 @@ pub struct Terrain;
 #[derive(Component, PartialEq)]
 pub struct TerrainChunk(pub i128);
 
-impl WorldPlugin {
+impl WorldTerrainPlugin {
     const CHUNK_WIDTH: f32 = 2048.0;
 
     pub fn x_pos_to_chunk_index(pos: f64) -> i128 {
@@ -58,7 +58,7 @@ impl WorldPlugin {
                     info!("Creating Chunk {:?}", index);
 
                     let chunk_collider =
-                        WorldPlugin::generate_hilly_terrain_chunk(index, terrain_seed.0);
+                        WorldTerrainPlugin::generate_hilly_terrain_chunk(index, terrain_seed.0);
 
                     commands.entity(terrain_id).with_child((
                         Name::new(format!("TerrainChunk({:?})", index)),
@@ -68,7 +68,7 @@ impl WorldPlugin {
                         Friction::new(0.95),
                         Restitution::new(0.0),
                         SweptCcd::default(),
-                        // Mesh2d(meshes.add(WorldPlugin::heightmap_to_bevy_mesh(collider.shape().as_heightfield().unwrap().heights(), Vec2::new(1.0, 1.0)))),
+                        // Mesh2d(meshes.add(WorldTerrainPlugin::heightmap_to_bevy_mesh(collider.shape().as_heightfield().unwrap().heights(), Vec2::new(1.0, 1.0)))),
                         // MeshMaterial2d(materials.add(ColorMaterial::from_color(LIGHT_GREEN))),
                         Transform::from_xyz((index as f32).round() * Self::CHUNK_WIDTH, 0.0, 10.0),
                     ));
