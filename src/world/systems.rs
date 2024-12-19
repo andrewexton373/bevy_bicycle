@@ -65,7 +65,6 @@ impl WorldPlugin {
                         TerrainChunk(index),
                         RigidBody::Static,
                         chunk_collider,
-                        // DebugRender::all().with_mesh_visibility(true),
                         Friction::new(0.95),
                         Restitution::new(0.0),
                         SweptCcd::default(),
@@ -84,13 +83,12 @@ impl WorldPlugin {
     }
 
     pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> Collider {
-        let origin = DVec2::ZERO;
         let substep_count = 100;
         let substep_width = Self::CHUNK_WIDTH as f64 / substep_count as f64;
 
         let mut geometry = vec![];
 
-        // Sample Points on Function
+        // Sample Points via Terrain Generation Function
         for i in -substep_count / 2..substep_count / 2 {
             let x =
                 (chunk_index as f64 * Self::CHUNK_WIDTH as f64).floor() + substep_width * i as f64;
@@ -103,20 +101,12 @@ impl WorldPlugin {
             geometry.into_iter().collect(),
             Vector::new(Self::CHUNK_WIDTH as f64, 1.0),
         );
-        // let bottom_segment_collider= Collider::segment(origin, origin + DVec2::new(Self::CHUNK_WIDTH as f64, 0.0));
-        // let left_segment_collider = Collider::segment(origin, origin + DVec2::new(0.0, sample(0.0)));
-        // let right_segment_collider = Collider::segment(origin + DVec2::new(Self::CHUNK_WIDTH as f64, 0.0), origin + DVec2::new(Self::CHUNK_WIDTH as f64, sample(Self::CHUNK_WIDTH as f64)));
 
-        Collider::compound(vec![
-            (
-                Position::new(DVec2::ZERO),
-                Rotation::default(),
-                heightfield_collider,
-            ),
-            // (Position::default(), Rotation::default(), bottom_segment_collider),
-            // (Position::default(), Rotation::default(), left_segment_collider),
-            // (Position::default(), Rotation::default(), right_segment_collider),
-        ])
+        Collider::compound(vec![(
+            Position::new(DVec2::ZERO),
+            Rotation::default(),
+            heightfield_collider,
+        )])
     }
 
     pub fn remove_chunks_outside_viewport(
@@ -139,12 +129,6 @@ impl WorldPlugin {
         let current_chunk_index = Self::x_pos_to_chunk_index(camera_gt.translation().x as f64);
         let i_min = current_chunk_index.wrapping_sub(terrain_chunk_count.0 as i128 / 2);
         let i_max = current_chunk_index.wrapping_add(terrain_chunk_count.0 as i128 / 2);
-
-        // Get sector indicies min, and max for x and y values
-        //let i_min = ((left_bound.x / Self::CHUNK_WIDTH) as i128)
-        //    .wrapping_sub(terrain_chunk_count.0 as i128 / 2);
-        //let i_max = ((right_bound.x / Self::CHUNK_WIDTH) as i128)
-        //    .wrapping_add(terrain_chunk_count.0 as i128 / 2);
 
         //info!(
         //    "current: {}, i_min: {}, i_max: {}",
