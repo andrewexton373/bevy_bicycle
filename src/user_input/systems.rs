@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{bicycle::{chain::events::ResetChainEvent, events::SpawnBicycleEvent}, camera::events::{CameraZoomDirection, CameraZoomEvent}};
+use crate::{bicycle::{chain::events::ResetChainEvent, events::SpawnBicycleEvent}, camera::events::{CameraPanDirection, CameraPanEvent, CameraZoomDirection, CameraZoomEvent, CycleCameraModeEvent}};
 
 use super::plugin::UserInputPlugin;
 
@@ -11,8 +11,13 @@ impl UserInputPlugin {
     ) {
         for key in keys.get_pressed() {
             match key {
-                KeyCode::ArrowUp => {commands.trigger(CameraZoomEvent(CameraZoomDirection::In));},
-                KeyCode::ArrowDown => {commands.trigger(CameraZoomEvent(CameraZoomDirection::Out));},
+                KeyCode::ArrowUp => {commands.send_event(CameraZoomEvent(CameraZoomDirection::In));},
+                KeyCode::ArrowDown => {commands.send_event(CameraZoomEvent(CameraZoomDirection::Out));},
+                KeyCode::KeyW => {commands.send_event(CameraPanEvent(CameraPanDirection::Up));},
+                KeyCode::KeyA => {commands.send_event(CameraPanEvent(CameraPanDirection::Left));},
+                KeyCode::KeyS => {commands.send_event(CameraPanEvent(CameraPanDirection::Down));},
+                KeyCode::KeyD => {commands.send_event(CameraPanEvent(CameraPanDirection::Right));},
+                KeyCode::KeyC => {commands.send_event(CycleCameraModeEvent);}
                 KeyCode::KeyR => {commands.trigger(ResetChainEvent);},
                 KeyCode::Enter => {commands.trigger(SpawnBicycleEvent);},
                 KeyCode::KeyQ => {}

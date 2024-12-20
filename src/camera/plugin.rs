@@ -1,6 +1,8 @@
 use avian2d::prelude::PhysicsSet;
 use bevy::prelude::*;
 use bevy_infinite_grid::InfiniteGridPlugin;
+
+use super::{events::{CameraPanEvent, CameraZoomEvent, CycleCameraModeEvent}, systems::CameraState};
 // use bevy_parallax::ParallaxSystems;
 
 pub struct CameraPlugin;
@@ -16,12 +18,19 @@ impl Plugin for CameraPlugin {
                 (
                     CameraPlugin::camera_follow
                         .after(PhysicsSet::Sync)
-                        .before(TransformSystem::TransformPropagate),
-                    // CameraPlugin::free_camera
-                    //     .after(PhysicsSet::Sync)
-                    //     .before(TransformSystem::TransformPropagate),
+                        .before(TransformSystem::TransformPropagate)
+                        .run_if(in_state(CameraState::Follow)),
+                    CameraPlugin::free_camera
+                        .after(PhysicsSet::Sync)
+                        .before(TransformSystem::TransformPropagate)
+                        .run_if(in_state(CameraState::Free)),
+                    CameraPlugin::handle_zoom_event,
+                    CameraPlugin::handle_cycle_camera_mode_event,
                 ),
             )
-            .add_observer(CameraPlugin::handle_zoom_event);
+            .init_state::<CameraState>()
+            .add_event::<CameraPanEvent>()
+            .add_event::<CameraZoomEvent>()
+            .add_event::<CycleCameraModeEvent>();
     }
 }
