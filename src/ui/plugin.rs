@@ -16,6 +16,7 @@ impl Plugin for UIPlugin {
             .add_systems(Update, (
                 UIPlugin::top_panel_ui,
                 UIPlugin::bottom_panel_ui,
+                UIPlugin::camera_window_ui,
                 UIPlugin::update_resources
             ).run_if(in_state(GameState::Ready)));
     }

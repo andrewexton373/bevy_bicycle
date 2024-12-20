@@ -1,7 +1,7 @@
 use avian2d::prelude::{AngularVelocity, LinearVelocity, Rotation};
-use bevy::prelude::*;
+use bevy::{math::VectorSpace, prelude::*};
 use bevy_egui::{
-    egui::{self, panel::TopBottomSide},
+    egui::{self, panel::TopBottomSide, Align2},
     EguiContexts,
 };
 use iyes_perf_ui::{entry::PerfUiEntry, prelude::PerfUiDefaultEntries};
@@ -14,8 +14,7 @@ use crate::{
             resources::{CassetteRadius, ChainringRadius},
         },
         wheel::components::BicycleWheel,
-    },
-    world::resources::{MaxTerrainChunkCount, TerrainSeed},
+    }, camera::systems::CameraState, world::resources::{MaxTerrainChunkCount, TerrainSeed}
 };
 
 use super::plugin::UIPlugin;
@@ -46,10 +45,25 @@ impl UIPlugin {
         }
     }
 
+    pub fn camera_window_ui(
+        mut contexts: EguiContexts,
+        camera_state: Res<State<CameraState>>,
+    ) {
+
+        egui::Window::new("Camera Information")
+            .anchor(Align2::LEFT_TOP, bevy_egui::egui::Vec2::new(4.0, 28.0))
+            .title_bar(false)
+            .auto_sized()
+            .show(contexts.ctx_mut(), |ui| {
+                ui.label(format!("Camera Mode: {:?}", camera_state));
+            });
+    }
+
     pub fn top_panel_ui(
         mut ui_state: ResMut<UiState>,
         mut contexts: EguiContexts,
         terrain_seed: Res<TerrainSeed>,
+        camera_state: Res<State<CameraState>>,
     ) {
         egui::TopBottomPanel::new(TopBottomSide::Top, "Top Panel").show(contexts.ctx_mut(), |ui| {
             ui.horizontal_wrapped(|ui| {
@@ -60,11 +74,12 @@ impl UIPlugin {
                 ));
                 ui.separator();
 
-                ui.label("Terrain Chunk Count:");
 
                 ui.add(
                     egui::Slider::new(&mut ui_state.max_terrain_chunk_count, 4..=128).text("value"),
                 );
+
+                ui.label("Terrain Chunk Count:");
             });
         });
     }

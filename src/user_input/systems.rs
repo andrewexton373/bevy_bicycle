@@ -9,10 +9,19 @@ impl UserInputPlugin {
         mut commands: Commands,
         keys: Res<ButtonInput<KeyCode>>
     ) {
+
+        // Continuous Input
         for key in keys.get_pressed() {
             match key {
                 KeyCode::ArrowUp => {commands.send_event(CameraZoomEvent(CameraZoomDirection::In));},
                 KeyCode::ArrowDown => {commands.send_event(CameraZoomEvent(CameraZoomDirection::Out));},
+                _ => {}
+            }
+        }
+
+        // One Keystroke Input
+        for key in keys.get_just_pressed() {
+            match key {
                 KeyCode::KeyW => {commands.send_event(CameraPanEvent(CameraPanDirection::Up));},
                 KeyCode::KeyA => {commands.send_event(CameraPanEvent(CameraPanDirection::Left));},
                 KeyCode::KeyS => {commands.send_event(CameraPanEvent(CameraPanDirection::Down));},
