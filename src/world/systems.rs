@@ -1,7 +1,7 @@
 use std::f64::MIN;
 
 use avian2d::{math::Vector, prelude::*};
-use bevy::{asset::RenderAssetUsages, color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN}, math::DVec2, pbr::wireframe::Wireframe, prelude::*, render::{mesh::{Indices, PrimitiveTopology}, render_resource::Face}};
+use bevy::{asset::RenderAssetUsages, color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN, RED, WHITE}, core_pipeline::core_3d::Opaque3d, math::DVec2, pbr::{wireframe::Wireframe, OpaqueRendererMethod}, prelude::*, render::{mesh::{Indices, PrimitiveTopology}, render_resource::Face}};
 use noise::{NoiseFn, Perlin};
 
 use crate::camera::components::FollowCamera;
@@ -73,7 +73,11 @@ impl WorldTerrainPlugin {
                         Restitution::new(0.0),
                         SweptCcd::default(),
                         Mesh3d(meshes.add(chunk_mesh)),
-                        MeshMaterial3d(materials.add(StandardMaterial::from_color(LIMEGREEN))),
+                        MeshMaterial3d(materials.add(StandardMaterial {
+                            base_color: LIGHT_GREEN.into(),
+                            unlit: true,
+                            ..Default::default()
+                        })),
                         Wireframe,
                         Transform::from_xyz((index as f32).round() * Self::CHUNK_WIDTH, 0.0, 10.0),
                     ));
