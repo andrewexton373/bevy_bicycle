@@ -12,11 +12,7 @@ use avian2d::{
     PhysicsPlugins,
 };
 use bevy::{
-    color::palettes::tailwind::BLUE_400,
-    input::InputPlugin,
-    prelude::*,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin}, utils::HashMap,
+    color::palettes::{css::WHITE, tailwind::BLUE_400}, input::InputPlugin, pbr::wireframe::{WireframeConfig, WireframePlugin}, prelude::*, render::render_resource::{AsBindGroup, ShaderRef}, sprite::{Material2d, Material2dPlugin}, utils::HashMap
 };
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -63,6 +59,7 @@ fn main() {
             BicyclePlugin,
             UserInputPlugin,
             Sprite3dPlugin,
+            WireframePlugin,
         ))
         .add_systems(Startup, load_png_assets)
         .add_systems(Update, setup.run_if(in_state(GameState::Loading)))
@@ -72,6 +69,16 @@ fn main() {
         .insert_resource(ClearColor(Color::from(BLUE_400)))
         .insert_resource(Gravity(Vector::NEG_Y * 100.0))
         .insert_resource(SubstepCount(120))
+        // Wireframes can be configured with this resource. This can be changed at runtime.
+        .insert_resource(WireframeConfig {
+            // The global wireframe config enables drawing of wireframes on every mesh,
+            // except those with `NoWireframe`. Meshes with `Wireframe` will always have a wireframe,
+            // regardless of the global configuration.
+            global: true,
+            // Controls the default color of all wireframes. Used as the default color for global wireframes.
+            // Can be changed per mesh using the `WireframeColor` component.
+            default_color: WHITE.into(),
+        })
         .run();
 }
 

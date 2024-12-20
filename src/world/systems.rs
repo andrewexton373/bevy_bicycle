@@ -1,7 +1,7 @@
 use std::f64::MIN;
 
 use avian2d::{math::Vector, prelude::*};
-use bevy::{asset::RenderAssetUsages, color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN}, math::DVec2, prelude::*, render::{mesh::{Indices, PrimitiveTopology}, render_resource::Face}};
+use bevy::{asset::RenderAssetUsages, color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN}, math::DVec2, pbr::wireframe::Wireframe, prelude::*, render::{mesh::{Indices, PrimitiveTopology}, render_resource::Face}};
 use noise::{NoiseFn, Perlin};
 
 use crate::camera::components::FollowCamera;
@@ -74,6 +74,7 @@ impl WorldTerrainPlugin {
                         SweptCcd::default(),
                         Mesh3d(meshes.add(chunk_mesh)),
                         MeshMaterial3d(materials.add(StandardMaterial::from_color(LIMEGREEN))),
+                        Wireframe,
                         Transform::from_xyz((index as f32).round() * Self::CHUNK_WIDTH, 0.0, 10.0),
                     ));
                 }
@@ -87,7 +88,7 @@ impl WorldTerrainPlugin {
     }
 
     pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> (Collider, Mesh) {
-        let substep_count = 2;
+        let substep_count: i32 = 8;
         let substep_width = Self::CHUNK_WIDTH as f64 / substep_count as f64;
 
         let mut geometry = vec![];
@@ -111,39 +112,43 @@ impl WorldTerrainPlugin {
         let mut normals = vec![];
         let geometry_2 = geometry.clone();
 
+        info!("COUNT: {}", geometry_2.iter().count());
+
         let mut sample_heights = geometry_2.iter().enumerate().peekable();
-        while sample_heights.peek().is_some() {
-            let (i, height) = sample_heights.next().unwrap();
+        while let Some((i, height)) = sample_heights.next() {
 
             info!("HIT! {}", i);
             
-            if sample_heights.peek().is_none() { break; }
-
             let substep_width = substep_width as f32;
             let height = *height as f32;
 
             verticies.push([i as f32 * substep_width, -1000.0, 0.0]); // Vertex 0
             verticies.push([i as f32 * substep_width, height, 0.0]); 
-            verticies.push([(i as f32 + 1.) * substep_width, *sample_heights.peek().unwrap().1 as f32, 0.0]); 
-            verticies.push([(i as f32 + 1.) * substep_width, -1000.0, 0.0]); 
 
-            let i = i as u32;
+            normals.push([0.,0.,1.]);
+            normals.push([0.,0.,1.]);
+            let i = i as u32 * 2;
+
+        }
+
+        for step in 0..substep_count - 1 {
+            let i = (step * 2) as u32;
+            info!("STEP: {}", step);
 
             // First Triangle
             indicies.push(i);
-            indicies.push(i + 3);
+            indicies.push(i + 2);
             indicies.push(i + 1);
 
             // Second Triangle
             indicies.push(i + 1);            
-            indicies.push(i + 3);            
             indicies.push(i + 2);            
-
-            normals.push([0.,0.,1.]);
-            normals.push([0.,0.,1.]);
-            normals.push([0.,0.,1.]);
-            normals.push([0.,0.,1.]);
+            indicies.push(i + 3);            
         }
+
+        info!("Vertex Count: {}", verticies.iter().count());
+        info!("Index Count: {}", indicies.iter().count());
+        
 
 
 
