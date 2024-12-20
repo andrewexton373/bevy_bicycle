@@ -56,7 +56,7 @@ fn main() {
             EguiPlugin,
             PhysicsPlugins::default(),
             PhysicsDebugPlugin::default(),
-            Material2dPlugin::<CustomMaterial>::default(),
+            // Material2dPlugin::<CustomMaterial>::default(),
             UIPlugin,
             WorldTerrainPlugin,
             CameraPlugin,

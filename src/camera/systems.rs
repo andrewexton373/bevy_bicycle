@@ -64,7 +64,7 @@ impl CameraPlugin {
         // Follow the Bicycle Frame
         for frame_t in frame_query.iter() {
             let mut camera_t = camera_query.single_mut();
-            camera_t.translation = frame_t.translation.truncate().extend(10.0);
+            camera_t.translation = frame_t.translation.truncate().extend(100.0);
         }
     }
 

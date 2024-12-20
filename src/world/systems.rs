@@ -1,5 +1,7 @@
+use std::f64::MIN;
+
 use avian2d::{math::Vector, prelude::*};
-use bevy::{math::DVec2, prelude::*};
+use bevy::{asset::RenderAssetUsages, color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN}, math::DVec2, prelude::*, render::{mesh::{Indices, PrimitiveTopology}, render_resource::Face}};
 use noise::{NoiseFn, Perlin};
 
 use crate::camera::components::FollowCamera;
@@ -29,13 +31,15 @@ impl WorldTerrainPlugin {
         terrain: Query<(Entity, Option<&Children>), With<Terrain>>,
         terrain_seed: Res<TerrainSeed>,
         terrain_chunk_count: Res<MaxTerrainChunkCount>,
+        mut meshes: ResMut<Assets<Mesh>>,
+        mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
         let mut terrain_id: Entity = Entity::PLACEHOLDER;
 
         if terrain.is_empty() {
             info!("Spawning Terrain Parent");
             terrain_id = commands
-                .spawn((Terrain, Name::new("Terrain"), Transform::default()))
+                .spawn((Terrain, Name::new("Terrain"), Transform::default(), InheritedVisibility::VISIBLE))
                 .id();
         }
 
@@ -57,7 +61,7 @@ impl WorldTerrainPlugin {
                 if !terrain_chunks.iter().any(|chunk| chunk.0 == index) {
                     info!("Creating Chunk {:?}", index);
 
-                    let chunk_collider =
+                    let (chunk_collider, chunk_mesh) =
                         WorldTerrainPlugin::generate_hilly_terrain_chunk(index, terrain_seed.0);
 
                     commands.entity(terrain_id).with_child((
@@ -68,8 +72,8 @@ impl WorldTerrainPlugin {
                         Friction::new(0.95),
                         Restitution::new(0.0),
                         SweptCcd::default(),
-                        // Mesh2d(meshes.add(WorldTerrainPlugin::heightmap_to_bevy_mesh(collider.shape().as_heightfield().unwrap().heights(), Vec2::new(1.0, 1.0)))),
-                        // MeshMaterial2d(materials.add(ColorMaterial::from_color(LIGHT_GREEN))),
+                        Mesh3d(meshes.add(chunk_mesh)),
+                        MeshMaterial3d(materials.add(StandardMaterial::from_color(LIMEGREEN))),
                         Transform::from_xyz((index as f32).round() * Self::CHUNK_WIDTH, 0.0, 10.0),
                     ));
                 }
@@ -82,8 +86,8 @@ impl WorldTerrainPlugin {
         100.0 * (perlin.get([0.0001 * x_pos]) + 1.0)
     }
 
-    pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> Collider {
-        let substep_count = 100;
+    pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> (Collider, Mesh) {
+        let substep_count = 2;
         let substep_width = Self::CHUNK_WIDTH as f64 / substep_count as f64;
 
         let mut geometry = vec![];
@@ -98,15 +102,79 @@ impl WorldTerrainPlugin {
         }
 
         let heightfield_collider = Collider::heightfield(
-            geometry.into_iter().collect(),
+            geometry.clone().into_iter().collect(),
             Vector::new(Self::CHUNK_WIDTH as f64, 1.0),
         );
 
-        Collider::compound(vec![(
+        let mut verticies: Vec<[f32; 3]> = vec![];
+        let mut indicies = vec![];
+        let mut normals = vec![];
+        let geometry_2 = geometry.clone();
+
+        let mut sample_heights = geometry_2.iter().enumerate().peekable();
+        while sample_heights.peek().is_some() {
+            let (i, height) = sample_heights.next().unwrap();
+
+            info!("HIT! {}", i);
+            
+            if sample_heights.peek().is_none() { break; }
+
+            let substep_width = substep_width as f32;
+            let height = *height as f32;
+
+            verticies.push([i as f32 * substep_width, -1000.0, 0.0]); // Vertex 0
+            verticies.push([i as f32 * substep_width, height, 0.0]); 
+            verticies.push([(i as f32 + 1.) * substep_width, *sample_heights.peek().unwrap().1 as f32, 0.0]); 
+            verticies.push([(i as f32 + 1.) * substep_width, -1000.0, 0.0]); 
+
+            let i = i as u32;
+
+            // First Triangle
+            indicies.push(i);
+            indicies.push(i + 3);
+            indicies.push(i + 1);
+
+            // Second Triangle
+            indicies.push(i + 1);            
+            indicies.push(i + 3);            
+            indicies.push(i + 2);            
+
+            normals.push([0.,0.,1.]);
+            normals.push([0.,0.,1.]);
+            normals.push([0.,0.,1.]);
+            normals.push([0.,0.,1.]);
+        }
+
+
+
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
+        // Add 4 vertices, each with its own position attribute (coordinate in
+        // 3D space), for each of the corners of the parallelogram.
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_POSITION,
+            verticies
+        )
+        // Assign a UV coordinate to each vertex.
+        // .with_inserted_attribute(
+        //     Mesh::ATTRIBUTE_UV_0,
+        //     vec![[0.0, 1.0], [0.5, 0.0], [1.0, 0.0], [0.5, 1.0]]
+        // )
+        // Assign normals (everything points outwards)
+        .with_inserted_attribute(
+            Mesh::ATTRIBUTE_NORMAL,
+            normals
+        )
+        // After defining all the vertices and their attributes, build each triangle using the
+        // indices of the vertices that make it up in a counter-clockwise order.
+        .with_inserted_indices(Indices::U32(indicies));
+
+        (Collider::compound(vec![(
             Position::new(DVec2::ZERO),
             Rotation::default(),
             heightfield_collider,
-        )])
+        )]),
+            mesh
+        )
     }
 
     pub fn remove_chunks_outside_viewport(
