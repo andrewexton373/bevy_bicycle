@@ -105,7 +105,7 @@ impl BicyclePlugin {
         }
 
         let spawn_height: f32 =
-            30.0 + WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
+            50.0 + WorldTerrainPlugin::CHUNK_WIDTH *  WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
 
         info!("SPAWN HEIGHT: {:?}", spawn_height);
 

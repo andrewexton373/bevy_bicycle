@@ -18,7 +18,7 @@ pub struct Terrain;
 pub struct TerrainChunk(pub i128);
 
 impl WorldTerrainPlugin {
-    const CHUNK_WIDTH: f32 = 2048.0;
+    pub const CHUNK_WIDTH: f32 = 2048.0;
 
     pub fn x_pos_to_chunk_index(pos: f64) -> i128 {
         (pos / Self::CHUNK_WIDTH as f64).round() as i128
@@ -84,17 +84,17 @@ impl WorldTerrainPlugin {
 
     pub fn terrain_height_sample(x_pos: f64, seed: u32) -> f64 {
         let perlin = Perlin::new(seed);
-        100.0 * (perlin.get([0.0001 * x_pos]) + 1.0)
+        100.0 * (perlin.get([0.0001 * x_pos]) + 1.0) / Self::CHUNK_WIDTH as f64
     }
 
     pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> (Collider, Mesh) {
-        let substep_count: i32 = 8;
+        let substep_count: i32 = 4;
         let substep_width = Self::CHUNK_WIDTH as f64 / substep_count as f64;
 
         let mut geometry = vec![];
 
         // Sample Points via Terrain Generation Function
-        for i in -substep_count / 2..substep_count / 2 {
+        for i in 0..=substep_count {
             let x =
                 (chunk_index as f64 * Self::CHUNK_WIDTH as f64).floor() + substep_width * i as f64;
             let sample_point = Self::terrain_height_sample(x, seed);
@@ -104,7 +104,7 @@ impl WorldTerrainPlugin {
 
         let heightfield_collider = Collider::heightfield(
             geometry.clone().into_iter().collect(),
-            Vector::new(Self::CHUNK_WIDTH as f64, 1.0),
+            Vector::splat(Self::CHUNK_WIDTH as f64),
         );
 
         let mut verticies: Vec<[f32; 3]> = vec![];
@@ -117,21 +117,20 @@ impl WorldTerrainPlugin {
         let mut sample_heights = geometry_2.iter().enumerate().peekable();
         while let Some((i, height)) = sample_heights.next() {
 
-            info!("HIT! {}", i);
+            info!("HIT! {} {}", i, height);
             
             let substep_width = substep_width as f32;
             let height = *height as f32;
 
-            verticies.push([i as f32 * substep_width, -1000.0, 0.0]); // Vertex 0
-            verticies.push([i as f32 * substep_width, height, 0.0]); 
+            verticies.push([(i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0, -1000.0, 0.0]); // Vertex 0
+            verticies.push([(i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0, (height * Self::CHUNK_WIDTH) - 1.0, 0.0]); 
 
             normals.push([0.,0.,1.]);
             normals.push([0.,0.,1.]);
-            let i = i as u32 * 2;
 
         }
 
-        for step in 0..substep_count - 1 {
+        for step in 0..substep_count {
             let i = (step * 2) as u32;
             info!("STEP: {}", step);
 
