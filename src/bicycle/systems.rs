@@ -34,13 +34,6 @@ impl BicyclePlugin {
         commands.trigger(SpawnBicycleEvent);
     }
 
-    pub fn handle_reset_bicycle_input(mut commands: Commands, keys: Res<ButtonInput<KeyCode>>) {
-        if keys.just_pressed(KeyCode::Enter) {
-            info!("RESETTING BICYCLE");
-            commands.trigger(SpawnBicycleEvent);
-        }
-    }
-
     pub fn init_bicycle(
         _trigger: Trigger<SpawnBicycleEvent>,
         mut commands: Commands,

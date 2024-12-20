@@ -1,10 +1,10 @@
 use avian2d::prelude::{AngularVelocity, LinearVelocity, Rotation};
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{self, panel::TopBottomSide, TextureHandle},
+    egui::{self, panel::TopBottomSide},
     EguiContexts,
 };
-use iyes_perf_ui::prelude::PerfUiDefaultEntries;
+use iyes_perf_ui::{entry::PerfUiEntry, prelude::PerfUiDefaultEntries};
 
 use crate::{
     bicycle::{
@@ -22,11 +22,6 @@ use super::plugin::UIPlugin;
 
 #[derive(Default, Resource)]
 pub struct UiState {
-    label: String,
-    value: f32,
-    inverted: bool,
-    egui_texture_handle: Option<TextureHandle>,
-    is_window_open: bool,
     chainring_radius: f32,
     cassette_radius: f32,
     max_terrain_chunk_count: u8,
@@ -44,9 +39,9 @@ impl UIPlugin {
         mut max_terrain_chunk_count: ResMut<MaxTerrainChunkCount>,
     ) {
         if ui_state.is_changed() && !ui_state.is_added() {
-            chainring_radius.replace_if_neq(ChainringRadius(ui_state.chainring_radius));
-            cassette_radius.replace_if_neq(CassetteRadius(ui_state.cassette_radius));
-            max_terrain_chunk_count
+            let _ = chainring_radius.replace_if_neq(ChainringRadius(ui_state.chainring_radius));
+            let _ = cassette_radius.replace_if_neq(CassetteRadius(ui_state.cassette_radius));
+            let _ = max_terrain_chunk_count
                 .replace_if_neq(MaxTerrainChunkCount(ui_state.max_terrain_chunk_count));
         }
     }
@@ -59,6 +54,10 @@ impl UIPlugin {
         egui::TopBottomPanel::new(TopBottomSide::Top, "Top Panel").show(contexts.ctx_mut(), |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.label(format!("Terrain Seed: {:?}", terrain_seed.0));
+                ui.label(format!(
+                    "FPS: {:?}",
+                    PerfUiDefaultEntries::default().fps.label()
+                ));
                 ui.separator();
 
                 ui.label("Terrain Chunk Count:");

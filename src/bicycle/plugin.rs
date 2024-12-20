@@ -16,7 +16,6 @@ impl Plugin for BicyclePlugin {
             WheelPlugin,
         ))
         .add_systems(Startup, BicyclePlugin::spawn_bicycle_on_startup)
-        .add_systems(Update, BicyclePlugin::handle_reset_bicycle_input)
         .add_observer(BicyclePlugin::spawn_frame)
         .add_observer(BicyclePlugin::on_remove_bicyle)
         .add_observer(BicyclePlugin::init_bicycle)

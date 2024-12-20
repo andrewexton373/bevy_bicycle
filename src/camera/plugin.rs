@@ -10,7 +10,7 @@ impl Plugin for CameraPlugin {
         app.add_plugins(InfiniteGridPlugin)
             .add_systems(Startup, CameraPlugin::setup_camera)
             .add_systems(Startup, CameraPlugin::setup_infinite_grid)
-            .add_systems(Update, CameraPlugin::zoom_scale)
+            // .add_systems(Update, CameraPlugin::zoom_scale)
             .add_systems(
                 PostUpdate,
                 (
@@ -21,6 +21,7 @@ impl Plugin for CameraPlugin {
                     //     .after(PhysicsSet::Sync)
                     //     .before(TransformSystem::TransformPropagate),
                 ),
-            );
+            )
+            .add_observer(CameraPlugin::handle_zoom_event);
     }
 }

@@ -10,7 +10,7 @@ use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridSettings};
 
 use crate::bicycle::components::BicycleFrame;
 
-use super::{components::FollowCamera, plugin::CameraPlugin};
+use super::{components::FollowCamera, events::{CameraZoomDirection, CameraZoomEvent}, plugin::CameraPlugin};
 
 impl CameraPlugin {
     pub fn setup_infinite_grid(mut commands: Commands) {
@@ -72,34 +72,31 @@ impl CameraPlugin {
 
         if let Ok(mut camera_t) = camera.get_single_mut() {
             camera_t.translation += movement_vector * 10000.0 * time.delta_secs();
-            // info!("MOVEMENT_VEC: {:?}", movement_vector);
-            // info!("CAMERA_T: {:?}", camera_t.translation);
         }
     }
 
-    pub fn zoom_scale(
+    pub fn handle_zoom_event(
+        trigger: Trigger<CameraZoomEvent>,
         mut query_camera: Query<&mut Projection, With<FollowCamera>>,
-        mut keyboard_input: EventReader<KeyboardInput>,
+        time: Res<Time>,
     ) {
-        for event in keyboard_input.read() {
-            if event.state == ButtonState::Pressed {
-                // assume orthographic. do nothing if perspective.
-                let Projection::Orthographic(ortho) = query_camera.single_mut().into_inner() else {
-                    return;
-                };
 
-                match event.logical_key {
-                    Key::ArrowUp => {
-                        // zoom in
-                        ortho.scale /= 1.25;
-                    }
-                    Key::ArrowDown => {
-                        // zoom out
-                        ortho.scale *= 1.25;
-                    }
-                    _ => {}
-                }
-            }
+        let event = trigger.event();
+
+        // assume orthographic. do nothing if perspective.
+        let Projection::Orthographic(ortho) = query_camera.single_mut().into_inner() else {
+            return;
+        };
+
+        match event.0 {
+            CameraZoomDirection::In => {
+                ortho.scale /= 1.02;
+            },
+            CameraZoomDirection::Out => {
+                ortho.scale *= 1.02;
+            },
         }
+
     }
+
 }

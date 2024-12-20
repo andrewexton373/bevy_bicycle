@@ -11,12 +11,6 @@ use crate::bicycle::{
 use super::{components::Chain, events::ResetChainEvent, plugin::ChainPlugin};
 
 impl ChainPlugin {
-    pub fn reset_chain_on_press_r(keys: Res<ButtonInput<KeyCode>>, mut commands: Commands) {
-        if keys.just_pressed(KeyCode::KeyR) {
-            commands.trigger(ResetChainEvent);
-        }
-    }
-
     pub fn reset_chain(
         _trigger: Trigger<ResetChainEvent>,
         mut commands: Commands,

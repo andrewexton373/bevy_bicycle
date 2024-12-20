@@ -1,5 +1,6 @@
 pub mod bicycle;
 pub mod camera;
+pub mod user_input;
 pub mod ui;
 pub mod world;
 
@@ -10,6 +11,7 @@ use avian2d::{
 };
 use bevy::{
     color::palettes::tailwind::BLUE_400,
+    input::InputPlugin,
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
     sprite::{Material2d, Material2dPlugin},
@@ -19,6 +21,7 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
 use ui::plugin::UIPlugin;
+use user_input::plugin::UserInputPlugin;
 use world::plugin::WorldTerrainPlugin;
 
 fn main() {
@@ -45,6 +48,7 @@ fn main() {
             WorldTerrainPlugin,
             CameraPlugin,
             BicyclePlugin,
+            UserInputPlugin,
         ))
         //.add_plugins(WorldInspectorPlugin::new())
         .insert_resource(ClearColor(Color::from(BLUE_400)))
