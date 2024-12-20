@@ -78,7 +78,7 @@ impl WorldTerrainPlugin {
                             unlit: true,
                             ..Default::default()
                         })),
-                        Wireframe,
+                        // Wireframe,
                         Transform::from_xyz((index as f32).round() * Self::CHUNK_WIDTH, 0.0, 10.0),
                     ));
                 }
@@ -92,7 +92,7 @@ impl WorldTerrainPlugin {
     }
 
     pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> (Collider, Mesh) {
-        let substep_count: i32 = 4;
+        let substep_count: i32 = 20;
         let substep_width = Self::CHUNK_WIDTH as f64 / substep_count as f64;
 
         let mut geometry = vec![];

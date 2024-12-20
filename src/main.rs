@@ -59,7 +59,7 @@ fn main() {
             BicyclePlugin,
             UserInputPlugin,
             Sprite3dPlugin,
-            WireframePlugin,
+            // WireframePlugin,
         ))
         .add_systems(Startup, load_png_assets)
         .add_systems(Update, setup.run_if(in_state(GameState::Loading)))
