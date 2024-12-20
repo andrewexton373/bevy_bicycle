@@ -3,8 +3,6 @@ use std::collections::BTreeMap; // itertools = "0.8"
 use avian2d::prelude::{Collider, Position, Rotation};
 use bevy::{math::DVec2, prelude::Component};
 
-// use super::systems::AttachmentPoint;
-
 #[derive(Component)]
 pub struct Bicycle;
 
