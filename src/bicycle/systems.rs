@@ -30,8 +30,11 @@ pub enum GameLayer {
 }
 
 impl BicyclePlugin {
-    pub fn spawn_bicycle_on_startup(mut commands: Commands) {
-        commands.trigger(SpawnBicycleEvent);
+    pub fn spawn_bicycle_on_startup(mut commands: Commands, bicycle: Query<Entity, With<Bicycle>>) {
+        if bicycle.is_empty() {
+            info!("SPAWN BICYCLE");
+            commands.trigger(SpawnBicycleEvent);
+        }
     }
 
     pub fn init_bicycle(

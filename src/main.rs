@@ -4,6 +4,8 @@ pub mod user_input;
 pub mod ui;
 pub mod world;
 
+use std::iter::Map;
+
 use avian2d::{
     math::Vector,
     prelude::{Gravity, PhysicsDebugPlugin, SubstepCount},
@@ -14,15 +16,26 @@ use bevy::{
     input::InputPlugin,
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin},
+    sprite::{Material2d, Material2dPlugin}, utils::HashMap,
 };
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_sprite3d::{Sprite3dParams, Sprite3dPlugin};
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
 use ui::plugin::UIPlugin;
 use user_input::plugin::UserInputPlugin;
-use world::plugin::WorldTerrainPlugin;
+    use world::plugin::WorldTerrainPlugin;
+    use itertools::Itertools;
+
+#[derive(States, Hash, Clone, PartialEq, Eq, Debug, Default)]
+pub enum GameState { #[default] Loading, Ready }
+
+
+#[derive(Resource)]
+pub struct PNGAssets {
+    pub assets: HashMap<String, Handle<Image>>
+}
 
 fn main() {
     let primary_window = Window {
@@ -49,12 +62,37 @@ fn main() {
             CameraPlugin,
             BicyclePlugin,
             UserInputPlugin,
+            Sprite3dPlugin,
         ))
+        .add_systems(Startup, load_png_assets)
+        .add_systems(Update, setup.run_if(in_state(GameState::Loading)))
+        .init_state::<GameState>()
+        .insert_resource(PNGAssets {assets: HashMap::new()})
         //.add_plugins(WorldInspectorPlugin::new())
         .insert_resource(ClearColor(Color::from(BLUE_400)))
         .insert_resource(Gravity(Vector::NEG_Y * 100.0))
         .insert_resource(SubstepCount(120))
         .run();
+}
+
+fn load_png_assets(
+    asset_server: Res<AssetServer>,
+    mut png_assets: ResMut<PNGAssets>
+) {
+    png_assets.assets.insert("bicycle_wheel".to_string(), asset_server.load("media/bike_spokes_4.png"));
+}
+
+fn setup(
+    asset_server: Res<AssetServer>,
+    png_assets: Res<PNGAssets>,
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    mut sprite_params: Sprite3dParams
+) {
+    if !png_assets.assets.iter().all(|(_, asset_handle)| asset_server.get_load_state(asset_handle.id()).is_some_and(|s| s.is_loaded())) { return };
+     // poll every frame to check if assets are loaded. Once they are, we can proceed with setup.
+    info!("ASSETS LOADED -> READY");
+    next_state.set(GameState::Ready);
 }
 
 // This struct defines the data that will be passed to your shader

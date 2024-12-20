@@ -387,6 +387,7 @@ dependencies = [
  "bevy_dylib",
  "bevy_egui",
  "bevy_infinite_grid",
+ "bevy_sprite3d",
  "bevy_ui",
  "itertools",
  "iyes_perf_ui",
@@ -1208,6 +1209,15 @@ dependencies = [
  "nonmax",
  "radsort",
  "rectangle-pack",
+]
+
+[[package]]
+name = "bevy_sprite3d"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11512eeb84d4106da2bc9bcd2434a2ab9a32da1ee1794c27a7aa55f1df761268"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

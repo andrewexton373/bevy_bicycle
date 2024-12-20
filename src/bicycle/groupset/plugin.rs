@@ -1,8 +1,10 @@
 use avian2d::prelude::PhysicsSet;
 use bevy::{
     app::{Plugin, PostUpdate},
-    prelude::IntoSystemConfigs,
+    prelude::{in_state, IntoSystemConfigs},
 };
+
+use crate::GameState;
 
 use super::{
     events::SpawnGroupsetEvent,
@@ -21,7 +23,8 @@ impl Plugin for GroupsetPlugin {
                 GroupsetPlugin::limit_crank_rpm,
             )
                 .chain()
-                .after(PhysicsSet::Sync),
+                .after(PhysicsSet::Sync)
+                .run_if(in_state(GameState::Ready)),
         )
         .init_resource::<ChainringRadius>()
         .init_resource::<CassetteRadius>()

@@ -76,6 +76,10 @@ impl UIPlugin {
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
         chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
     ) {
+
+        if rear_wheel_query.is_empty() {return;}
+        if chainring_query.is_empty() {return;}
+
         egui::TopBottomPanel::new(TopBottomSide::Bottom, "Bottom Panel").show(
             contexts.ctx_mut(),
             |ui| {

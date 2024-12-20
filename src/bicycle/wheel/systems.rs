@@ -1,12 +1,13 @@
 use avian2d::prelude::*;
 use bevy::{color::palettes::css::BLACK, prelude::*};
+use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 
 use crate::{
     bicycle::{
         components::{BicycleFrame, FrameGeometry},
         systems::GameLayer,
     },
-    CustomMaterial,
+    CustomMaterial, PNGAssets,
 };
 
 use super::{components::BicycleWheel, events::SpawnWheelEvent, plugin::WheelPlugin};
@@ -16,9 +17,11 @@ impl WheelPlugin {
         trigger: Trigger<SpawnWheelEvent>,
         mut commands: Commands,
         frame: Query<(Entity, &Transform, &BicycleFrame)>,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut custom_materials: ResMut<Assets<CustomMaterial>>,
+        // mut meshes: ResMut<Assets<Mesh>>,
+        // mut custom_materials: ResMut<Assets<CustomMaterial>>,
         asset_server: Res<AssetServer>,
+        mut png_assets: Res<PNGAssets>,
+        mut sprite_params: Sprite3dParams
     ) {
         let evt = trigger.event();
 
@@ -48,12 +51,20 @@ impl WheelPlugin {
                 Friction::new(1.0),
                 Restitution::new(0.001),
                 SweptCcd::new_with_mode(SweepMode::NonLinear),
-                Mesh2d(meshes.add(Circle::new(BicycleWheel::size()))),
-                MeshMaterial2d(custom_materials.add(CustomMaterial {
-                    color: LinearRgba::WHITE,
-                    color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
-                    alpha_mode: AlphaMode::Blend,
-                })),
+                // Mesh2d(meshes.add(Circle::new(BicycleWheel::size()))),
+                // MeshMaterial2d(custom_materials.add(CustomMaterial {
+                //     color: LinearRgba::WHITE,
+                //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
+                //     alpha_mode: AlphaMode::Blend,
+                // })),
+                Sprite3dBuilder {
+                    image: png_assets.assets.get("bicycle_wheel").unwrap().clone(),
+                    pixels_per_metre: 2.5,
+                    alpha_mode: AlphaMode::Multiply,
+                    unlit: true,
+
+                    ..default()
+                }.bundle(&mut sprite_params),
                 Position::from(*mounting_point.1 + transform.translation.truncate().as_dvec2()),
             ))
             .id();

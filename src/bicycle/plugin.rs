@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::GameState;
+
 use super::{
     chain::plugin::ChainPlugin, events::SpawnBicycleEvent, groupset::plugin::GroupsetPlugin,
     wheel::plugin::WheelPlugin,
@@ -15,7 +17,7 @@ impl Plugin for BicyclePlugin {
             GroupsetPlugin,
             WheelPlugin,
         ))
-        .add_systems(Startup, BicyclePlugin::spawn_bicycle_on_startup)
+        .add_systems(Update, BicyclePlugin::spawn_bicycle_on_startup.run_if(in_state(GameState::Ready)))
         .add_observer(BicyclePlugin::spawn_frame)
         .add_observer(BicyclePlugin::on_remove_bicyle)
         .add_observer(BicyclePlugin::init_bicycle)

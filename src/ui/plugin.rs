@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use iyes_perf_ui::PerfUiPlugin;
 
+use crate::GameState;
+
 use super::systems::UiState;
 
 pub struct UIPlugin;
@@ -11,8 +13,10 @@ impl Plugin for UIPlugin {
             .add_plugins(PerfUiPlugin)
             .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
             .add_systems(Startup, UIPlugin::performance_ui)
-            .add_systems(Update, UIPlugin::top_panel_ui)
-            .add_systems(Update, UIPlugin::bottom_panel_ui)
-            .add_systems(Update, UIPlugin::update_resources);
+            .add_systems(Update, (
+                UIPlugin::top_panel_ui,
+                UIPlugin::bottom_panel_ui,
+                UIPlugin::update_resources
+            ).run_if(in_state(GameState::Ready)));
     }
 }
