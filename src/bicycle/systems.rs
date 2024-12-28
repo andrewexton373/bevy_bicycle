@@ -120,7 +120,7 @@ impl BicyclePlugin {
                 frame_collider,
                 CollisionLayers::new(GameLayer::Frame, GameLayer::World),
                 MassPropertiesBundle {
-                    mass: Mass::new(1.0),
+                    mass: Mass(1.0),
                     ..default()
                 },
             ))

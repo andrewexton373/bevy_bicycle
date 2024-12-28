@@ -4,7 +4,7 @@ use avian2d::{math::Vector, prelude::*};
 use bevy::{asset::RenderAssetUsages, color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN, RED, WHITE}, core_pipeline::core_3d::Opaque3d, math::DVec2, pbr::{wireframe::Wireframe, OpaqueRendererMethod}, prelude::*, render::{mesh::{Indices, PrimitiveTopology}, render_resource::Face}};
 use noise::{NoiseFn, Perlin};
 
-use crate::camera::components::FollowCamera;
+use crate::{bicycle::systems::GameLayer, camera::components::FollowCamera};
 
 use super::{
     plugin::WorldTerrainPlugin,
@@ -67,11 +67,12 @@ impl WorldTerrainPlugin {
                     commands.entity(terrain_id).with_child((
                         Name::new(format!("TerrainChunk({:?})", index)),
                         TerrainChunk(index),
+                        CollisionLayers::new([GameLayer::World, GameLayer::Wheels], [GameLayer::World, GameLayer::Wheels]),
                         RigidBody::Static,
                         chunk_collider,
                         Friction::new(0.95),
                         Restitution::new(0.0),
-                        SweptCcd::default(),
+                        // SweptCcd::default(),
                         Mesh3d(meshes.add(chunk_mesh)),
                         MeshMaterial3d(materials.add(StandardMaterial {
                             base_color: LIGHT_GREEN.into(),

@@ -330,12 +330,15 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "avian2d"
-version = "0.1.2"
-source = "git+https://github.com/Jondolf/avian.git?branch=main#52cbcecce0fd05a65005ab6935ebeb231373c2c6"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e57956ec5f349024c6023defb05ba2ac58500771d37abddb1d1f6fcb0e0d8a70"
 dependencies = [
  "avian_derive",
  "bevy",
+ "bevy_heavy",
  "bevy_math",
+ "bevy_transform_interpolation",
  "bitflags 2.6.0",
  "derive_more",
  "fxhash",
@@ -347,8 +350,9 @@ dependencies = [
 
 [[package]]
 name = "avian_derive"
-version = "0.1.0"
-source = "git+https://github.com/Jondolf/avian.git?branch=main#52cbcecce0fd05a65005ab6935ebeb231373c2c6"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf96a7b75cf061f223b6e1ed3dd4d3a063b2c3c0acfb8994d6ab31e29a2bcea5"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -826,6 +830,16 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
+]
+
+[[package]]
+name = "bevy_heavy"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f85619a206875db57b0213dc5242b51f1be748663cd5f8f99f78d2a6a108dabf"
+dependencies = [
+ "bevy_math",
+ "bevy_reflect",
 ]
 
 [[package]]
@@ -1314,6 +1328,15 @@ dependencies = [
  "bevy_math",
  "bevy_reflect",
  "derive_more",
+]
+
+[[package]]
+name = "bevy_transform_interpolation"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fcad6974fb74cab07425c4f3d3af78876966b4525c3aec5c0d56ae8511a946a"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

@@ -65,7 +65,7 @@ impl ChainPlugin {
             Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
             MassPropertiesBundle {
-                mass: Mass::new(0.01),
+                mass: Mass(0.01),
                 ..default()
             },
             Transform {
