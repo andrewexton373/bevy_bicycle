@@ -67,7 +67,7 @@ impl WorldTerrainPlugin {
                     commands.entity(terrain_id).with_child((
                         Name::new(format!("TerrainChunk({:?})", index)),
                         TerrainChunk(index),
-                        CollisionLayers::new([GameLayer::World, GameLayer::Wheels], [GameLayer::World, GameLayer::Wheels]),
+                        CollisionLayers::new([GameLayer::World], LayerMask::ALL),
                         RigidBody::Static,
                         chunk_collider,
                         Friction::new(0.95),

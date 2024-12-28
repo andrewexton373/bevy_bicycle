@@ -115,12 +115,12 @@ impl BicyclePlugin {
                 Name::new("Frame"),
                 Transform::from_xyz(camera_pos.x as f32, spawn_height, 0.0),
                 RigidBody::Dynamic,
-                Rotation::default(),
+                // Rotation::default(),
                 Visibility::Inherited,
                 frame_collider,
                 CollisionLayers::new(GameLayer::Frame, GameLayer::World),
                 MassPropertiesBundle {
-                    mass: Mass(1.0),
+                    mass: Mass(10.0),
                     ..default()
                 },
             ))

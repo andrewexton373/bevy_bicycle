@@ -84,7 +84,7 @@ impl ChainPlugin {
         let compliance: f64 = 0.0;
 
         commands
-            .spawn((Chain, GlobalTransform::default()))
+            .spawn((Chain, Transform::default(), GlobalTransform::default()))
             .with_children(|parent| {
                 let mut previous_link = None;
 
