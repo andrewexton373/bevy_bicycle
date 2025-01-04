@@ -6,7 +6,7 @@ use bevy::{math::DVec2, prelude::Resource};
 pub struct SprocketInfo {}
 
 pub struct SprocketOptions {
-    pub(crate) size: f32,
+    // pub(crate) size: f32,
     pub(crate) teeth: u32,
 }
 
@@ -18,10 +18,6 @@ impl Sprocket {
     pub(crate) fn new(options: SprocketOptions) -> Self {
         Self { options }
     }
-
-    fn get_pitch(self) {}
-
-    fn get_roller_diameter(self) {}
 
     fn invert_x(p: (f32, f32)) -> (f32, f32) {
         (-p.0, p.1)
@@ -50,7 +46,8 @@ impl Sprocket {
         let ab = 1.4 * dr;
         let w = ab * f32::cos(PI / n as f32);
         let v = ab * f32::sin(PI / n as f32);
-        let f = dr * (0.8 * f32::cos(b) + 1.4 * f32::cos(17.0 - 64.0 / n as f32) - 1.3025) - 0.0381;
+        let _f =
+            dr * (0.8 * f32::cos(b) + 1.4 * f32::cos(17.0 - 64.0 / n as f32) - 1.3025) - 0.0381;
         let t_inc = 2.0 * PI / n as f32;
 
         let mut thetas: Vec<f32> = vec![];
@@ -118,7 +115,7 @@ impl Sprocket {
             let tanl_m = -(tran_c.0 - y.0) / (tran_c.1 - y.1);
             let tanl_b = -y.0 * tanl_m + y.1;
 
-            let t_off = (y.0 - 10.0, tanl_m * (y.0 - 10.0) + tanl_b);
+            let _t_off = (y.0 - 10.0, tanl_m * (y.0 - 10.0) + tanl_b);
 
             // Topping curve center
             let top_c = (-w, -pr + v);
@@ -162,8 +159,8 @@ impl Sprocket {
             println!("TOPPING CURVE TOP: {:?}", tip);
 
             // Rotate points by theta
-            let rotated_tip = Sprocket::rotate_vector(tip, theta);
-            let rotated_top_c = Sprocket::rotate_vector(top_c, theta);
+            let _rotated_tip = Sprocket::rotate_vector(tip, theta);
+            let _rotated_top_c = Sprocket::rotate_vector(top_c, theta);
             let rotated_x: (f32, f32) = Sprocket::rotate_vector(x, theta);
             let rotated_y: (f32, f32) = Sprocket::rotate_vector(y, theta);
             let rotated_tanl = Sprocket::rotate_vector(tanl, theta);

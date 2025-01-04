@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{color::palettes::css::BLACK, prelude::*};
 use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 
 use crate::{
@@ -41,20 +41,16 @@ impl WheelPlugin {
                 Name::new("Wheel"),
                 RigidBody::Dynamic,
                 Collider::circle(BicycleWheel::size() as f64),
-                // CollisionLayers::new(GameLayer::Wheels, GameLayer::World),
                 CollisionLayers::new([GameLayer::Wheels], [GameLayer::World]),
-                // DebugRender::default().with_collider_color(BLACK.into()),
-                CollisionMargin(1.0),
+                DebugRender::default().with_collider_color(BLACK.into()),
                 Mass(1.0),
                 Friction::new(1.0),
-                // Restitution::new(0.001),
-                SweptCcd::new_with_mode(SweepMode::NonLinear),
+                Restitution::new(0.0),
                 Sprite3dBuilder {
                     image: png_assets.assets.get("bicycle_wheel").unwrap().clone(),
                     pixels_per_metre: 2.5,
                     alpha_mode: AlphaMode::Multiply,
                     unlit: true,
-
                     ..default()
                 }
                 .bundle(&mut sprite_params),

@@ -121,7 +121,7 @@ pub struct CustomMaterial {
     #[texture(1)]
     #[sampler(2)]
     color_texture: Option<Handle<Image>>,
-    alpha_mode: AlphaMode,
+    // alpha_mode: AlphaMode,
 }
 
 /// The Material trait is very configurable, but comes with sensible defaults for all methods.

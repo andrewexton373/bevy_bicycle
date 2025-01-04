@@ -190,7 +190,7 @@ impl GroupsetPlugin {
     }
 
     pub fn limit_crank_rpm(mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>) {
-        for (cog, ang_vel) in cogs.iter_mut() {
+        for (cog, _ang_vel) in cogs.iter_mut() {
             if cog == &Cog::FrontChainring {}
         }
     }
@@ -205,7 +205,7 @@ impl GroupsetPlugin {
 
     pub fn turn_crank(
         mut cogs: Query<(&Cog, &mut AngularVelocity, &mut ExternalTorque), With<Cog>>,
-        mouse_wheel_evt: EventReader<MouseWheel>,
+        _mouse_wheel_evt: EventReader<MouseWheel>,
     ) {
         for (cog, ang_vel, mut torque) in cogs.iter_mut() {
             if let Cog::FrontChainring = cog {

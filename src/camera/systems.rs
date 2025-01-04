@@ -46,10 +46,8 @@ impl CameraPlugin {
     pub fn setup_camera(mut commands: Commands) {
         commands.spawn((
             FollowCamera,
-            Camera3dBundle {
-                projection: Projection::Orthographic(OrthographicProjection::default_3d()),
-                ..default()
-            },
+            Camera3d::default(),
+            Projection::Orthographic(OrthographicProjection::default_3d()),
         ));
     }
 

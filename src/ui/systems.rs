@@ -61,7 +61,7 @@ impl UIPlugin {
         mut ui_state: ResMut<UiState>,
         mut contexts: EguiContexts,
         terrain_seed: Res<TerrainSeed>,
-        camera_state: Res<State<CameraState>>,
+        _camera_state: Res<State<CameraState>>,
     ) {
         egui::TopBottomPanel::new(TopBottomSide::Top, "Top Panel").show(contexts.ctx_mut(), |ui| {
             ui.horizontal_wrapped(|ui| {
@@ -116,7 +116,7 @@ impl UIPlugin {
 
                     ui.vertical(|ui| {
                         ui.heading("Wheel RPM");
-                        for (wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {
+                        for (_wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {
                             let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
                             ui.label(format!("{:?} RPM {:.0}", wheel, rpm));
                         }

@@ -33,25 +33,19 @@ impl WorldTerrainPlugin {
         mut meshes: ResMut<Assets<Mesh>>,
         mut materials: ResMut<Assets<StandardMaterial>>,
     ) {
-        let mut terrain_id: Entity = Entity::PLACEHOLDER;
-
         if terrain.is_empty() {
             info!("Spawning Terrain Parent");
-            terrain_id = commands
-                .spawn((
-                    Terrain,
-                    Name::new("Terrain"),
-                    Transform::default(),
-                    InheritedVisibility::VISIBLE,
-                ))
-                .id();
+            commands.spawn((
+                Terrain,
+                Name::new("Terrain"),
+                Transform::default(),
+                InheritedVisibility::VISIBLE,
+            ));
         }
 
-        if let Ok((terrain_id, terrain_chunks_query)) = terrain.get_single() {
+        // Parent Should Exist, So Get Parent Terrain Entity
+        if let Ok((terrain_id, _terrain_chunks_query)) = terrain.get_single() {
             let camera_t = camera.single();
-
-            // info!("Camera_t: {:?}", camera_t);
-
             let camera_t_x = camera_t.translation.x;
             let chunk_index = Self::x_pos_to_chunk_index(camera_t_x as f64);
 
@@ -76,9 +70,9 @@ impl WorldTerrainPlugin {
                             [GameLayer::Wheels, GameLayer::Frame],
                         ),
                         RigidBody::Static,
-                        CollisionMargin(1.0),
+                        // CollisionMargin(1.0),
                         chunk_collider,
-                        Friction::new(0.95),
+                        Friction::new(1.0),
                         Restitution::new(0.0),
                         // SweptCcd::default(),
                         Mesh3d(meshes.add(chunk_mesh)),
