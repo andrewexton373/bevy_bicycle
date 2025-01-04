@@ -10,18 +10,14 @@ use noise::{NoiseFn, Perlin};
 use crate::{bicycle::systems::GameLayer, camera::components::FollowCamera};
 
 use super::{
+    components::{Terrain, TerrainChunk},
     plugin::WorldTerrainPlugin,
     resources::{MaxTerrainChunkCount, TerrainSeed},
 };
 
-#[derive(Component)]
-pub struct Terrain;
-
-#[derive(Component, PartialEq)]
-pub struct TerrainChunk(pub i128);
-
 impl WorldTerrainPlugin {
     pub const CHUNK_WIDTH: f32 = 2048.0;
+    pub const SUBSTEP_COUNT: u32 = 20;
 
     pub fn x_pos_to_chunk_index(pos: f64) -> i128 {
         (pos / Self::CHUNK_WIDTH as f64).round() as i128
@@ -104,47 +100,48 @@ impl WorldTerrainPlugin {
         100.0 * (perlin.get([0.0001 * x_pos]) + 1.0) / Self::CHUNK_WIDTH as f64
     }
 
-    pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> (Collider, Mesh) {
-        let substep_count: i32 = 20;
-        let substep_width = Self::CHUNK_WIDTH as f64 / substep_count as f64;
+    fn substep_width() -> f64 {
+        Self::CHUNK_WIDTH as f64 / Self::SUBSTEP_COUNT as f64
+    }
 
-        let mut geometry = vec![];
+    pub fn generate_hilly_terrain_chunk(chunk_index: i128, seed: u32) -> (Collider, Mesh) {
+        let mut terrain_height_samples = vec![];
 
         // Sample Points via Terrain Generation Function
-        for i in 0..=substep_count {
-            let x =
-                (chunk_index as f64 * Self::CHUNK_WIDTH as f64).floor() + substep_width * i as f64;
+        for i in 0..=Self::SUBSTEP_COUNT {
+            let x = (chunk_index as f64 * Self::CHUNK_WIDTH as f64).floor()
+                + Self::substep_width() * i as f64;
             let sample_point = Self::terrain_height_sample(x, seed);
 
-            geometry.push(sample_point);
+            terrain_height_samples.push(sample_point);
         }
 
         let heightfield_collider = Collider::heightfield(
-            geometry.clone().into_iter().collect(),
+            terrain_height_samples.clone().into_iter().collect(),
             Vector::splat(Self::CHUNK_WIDTH as f64),
         );
 
+        let mesh = Self::generate_terrain_mesh(&terrain_height_samples);
+
+        (heightfield_collider, mesh)
+    }
+
+    pub fn generate_terrain_mesh(terrain_height_samples: &[f64]) -> Mesh {
         let mut verticies: Vec<[f32; 3]> = vec![];
         let mut indicies = vec![];
         let mut normals = vec![];
-        let geometry_2 = geometry.clone();
 
-        info!("COUNT: {}", geometry_2.iter().count());
-
-        let mut sample_heights = geometry_2.iter().enumerate().peekable();
-        while let Some((i, height)) = sample_heights.next() {
-            info!("HIT! {} {}", i, height);
-
-            let substep_width = substep_width as f32;
+        let sample_heights = terrain_height_samples.iter().enumerate().peekable();
+        for (i, height) in sample_heights {
             let height = *height as f32;
 
             verticies.push([
-                (i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0,
+                (i as f32 * Self::substep_width() as f32) - Self::CHUNK_WIDTH / 2.0,
                 -1000.0,
                 0.0,
             ]); // Vertex 0
             verticies.push([
-                (i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0,
+                (i as f32 * Self::substep_width() as f32) - Self::CHUNK_WIDTH / 2.0,
                 (height * Self::CHUNK_WIDTH) - 1.0,
                 0.0,
             ]);
@@ -153,8 +150,8 @@ impl WorldTerrainPlugin {
             normals.push([0., 0., 1.]);
         }
 
-        for step in 0..substep_count {
-            let i = (step * 2) as u32;
+        for step in 0..Self::SUBSTEP_COUNT {
+            let i = step * 2;
             info!("STEP: {}", step);
 
             // First Triangle
@@ -167,29 +164,16 @@ impl WorldTerrainPlugin {
             indicies.push(i + 2);
             indicies.push(i + 3);
         }
+        info!("Vertex Count: {}", verticies.len());
+        info!("Index Count: {}", indicies.len());
 
-        info!("Vertex Count: {}", verticies.iter().count());
-        info!("Index Count: {}", indicies.iter().count());
-
-        let mesh = Mesh::new(
+        Mesh::new(
             PrimitiveTopology::TriangleList,
             RenderAssetUsages::default(),
         )
-        // Add 4 vertices, each with its own position attribute (coordinate in
-        // 3D space), for each of the corners of the parallelogram.
         .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verticies)
-        // Assign a UV coordinate to each vertex.
-        // .with_inserted_attribute(
-        //     Mesh::ATTRIBUTE_UV_0,
-        //     vec![[0.0, 1.0], [0.5, 0.0], [1.0, 0.0], [0.5, 1.0]]
-        // )
-        // Assign normals (everything points outwards)
         .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
-        // After defining all the vertices and their attributes, build each triangle using the
-        // indices of the vertices that make it up in a counter-clockwise order.
-        .with_inserted_indices(Indices::U32(indicies));
-
-        (heightfield_collider, mesh)
+        .with_inserted_indices(Indices::U32(indicies))
     }
 
     pub fn remove_chunks_outside_viewport(
