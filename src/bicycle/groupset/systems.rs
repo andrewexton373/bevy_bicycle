@@ -1,4 +1,4 @@
-use avian2d::prelude::*;
+use avian2d::{parry::na::clamp, prelude::*};
 use bevy::{
     color::palettes::css::{GREEN, RED},
     input::mouse::MouseWheel,
@@ -71,7 +71,7 @@ impl GroupsetPlugin {
                     .insert(Collider::circle(cassette_radius.0 as f64));
                 commands
                     .entity(ent)
-                    .insert(Mesh2d(meshes.add(Circle::new(cassette_radius.0))));
+                    .insert(Mesh3d(meshes.add(Circle::new(cassette_radius.0))));
                 commands.trigger(ResetChainEvent);
             }
         }
@@ -109,8 +109,8 @@ impl GroupsetPlugin {
                             *frame.geometry.get(&FrameGeometry::BottomBracket).unwrap(),
                         )
                         .with_compliance(0.0001)
-                        .with_angular_velocity_damping(0.0)
-                        .with_linear_velocity_damping(0.0),
+                        .with_angular_velocity_damping(0.0001)
+                        .with_linear_velocity_damping(0.0001),
                 ));
             }
             Cog::RearCassette => {
@@ -130,8 +130,8 @@ impl GroupsetPlugin {
                     RevoluteJoint::new(frame_ent, rear_cassette)
                         .with_local_anchor_1(*frame.geometry.get(&FrameGeometry::RearHub).unwrap())
                         .with_compliance(0.0001)
-                        .with_angular_velocity_damping(0.0)
-                        .with_linear_velocity_damping(0.0),
+                        .with_angular_velocity_damping(0.0001)
+                        .with_linear_velocity_damping(0.0001),
                 ));
 
                 let (wheel_ent, _wheel) = wheels
@@ -144,8 +144,8 @@ impl GroupsetPlugin {
                     FixedJoint::new(wheel_ent, rear_cassette)
                         // .with_local_anchor_1(frame.gemometry.get(&FrameGeometry::RearHub).unwrap().as_dvec2())
                         .with_compliance(0.0001)
-                        .with_angular_velocity_damping(0.0)
-                        .with_linear_velocity_damping(0.0),
+                        .with_angular_velocity_damping(0.0001)
+                        .with_linear_velocity_damping(0.0001),
                 ));
             }
         }
@@ -190,8 +190,14 @@ impl GroupsetPlugin {
     }
 
     pub fn limit_crank_rpm(mut cogs: Query<(&Cog, &mut AngularVelocity), With<Cog>>) {
-        for (cog, _ang_vel) in cogs.iter_mut() {
-            if cog == &Cog::FrontChainring {}
+        for (cog, mut _ang_vel) in cogs.iter_mut() {
+            if cog == &Cog::FrontChainring {
+                let current_rpm = Self::ang_vel_to_rpm(_ang_vel.0);
+                let clamped = current_rpm.clamp(-90.0, 90.0);
+
+                // info!("Current RPM: {}", clamped);
+                // _ang_vel.0 = Self::rpm_to_ang_vel(clamped); // _ang_vel.0.clamp(, max)
+            }
         }
     }
 
@@ -209,32 +215,11 @@ impl GroupsetPlugin {
     ) {
         for (cog, ang_vel, mut torque) in cogs.iter_mut() {
             if let Cog::FrontChainring = cog {
-                // torque.clear();
-
-                // for &evt in mouse_wheel_evt.read() {
-                //     match &evt.unit {
-                //         MouseScrollUnit::Line => {
-                //             // ang_vel.0 += -0.1_f64 * (evt.y as f64);
-                //             println!("evt {:?}", evt.y);
-
-                //             // if GroupsetPlugin::ang_vel_to_rpm(ang_vel.0).abs() > 90.0 {
-                //                 torque.apply_torque(8000.0 * (evt.y as f64));
-                //                 // *torque = *torque.with_persistence(true).apply_torque(200000.0 * (evt.y as f64));
-                //                 println!("Torqeing: {:?}", torque);
-                //             // }
-
-                //             // ang_vel.0 += -1.0 as f64 * evt.y as f64;
-                //             println!("TURN CRANK: ang_vel {}", ang_vel.0);
-                //         }
-                //         MouseScrollUnit::Pixel => {}
-                //     }
-                // }
-
+                torque.clear();
                 if GroupsetPlugin::ang_vel_to_rpm(ang_vel.0).abs() > 90.0 {
                     torque.clear();
-                    // println!("MAXRPM!");
                 } else {
-                    torque.apply_torque(-8000.0_f64);
+                    torque.apply_torque(-800.0_f64);
                 }
             }
         }

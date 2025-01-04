@@ -146,7 +146,7 @@ impl WorldTerrainPlugin {
 
         for step in 0..Self::SUBSTEP_COUNT {
             let i = step * 2;
-            info!("STEP: {}", step);
+            // info!("STEP: {}", step);
 
             // First Triangle
             indicies.push(i);
@@ -158,8 +158,8 @@ impl WorldTerrainPlugin {
             indicies.push(i + 2);
             indicies.push(i + 3);
         }
-        info!("Vertex Count: {}", verticies.len());
-        info!("Index Count: {}", indicies.len());
+        // info!("Vertex Count: {}", verticies.len());
+        // info!("Index Count: {}", indicies.len());
 
         Mesh::new(
             PrimitiveTopology::TriangleList,
@@ -175,6 +175,7 @@ impl WorldTerrainPlugin {
         camera_viewport: Query<(&Camera, &GlobalTransform), With<FollowCamera>>,
         terrain_chunks: Query<(Entity, &TerrainChunk), With<TerrainChunk>>,
         terrain: Query<Entity, With<Terrain>>,
+        terrain_chunk_count: Res<MaxTerrainChunkCount>,
     ) {
         let (camera, camera_gt) = camera_viewport.single();
 
@@ -186,8 +187,14 @@ impl WorldTerrainPlugin {
             .ndc_to_world(camera_gt, Vec3::new(1.0, 0.0, 0.0))
             .unwrap();
 
-        let i_min = Self::x_pos_to_chunk_index(_left_bound.x as f64);
-        let i_max = Self::x_pos_to_chunk_index(_right_bound.x as f64);
+        let current_chunk_index = Self::x_pos_to_chunk_index(camera_gt.translation().x as f64);
+        let i_min = current_chunk_index.wrapping_sub(terrain_chunk_count.0 as i128 / 2);
+        let i_max = current_chunk_index.wrapping_add(terrain_chunk_count.0 as i128 / 2);
+
+        //info!(
+        //    "current: {}, i_min: {}, i_max: {}",
+        //    current_chunk_index, i_min, i_max
+        //);
 
         // Filter Invalid sectors to despawn
         let invalid_sectors: Vec<(Entity, &TerrainChunk)> = terrain_chunks
