@@ -1,18 +1,9 @@
-use std::f64::MIN;
-
 use avian2d::{math::Vector, prelude::*};
 use bevy::{
     asset::RenderAssetUsages,
-    color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN, RED, WHITE},
-    core_pipeline::core_3d::Opaque3d,
-    log::tracing_subscriber::Layer,
-    math::DVec2,
-    pbr::{wireframe::Wireframe, OpaqueRendererMethod},
+    color::palettes::css::LIGHT_GREEN,
     prelude::*,
-    render::{
-        mesh::{Indices, PrimitiveTopology},
-        render_resource::Face,
-    },
+    render::mesh::{Indices, PrimitiveTopology},
 };
 use noise::{NoiseFn, Perlin};
 
@@ -180,7 +171,7 @@ impl WorldTerrainPlugin {
         info!("Vertex Count: {}", verticies.iter().count());
         info!("Index Count: {}", indicies.iter().count());
 
-        let mut mesh = Mesh::new(
+        let mesh = Mesh::new(
             PrimitiveTopology::TriangleList,
             RenderAssetUsages::default(),
         )

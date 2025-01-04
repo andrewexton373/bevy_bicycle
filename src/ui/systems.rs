@@ -1,5 +1,5 @@
 use avian2d::prelude::{AngularVelocity, LinearVelocity, Rotation};
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::prelude::*;
 use bevy_egui::{
     egui::{self, panel::TopBottomSide, Align2},
     EguiContexts,
