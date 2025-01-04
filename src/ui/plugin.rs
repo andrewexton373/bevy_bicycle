@@ -13,11 +13,15 @@ impl Plugin for UIPlugin {
             .add_plugins(PerfUiPlugin)
             .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
             .add_systems(Startup, UIPlugin::performance_ui)
-            .add_systems(Update, (
-                UIPlugin::top_panel_ui,
-                UIPlugin::bottom_panel_ui,
-                UIPlugin::camera_window_ui,
-                UIPlugin::update_resources
-            ).run_if(in_state(GameState::Ready)));
+            .add_systems(
+                Update,
+                (
+                    UIPlugin::top_panel_ui,
+                    UIPlugin::bottom_panel_ui,
+                    UIPlugin::camera_window_ui,
+                    UIPlugin::update_resources,
+                )
+                    .run_if(in_state(GameState::Ready)),
+            );
     }
 }

@@ -1,21 +1,24 @@
-use bevy::{math::{DVec2, Vec2}, prelude::Event};
+use bevy::{
+    math::{DVec2, Vec2},
+    prelude::Event,
+};
 
 #[derive(Event)]
 pub struct CameraZoomEvent(pub CameraZoomDirection);
 
 pub enum CameraZoomDirection {
     In,
-    Out
+    Out,
 }
 
 #[derive(Event)]
 pub struct CameraPanEvent(pub CameraPanDirection);
 
-pub enum CameraPanDirection{
+pub enum CameraPanDirection {
     Up,
     Down,
     Left,
-    Right
+    Right,
 }
 
 impl CameraPanDirection {

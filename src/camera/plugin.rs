@@ -4,7 +4,10 @@ use bevy_infinite_grid::InfiniteGridPlugin;
 
 use crate::GameState;
 
-use super::{events::{CameraPanEvent, CameraZoomEvent, CycleCameraModeEvent}, systems::CameraState};
+use super::{
+    events::{CameraPanEvent, CameraZoomEvent, CycleCameraModeEvent},
+    systems::CameraState,
+};
 // use bevy_parallax::ParallaxSystems;
 
 pub struct CameraPlugin;
@@ -28,7 +31,8 @@ impl Plugin for CameraPlugin {
                         .run_if(in_state(CameraState::Free)),
                     CameraPlugin::handle_zoom_event,
                     CameraPlugin::handle_cycle_camera_mode_event,
-                ).run_if(in_state(GameState::Ready)),
+                )
+                    .run_if(in_state(GameState::Ready)),
             )
             .init_state::<CameraState>()
             .add_event::<CameraPanEvent>()

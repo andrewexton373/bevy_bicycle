@@ -14,7 +14,9 @@ use crate::{
             resources::{CassetteRadius, ChainringRadius},
         },
         wheel::components::BicycleWheel,
-    }, camera::systems::CameraState, world::resources::{MaxTerrainChunkCount, TerrainSeed}
+    },
+    camera::systems::CameraState,
+    world::resources::{MaxTerrainChunkCount, TerrainSeed},
 };
 
 use super::plugin::UIPlugin;
@@ -45,11 +47,7 @@ impl UIPlugin {
         }
     }
 
-    pub fn camera_window_ui(
-        mut contexts: EguiContexts,
-        camera_state: Res<State<CameraState>>,
-    ) {
-
+    pub fn camera_window_ui(mut contexts: EguiContexts, camera_state: Res<State<CameraState>>) {
         egui::Window::new("Camera Information")
             .anchor(Align2::LEFT_TOP, bevy_egui::egui::Vec2::new(4.0, 28.0))
             .title_bar(false)
@@ -74,7 +72,6 @@ impl UIPlugin {
                 ));
                 ui.separator();
 
-
                 ui.add(
                     egui::Slider::new(&mut ui_state.max_terrain_chunk_count, 4..=128).text("value"),
                 );
@@ -91,9 +88,12 @@ impl UIPlugin {
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
         chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
     ) {
-
-        if rear_wheel_query.is_empty() {return;}
-        if chainring_query.is_empty() {return;}
+        if rear_wheel_query.is_empty() {
+            return;
+        }
+        if chainring_query.is_empty() {
+            return;
+        }
 
         egui::TopBottomPanel::new(TopBottomSide::Bottom, "Bottom Panel").show(
             contexts.ctx_mut(),

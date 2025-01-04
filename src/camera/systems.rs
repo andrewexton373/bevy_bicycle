@@ -10,17 +10,20 @@ use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridSettings};
 
 use crate::bicycle::components::BicycleFrame;
 
-use super::{components::FollowCamera, events::{CameraPanEvent, CameraZoomDirection, CameraZoomEvent, CycleCameraModeEvent}, plugin::CameraPlugin};
+use super::{
+    components::FollowCamera,
+    events::{CameraPanEvent, CameraZoomDirection, CameraZoomEvent, CycleCameraModeEvent},
+    plugin::CameraPlugin,
+};
 
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum CameraState {
     #[default]
     Follow,
-    Free
+    Free,
 }
 
 impl CameraPlugin {
-
     pub fn handle_cycle_camera_mode_event(
         mut events: EventReader<CycleCameraModeEvent>,
         state: Res<State<CameraState>>,
@@ -96,13 +99,11 @@ impl CameraPlugin {
             match evt.0 {
                 CameraZoomDirection::In => {
                     ortho.scale /= 1.02;
-                },
+                }
                 CameraZoomDirection::Out => {
                     ortho.scale *= 1.02;
-                },
+                }
             }
-        }        
-
+        }
     }
-
 }
