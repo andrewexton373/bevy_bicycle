@@ -21,7 +21,7 @@ impl WheelPlugin {
         // mut custom_materials: ResMut<Assets<CustomMaterial>>,
         asset_server: Res<AssetServer>,
         mut png_assets: Res<PNGAssets>,
-        mut sprite_params: Sprite3dParams
+        mut sprite_params: Sprite3dParams,
     ) {
         let evt = trigger.event();
 
@@ -45,7 +45,7 @@ impl WheelPlugin {
                 RigidBody::Dynamic,
                 Collider::circle(BicycleWheel::size() as f64),
                 // CollisionLayers::new(GameLayer::Wheels, GameLayer::World),
-                CollisionLayers::new([GameLayer::Wheels], LayerMask::ALL),
+                CollisionLayers::new([GameLayer::Wheels], [GameLayer::World]),
                 // DebugRender::default().with_collider_color(BLACK.into()),
                 CollisionMargin(1.0),
                 Mass(1.0),
@@ -59,7 +59,8 @@ impl WheelPlugin {
                     unlit: true,
 
                     ..default()
-                }.bundle(&mut sprite_params),
+                }
+                .bundle(&mut sprite_params),
                 Position::from(*mounting_point.1 + transform.translation.truncate().as_dvec2()),
             ))
             .id();
@@ -68,9 +69,9 @@ impl WheelPlugin {
             Name::new("Wheel Joint"),
             RevoluteJoint::new(frame_ent, wheel)
                 .with_local_anchor_1(*mounting_point.1)
-                .with_compliance(0.0)
+                .with_compliance(0.0001)
                 .with_angular_velocity_damping(0.0)
-                .with_linear_velocity_damping(0.0),
+                .with_linear_velocity_damping(1.00),
         ));
     }
 }

@@ -108,6 +108,7 @@ impl GroupsetPlugin {
                         .with_local_anchor_1(
                             *frame.geometry.get(&FrameGeometry::BottomBracket).unwrap(),
                         )
+                        .with_compliance(0.0001)
                         .with_angular_velocity_damping(0.0)
                         .with_linear_velocity_damping(0.0),
                 ));
@@ -128,6 +129,7 @@ impl GroupsetPlugin {
                     Name::new("Rear Wheel Fork / Cassette Revolute Joint"),
                     RevoluteJoint::new(frame_ent, rear_cassette)
                         .with_local_anchor_1(*frame.geometry.get(&FrameGeometry::RearHub).unwrap())
+                        .with_compliance(0.0001)
                         .with_angular_velocity_damping(0.0)
                         .with_linear_velocity_damping(0.0),
                 ));
@@ -141,6 +143,7 @@ impl GroupsetPlugin {
                     Name::new("Rear Wheel / Cassette Fixed Joint"),
                     FixedJoint::new(wheel_ent, rear_cassette)
                         // .with_local_anchor_1(frame.gemometry.get(&FrameGeometry::RearHub).unwrap().as_dvec2())
+                        .with_compliance(0.0001)
                         .with_angular_velocity_damping(0.0)
                         .with_linear_velocity_damping(0.0),
                 ));

@@ -1,7 +1,19 @@
 use std::f64::MIN;
 
 use avian2d::{math::Vector, prelude::*};
-use bevy::{asset::RenderAssetUsages, color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN, RED, WHITE}, core_pipeline::core_3d::Opaque3d, math::DVec2, pbr::{wireframe::Wireframe, OpaqueRendererMethod}, prelude::*, render::{mesh::{Indices, PrimitiveTopology}, render_resource::Face}};
+use bevy::{
+    asset::RenderAssetUsages,
+    color::palettes::css::{GREEN, LIGHT_GREEN, LIMEGREEN, RED, WHITE},
+    core_pipeline::core_3d::Opaque3d,
+    log::tracing_subscriber::Layer,
+    math::DVec2,
+    pbr::{wireframe::Wireframe, OpaqueRendererMethod},
+    prelude::*,
+    render::{
+        mesh::{Indices, PrimitiveTopology},
+        render_resource::Face,
+    },
+};
 use noise::{NoiseFn, Perlin};
 
 use crate::{bicycle::systems::GameLayer, camera::components::FollowCamera};
@@ -39,7 +51,12 @@ impl WorldTerrainPlugin {
         if terrain.is_empty() {
             info!("Spawning Terrain Parent");
             terrain_id = commands
-                .spawn((Terrain, Name::new("Terrain"), Transform::default(), InheritedVisibility::VISIBLE))
+                .spawn((
+                    Terrain,
+                    Name::new("Terrain"),
+                    Transform::default(),
+                    InheritedVisibility::VISIBLE,
+                ))
                 .id();
         }
 
@@ -67,8 +84,12 @@ impl WorldTerrainPlugin {
                     commands.entity(terrain_id).with_child((
                         Name::new(format!("TerrainChunk({:?})", index)),
                         TerrainChunk(index),
-                        CollisionLayers::new([GameLayer::World], LayerMask::ALL),
+                        CollisionLayers::new(
+                            [GameLayer::World],
+                            [GameLayer::Wheels, GameLayer::Frame],
+                        ),
                         RigidBody::Static,
+                        CollisionMargin(1.0),
                         chunk_collider,
                         Friction::new(0.95),
                         Restitution::new(0.0),
@@ -121,18 +142,24 @@ impl WorldTerrainPlugin {
 
         let mut sample_heights = geometry_2.iter().enumerate().peekable();
         while let Some((i, height)) = sample_heights.next() {
-
             info!("HIT! {} {}", i, height);
-            
+
             let substep_width = substep_width as f32;
             let height = *height as f32;
 
-            verticies.push([(i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0, -1000.0, 0.0]); // Vertex 0
-            verticies.push([(i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0, (height * Self::CHUNK_WIDTH) - 1.0, 0.0]); 
+            verticies.push([
+                (i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0,
+                -1000.0,
+                0.0,
+            ]); // Vertex 0
+            verticies.push([
+                (i as f32 * substep_width) - Self::CHUNK_WIDTH / 2.0,
+                (height * Self::CHUNK_WIDTH) - 1.0,
+                0.0,
+            ]);
 
-            normals.push([0.,0.,1.]);
-            normals.push([0.,0.,1.]);
-
+            normals.push([0., 0., 1.]);
+            normals.push([0., 0., 1.]);
         }
 
         for step in 0..substep_count {
@@ -145,45 +172,33 @@ impl WorldTerrainPlugin {
             indicies.push(i + 1);
 
             // Second Triangle
-            indicies.push(i + 1);            
-            indicies.push(i + 2);            
-            indicies.push(i + 3);            
+            indicies.push(i + 1);
+            indicies.push(i + 2);
+            indicies.push(i + 3);
         }
 
         info!("Vertex Count: {}", verticies.iter().count());
         info!("Index Count: {}", indicies.iter().count());
-        
 
-
-
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
+        let mut mesh = Mesh::new(
+            PrimitiveTopology::TriangleList,
+            RenderAssetUsages::default(),
+        )
         // Add 4 vertices, each with its own position attribute (coordinate in
         // 3D space), for each of the corners of the parallelogram.
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_POSITION,
-            verticies
-        )
+        .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, verticies)
         // Assign a UV coordinate to each vertex.
         // .with_inserted_attribute(
         //     Mesh::ATTRIBUTE_UV_0,
         //     vec![[0.0, 1.0], [0.5, 0.0], [1.0, 0.0], [0.5, 1.0]]
         // )
         // Assign normals (everything points outwards)
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_NORMAL,
-            normals
-        )
+        .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
         // After defining all the vertices and their attributes, build each triangle using the
         // indices of the vertices that make it up in a counter-clockwise order.
         .with_inserted_indices(Indices::U32(indicies));
 
-        (Collider::compound(vec![(
-            Position::new(DVec2::ZERO),
-            Rotation::default(),
-            heightfield_collider,
-        )]),
-            mesh
-        )
+        (heightfield_collider, mesh)
     }
 
     pub fn remove_chunks_outside_viewport(

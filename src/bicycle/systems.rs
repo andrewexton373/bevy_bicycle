@@ -1,8 +1,9 @@
-use avian2d::prelude::*;
+use avian2d::{parry::math::AngularInertia, prelude::*};
 use bevy::{
     math::{DVec2, VectorSpace},
     prelude::*,
 };
+use bevy_egui::egui::Vec2;
 
 use crate::{
     camera::components::FollowCamera,
@@ -21,6 +22,7 @@ use super::{
 #[derive(PhysicsLayer, Default)]
 pub enum GameLayer {
     #[default]
+    Default,
     World,
     Frame,
     Wheels,
@@ -104,8 +106,9 @@ impl BicyclePlugin {
             camera_pos = camera_t.translation.truncate().as_dvec2();
         }
 
-        let spawn_height: f32 =
-            50.0 + WorldTerrainPlugin::CHUNK_WIDTH *  WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
+        let spawn_height: f32 = 50.0
+            + WorldTerrainPlugin::CHUNK_WIDTH
+                * WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
 
         info!("SPAWN HEIGHT: {:?}", spawn_height);
 
@@ -115,14 +118,14 @@ impl BicyclePlugin {
                 Name::new("Frame"),
                 Transform::from_xyz(camera_pos.x as f32, spawn_height, 0.0),
                 RigidBody::Dynamic,
-                // Rotation::default(),
+                Mass(10.0),
+                AngularInertia(0.1),
+                CenterOfMass(bevy::prelude::Vec2::ZERO),
                 Visibility::Inherited,
                 frame_collider,
-                CollisionLayers::new(GameLayer::Frame, GameLayer::World),
-                MassPropertiesBundle {
-                    mass: Mass(10.0),
-                    ..default()
-                },
+                CollisionMargin(0.5),
+                // SweptCcd::new_with_mode(SweepMode::NonLinear),
+                CollisionLayers::new([GameLayer::Frame], [GameLayer::World]),
             ))
             .id();
 
