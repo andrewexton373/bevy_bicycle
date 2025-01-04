@@ -85,7 +85,7 @@ impl GroupsetPlugin {
         cassette_radius: Res<CassetteRadius>,
         chainring_radius: Res<ChainringRadius>,
         meshes: ResMut<Assets<Mesh>>,
-        color_materials: ResMut<Assets<ColorMaterial>>,
+        color_materials: ResMut<Assets<StandardMaterial>>,
     ) {
         let cog = trigger.event().cog;
         let (frame_ent, transform, frame) = frame.single();
@@ -153,7 +153,7 @@ impl GroupsetPlugin {
 
     pub fn front_chainring(
         mut meshes: ResMut<Assets<Mesh>>,
-        mut color_materials: ResMut<Assets<ColorMaterial>>,
+        mut color_materials: ResMut<Assets<StandardMaterial>>,
         chainring_radius: Res<ChainringRadius>,
         t: &Position,
     ) -> impl Bundle {
@@ -171,13 +171,13 @@ impl GroupsetPlugin {
             Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             Restitution::new(0.0),
             // SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
-            Mesh2d(meshes.add(Circle::new(wheel_radius.0))),
+            Mesh3d(meshes.add(Circle::new(wheel_radius.0))),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
             //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
             //     alpha_mode: AlphaMode::Blend,
             // })),
-            MeshMaterial2d(color_materials.add(ColorMaterial::from_color(GREEN))),
+            MeshMaterial3d(color_materials.add(StandardMaterial::from_color(GREEN))),
             CollisionLayers::new(
                 GameLayer::Groupset,
                 GameLayer::Groupset.to_bits()
@@ -242,7 +242,7 @@ impl GroupsetPlugin {
 
     pub fn rear_cassette(
         mut meshes: ResMut<Assets<Mesh>>,
-        mut color_materials: ResMut<Assets<ColorMaterial>>,
+        mut color_materials: ResMut<Assets<StandardMaterial>>,
         cassette_radius: Res<CassetteRadius>,
 
         t: &Position,
@@ -261,13 +261,13 @@ impl GroupsetPlugin {
             Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             Restitution::new(0.0),
             // SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
-            Mesh2d(meshes.add(Circle::new(wheel_radius.0))),
+            Mesh3d(meshes.add(Circle::new(wheel_radius.0))),
             // MeshMaterial2d(custom_materials.add(CustomMaterial {
             //     color: LinearRgba::WHITE,
             //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
             //     alpha_mode: AlphaMode::Blend,
             // })),
-            MeshMaterial2d(color_materials.add(ColorMaterial::from_color(RED))),
+            MeshMaterial3d(color_materials.add(StandardMaterial::from_color(RED))),
             CollisionLayers::new(
                 GameLayer::Groupset,
                 GameLayer::Groupset.to_bits()
