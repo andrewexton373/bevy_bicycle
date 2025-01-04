@@ -62,9 +62,9 @@ impl WheelPlugin {
             Name::new("Wheel Joint"),
             RevoluteJoint::new(frame_ent, wheel)
                 .with_local_anchor_1(*mounting_point.1)
-                .with_compliance(0.0001)
+                .with_compliance(0.00001)
                 .with_angular_velocity_damping(0.0)
-                .with_linear_velocity_damping(1.00),
+                .with_linear_velocity_damping(100.0),
         ));
     }
 }

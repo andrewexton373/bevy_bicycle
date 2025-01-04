@@ -60,7 +60,6 @@ impl ChainPlugin {
         (
             RigidBody::Dynamic,
             Collider::circle(link_radius),
-            // SweptCcd::new_with_mode(SweepMode::NonLinear),
             CollisionMargin(0.05),
             Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE

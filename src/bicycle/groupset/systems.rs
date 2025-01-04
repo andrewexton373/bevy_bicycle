@@ -29,8 +29,6 @@ impl GroupsetPlugin {
         commands.trigger(SpawnAttachedEvent {
             cog: Cog::RearCassette,
         });
-
-        // commands.trigger(ResetChainEvent);
     }
 
     pub fn update_chainring_size(
@@ -108,9 +106,9 @@ impl GroupsetPlugin {
                         .with_local_anchor_1(
                             *frame.geometry.get(&FrameGeometry::BottomBracket).unwrap(),
                         )
-                        .with_compliance(0.0001)
+                        .with_compliance(0.00001)
                         .with_angular_velocity_damping(0.0001)
-                        .with_linear_velocity_damping(0.0001),
+                        .with_linear_velocity_damping(10.0),
                 ));
             }
             Cog::RearCassette => {
@@ -129,9 +127,9 @@ impl GroupsetPlugin {
                     Name::new("Rear Wheel Fork / Cassette Revolute Joint"),
                     RevoluteJoint::new(frame_ent, rear_cassette)
                         .with_local_anchor_1(*frame.geometry.get(&FrameGeometry::RearHub).unwrap())
-                        .with_compliance(0.0001)
+                        .with_compliance(0.00001)
                         .with_angular_velocity_damping(0.0001)
-                        .with_linear_velocity_damping(0.0001),
+                        .with_linear_velocity_damping(10.0),
                 ));
 
                 let (wheel_ent, _wheel) = wheels
@@ -141,11 +139,7 @@ impl GroupsetPlugin {
 
                 commands.spawn((
                     Name::new("Rear Wheel / Cassette Fixed Joint"),
-                    FixedJoint::new(wheel_ent, rear_cassette)
-                        // .with_local_anchor_1(frame.gemometry.get(&FrameGeometry::RearHub).unwrap().as_dvec2())
-                        .with_compliance(0.0001)
-                        .with_angular_velocity_damping(0.0001)
-                        .with_linear_velocity_damping(0.0001),
+                    FixedJoint::new(wheel_ent, rear_cassette),
                 ));
             }
         }
@@ -159,7 +153,6 @@ impl GroupsetPlugin {
     ) -> impl Bundle {
         let wheel_radius = Radius(chainring_radius.0);
         (
-            // Axle::FRONT,
             Cog::FrontChainring,
             Name::new("Front Chainring"),
             wheel_radius,
@@ -170,13 +163,7 @@ impl GroupsetPlugin {
             Mass(1.0),
             Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             Restitution::new(0.0),
-            // SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
             Mesh3d(meshes.add(Circle::new(wheel_radius.0))),
-            // MeshMaterial2d(custom_materials.add(CustomMaterial {
-            //     color: LinearRgba::WHITE,
-            //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
-            //     alpha_mode: AlphaMode::Blend,
-            // })),
             MeshMaterial3d(color_materials.add(StandardMaterial::from_color(GREEN))),
             CollisionLayers::new(
                 GameLayer::Groupset,
@@ -184,7 +171,6 @@ impl GroupsetPlugin {
                     | GameLayer::World.to_bits()
                     | GameLayer::Chain.to_bits(),
             ),
-            // GlobalTransform::default(),
             *t,
         )
     }
@@ -219,7 +205,7 @@ impl GroupsetPlugin {
                 if GroupsetPlugin::ang_vel_to_rpm(ang_vel.0).abs() > 90.0 {
                     torque.clear();
                 } else {
-                    torque.apply_torque(-800.0_f64);
+                    torque.apply_torque(-2000.0_f64);
                 }
             }
         }
@@ -229,13 +215,10 @@ impl GroupsetPlugin {
         mut meshes: ResMut<Assets<Mesh>>,
         mut color_materials: ResMut<Assets<StandardMaterial>>,
         cassette_radius: Res<CassetteRadius>,
-
         t: &Position,
     ) -> impl Bundle {
         let wheel_radius = Radius(cassette_radius.0);
-
         (
-            // Axle::REAR,
             Cog::RearCassette,
             Name::new("Rear Cassette"),
             wheel_radius,
@@ -245,13 +228,7 @@ impl GroupsetPlugin {
             Mass(0.2),
             Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
             Restitution::new(0.0),
-            // SweptCcd::new_with_mode(SweepMode::NonLinear).include_dynamic(true),
             Mesh3d(meshes.add(Circle::new(wheel_radius.0))),
-            // MeshMaterial2d(custom_materials.add(CustomMaterial {
-            //     color: LinearRgba::WHITE,
-            //     color_texture: Some(asset_server.load("media/bike_spokes_2.png")),
-            //     alpha_mode: AlphaMode::Blend,
-            // })),
             MeshMaterial3d(color_materials.add(StandardMaterial::from_color(RED))),
             CollisionLayers::new(
                 GameLayer::Groupset,
@@ -259,7 +236,6 @@ impl GroupsetPlugin {
                     | GameLayer::World.to_bits()
                     | GameLayer::Chain.to_bits(),
             ),
-            // GlobalTransform::default(),
             *t,
         )
     }

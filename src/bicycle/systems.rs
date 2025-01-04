@@ -118,7 +118,6 @@ impl BicyclePlugin {
                 Visibility::Inherited,
                 frame_collider,
                 CollisionMargin(0.5),
-                // SweptCcd::new_with_mode(SweepMode::NonLinear),
                 CollisionLayers::new([GameLayer::Frame], [GameLayer::World]),
             ))
             .id();

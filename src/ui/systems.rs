@@ -88,10 +88,7 @@ impl UIPlugin {
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
         chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
     ) {
-        if rear_wheel_query.is_empty() {
-            return;
-        }
-        if chainring_query.is_empty() {
+        if rear_wheel_query.is_empty() || chainring_query.is_empty() || frame.is_empty() {
             return;
         }
 
