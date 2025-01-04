@@ -1,6 +1,6 @@
 use std::collections::BTreeMap; // itertools = "0.8"
 
-use avian2d::prelude::{Collider, ColliderConstructor, Position, Rotation};
+use avian2d::prelude::{Collider, Position, Rotation};
 use bevy::{math::DVec2, prelude::Component};
 
 #[derive(Component)]

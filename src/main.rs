@@ -4,8 +4,6 @@ pub mod ui;
 pub mod user_input;
 pub mod world;
 
-use std::iter::Map;
-
 use avian2d::{
     math::Vector,
     prelude::{Gravity, PhysicsDebugPlugin, SubstepCount},
@@ -13,19 +11,17 @@ use avian2d::{
 };
 use bevy::{
     color::palettes::{css::WHITE, tailwind::BLUE_400},
-    input::InputPlugin,
-    pbr::wireframe::{WireframeConfig, WireframePlugin},
+    pbr::wireframe::WireframeConfig,
     prelude::*,
     render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::{Material2d, Material2dPlugin},
+    sprite::Material2d,
     utils::HashMap,
 };
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_sprite3d::{Sprite3dParams, Sprite3dPlugin};
+use bevy_sprite3d::Sprite3dPlugin;
 use bicycle::plugin::BicyclePlugin;
 use camera::plugin::CameraPlugin;
-use itertools::Itertools;
 use ui::plugin::UIPlugin;
 use user_input::plugin::UserInputPlugin;
 use world::plugin::WorldTerrainPlugin;
@@ -103,9 +99,7 @@ fn load_png_assets(asset_server: Res<AssetServer>, mut png_assets: ResMut<PNGAss
 fn setup(
     asset_server: Res<AssetServer>,
     png_assets: Res<PNGAssets>,
-    mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
-    mut sprite_params: Sprite3dParams,
 ) {
     if !png_assets.assets.iter().all(|(_, asset_handle)| {
         asset_server

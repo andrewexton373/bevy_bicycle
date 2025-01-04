@@ -134,7 +134,7 @@ impl GroupsetPlugin {
                         .with_linear_velocity_damping(0.0),
                 ));
 
-                let (wheel_ent, wheel) = wheels
+                let (wheel_ent, _wheel) = wheels
                     .iter()
                     .find(|item| item.1 == &BicycleWheel::Back)
                     .unwrap();

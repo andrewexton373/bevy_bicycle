@@ -1,11 +1,4 @@
-use bevy::{
-    input::{
-        keyboard::{Key, KeyboardInput},
-        ButtonState,
-    },
-    math::VectorSpace,
-    prelude::*,
-};
+use bevy::prelude::*;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridSettings};
 
 use crate::bicycle::components::BicycleFrame;
@@ -29,7 +22,7 @@ impl CameraPlugin {
         state: Res<State<CameraState>>,
         mut next_state: ResMut<NextState<CameraState>>,
     ) {
-        for evt in events.read() {
+        for _evt in events.read() {
             match state.get() {
                 CameraState::Follow => next_state.set(CameraState::Free),
                 CameraState::Free => next_state.set(CameraState::Follow),
@@ -88,7 +81,6 @@ impl CameraPlugin {
     pub fn handle_zoom_event(
         mut events: EventReader<CameraZoomEvent>,
         mut query_camera: Query<&mut Projection, With<FollowCamera>>,
-        time: Res<Time>,
     ) {
         // assume orthographic. do nothing if perspective.
         let Projection::Orthographic(ortho) = query_camera.single_mut().into_inner() else {

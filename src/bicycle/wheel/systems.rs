@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{color::palettes::css::BLACK, prelude::*};
+use bevy::prelude::*;
 use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 
 use crate::{
@@ -7,7 +7,7 @@ use crate::{
         components::{BicycleFrame, FrameGeometry},
         systems::GameLayer,
     },
-    CustomMaterial, PNGAssets,
+    PNGAssets,
 };
 
 use super::{components::BicycleWheel, events::SpawnWheelEvent, plugin::WheelPlugin};
@@ -17,10 +17,7 @@ impl WheelPlugin {
         trigger: Trigger<SpawnWheelEvent>,
         mut commands: Commands,
         frame: Query<(Entity, &Transform, &BicycleFrame)>,
-        // mut meshes: ResMut<Assets<Mesh>>,
-        // mut custom_materials: ResMut<Assets<CustomMaterial>>,
-        asset_server: Res<AssetServer>,
-        mut png_assets: Res<PNGAssets>,
+        png_assets: Res<PNGAssets>,
         mut sprite_params: Sprite3dParams,
     ) {
         let evt = trigger.event();

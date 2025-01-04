@@ -1,9 +1,5 @@
-use avian2d::{parry::math::AngularInertia, prelude::*};
-use bevy::{
-    math::{DVec2, VectorSpace},
-    prelude::*,
-};
-use bevy_egui::egui::Vec2;
+use avian2d::prelude::*;
+use bevy::{math::DVec2, prelude::*};
 
 use crate::{
     camera::components::FollowCamera,
@@ -91,13 +87,11 @@ impl BicyclePlugin {
     }
 
     pub fn spawn_frame(
-        trigger: Trigger<OnAdd, Bicycle>,
+        _trigger: Trigger<OnAdd, Bicycle>,
         mut commands: Commands,
         terrain_seed: Res<TerrainSeed>,
         camera_t: Query<&Transform, With<FollowCamera>>,
     ) {
-        let bicycle_ent = trigger.entity();
-
         let bicycle_frame = BicycleFrame::new();
         let frame_collider = bicycle_frame.collider();
 
@@ -112,7 +106,7 @@ impl BicyclePlugin {
 
         info!("SPAWN HEIGHT: {:?}", spawn_height);
 
-        let frame_id = commands
+        let _frame_id = commands
             .spawn((
                 BicycleFrame::new(),
                 Name::new("Frame"),

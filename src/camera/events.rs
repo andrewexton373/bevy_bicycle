@@ -1,7 +1,4 @@
-use bevy::{
-    math::{DVec2, Vec2},
-    prelude::Event,
-};
+use bevy::{math::Vec2, prelude::Event};
 
 #[derive(Event)]
 pub struct CameraZoomEvent(pub CameraZoomDirection);

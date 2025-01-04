@@ -24,7 +24,7 @@ impl ChainPlugin {
         let mut point_set = vec![];
 
         // R(eset) was pressed
-        for (cog, radius, transform) in cogs.iter() {
+        for (_cog, radius, transform) in cogs.iter() {
             let larger_disc = Disc {
                 center: Point {
                     x: transform.x,
@@ -95,9 +95,9 @@ impl ChainPlugin {
 
                     link_ents.push(current_link);
 
-                    if previous_link.is_some() {
+                    if let Some(previous_link) = previous_link {
                         parent.spawn(
-                            DistanceJoint::new(previous_link.unwrap(), current_link)
+                            DistanceJoint::new(previous_link, current_link)
                                 .with_angular_velocity_damping(0.0)
                                 .with_linear_velocity_damping(0.0)
                                 .with_rest_length(r)
@@ -171,7 +171,7 @@ fn gift_wrapping(points: &Vec<Point>) -> Vec<Point> {
 }
 
 // Calculate the perimter of a polygon
-fn polygon_perimeter(polygon: &Vec<Point>) -> f64 {
+fn polygon_perimeter(polygon: &[Point]) -> f64 {
     let mut perimeter = 0.0;
 
     for i in 0..polygon.len() {
@@ -184,7 +184,7 @@ fn polygon_perimeter(polygon: &Vec<Point>) -> f64 {
 }
 
 // Calculate num_points on a polygon that are equally spaced apart
-fn equidistant_points_on_polygon(polygon: &Vec<Point>, num_points: usize) -> Vec<Point> {
+fn equidistant_points_on_polygon(polygon: &[Point], num_points: usize) -> Vec<Point> {
     let mut result = Vec::new();
     let perimeter = polygon_perimeter(polygon);
     let distance_between_points = perimeter / num_points as f64;
