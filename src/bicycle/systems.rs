@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{math::DVec2, prelude::*};
+use bevy::{ecs::system::SystemId, math::DVec2, prelude::*, utils::HashMap};
 
 use crate::{
     camera::components::FollowCamera,
@@ -14,6 +14,41 @@ use super::{
     plugin::BicyclePlugin,
     wheel::{components::BicycleWheel, events::SpawnWheelEvent},
 };
+
+pub(crate) fn initialize(world: &mut World) {
+    world
+        .run_system(world.resource::<BicycleSystems>().0["spawn_bicycle"])
+        .expect("Error Spawning Bicycle");
+}
+
+#[derive(Resource)]
+pub struct BicycleSystems(pub HashMap<String, SystemId>);
+
+impl FromWorld for BicycleSystems {
+    fn from_world(world: &mut World) -> Self {
+        let mut systems = BicycleSystems(HashMap::new());
+
+        systems
+            .0
+            .insert("spawn_bicycle".into(), world.register_system(spawn_bicycle));
+
+        systems
+    }
+}
+
+fn spawn_bicycle(mut commands: Commands, bicycle: Query<Entity, With<Bicycle>>) {
+    // Despawn Bicycle If It Already Exists to prepare to reinitialize.
+    if let Ok(bicycle_ent) = bicycle.get_single() {
+        commands.entity(bicycle_ent).despawn_recursive();
+    }
+
+    commands.spawn((
+        Bicycle,
+        Name::new("Bicycle"),
+        Transform::default(),
+        InheritedVisibility::default(),
+    ));
+}
 
 #[derive(PhysicsLayer, Default)]
 pub enum GameLayer {

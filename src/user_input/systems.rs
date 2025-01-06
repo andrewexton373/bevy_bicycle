@@ -1,7 +1,9 @@
+use std::alloc::System;
+
 use bevy::prelude::*;
 
 use crate::{
-    bicycle::{chain::events::ResetChainEvent, events::SpawnBicycleEvent},
+    bicycle::{chain::events::ResetChainEvent, events::SpawnBicycleEvent, systems::BicycleSystems},
     camera::events::{
         CameraPanDirection, CameraPanEvent, CameraZoomDirection, CameraZoomEvent,
         CycleCameraModeEvent,
@@ -11,7 +13,11 @@ use crate::{
 use super::plugin::UserInputPlugin;
 
 impl UserInputPlugin {
-    pub fn handle_user_input(mut commands: Commands, keys: Res<ButtonInput<KeyCode>>) {
+    pub fn handle_user_input(
+        mut commands: Commands,
+        systems: Res<BicycleSystems>,
+        keys: Res<ButtonInput<KeyCode>>,
+    ) {
         // Continuous Input
         for key in keys.get_pressed() {
             match key {
@@ -47,7 +53,7 @@ impl UserInputPlugin {
                     commands.trigger(ResetChainEvent);
                 }
                 KeyCode::Enter => {
-                    commands.trigger(SpawnBicycleEvent);
+                    commands.run_system(systems.0["spawn_bicycle"]);
                 }
                 KeyCode::KeyQ => {}
                 _ => {}
