@@ -48,7 +48,7 @@ impl GroupsetPlugin {
                     .insert(Collider::circle(chainring_radius.0 as f64));
                 commands
                     .entity(ent)
-                    .insert(Mesh2d(meshes.add(Circle::new(chainring_radius.0))));
+                    .insert(Mesh3d(meshes.add(Circle::new(chainring_radius.0))));
 
                 commands.trigger(ResetChainEvent);
             }
