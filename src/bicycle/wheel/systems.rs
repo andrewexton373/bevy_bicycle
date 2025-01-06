@@ -1,5 +1,5 @@
 use avian2d::prelude::*;
-use bevy::{color::palettes::css::BLACK, prelude::*};
+use bevy::{color::palettes::css::BLACK, ecs::system::SystemState, prelude::*};
 use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 
 use crate::{
@@ -10,21 +10,21 @@ use crate::{
     PNGAssets,
 };
 
-use super::{components::BicycleWheel, events::SpawnWheelEvent, plugin::WheelPlugin};
+use super::{components::BicycleWheel, plugin::WheelPlugin};
 
 impl WheelPlugin {
-    pub fn spawn_wheel(
-        trigger: Trigger<SpawnWheelEvent>,
-        mut commands: Commands,
-        frame: Query<(Entity, &Transform, &BicycleFrame)>,
-        png_assets: Res<PNGAssets>,
-        mut sprite_params: Sprite3dParams,
-    ) {
-        let evt = trigger.event();
+    pub fn spawn_wheel(In(wheel): In<BicycleWheel>, world: &mut World) {
+        let mut system_state: SystemState<(
+            Commands,
+            Query<(Entity, &Transform, &BicycleFrame)>,
+            Res<PNGAssets>,
+            Sprite3dParams,
+        )> = SystemState::new(world);
+        let (mut commands, frame, png_assets, mut sprite_params) = system_state.get_mut(world);
 
         let (frame_ent, transform, frame) = frame.single();
 
-        let mounting_point = match evt.wheel {
+        let mounting_point = match wheel {
             BicycleWheel::Front => frame
                 .geometry
                 .get_key_value(&FrameGeometry::FrontHub)
@@ -37,7 +37,7 @@ impl WheelPlugin {
 
         let wheel = commands
             .spawn((
-                evt.wheel,
+                wheel,
                 Name::new("Wheel"),
                 RigidBody::Dynamic,
                 Collider::circle(BicycleWheel::size() as f64),
@@ -66,5 +66,7 @@ impl WheelPlugin {
                 .with_angular_velocity_damping(0.0)
                 .with_linear_velocity_damping(100.0),
         ));
+
+        system_state.apply(world);
     }
 }

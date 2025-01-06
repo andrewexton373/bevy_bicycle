@@ -3,7 +3,7 @@ use std::alloc::System;
 use bevy::prelude::*;
 
 use crate::{
-    bicycle::{chain::events::ResetChainEvent, events::SpawnBicycleEvent, systems::BicycleSystems},
+    bicycle::systems::BicycleSystems,
     camera::events::{
         CameraPanDirection, CameraPanEvent, CameraZoomDirection, CameraZoomEvent,
         CycleCameraModeEvent,
@@ -50,7 +50,9 @@ impl UserInputPlugin {
                     commands.send_event(CycleCameraModeEvent);
                 }
                 KeyCode::KeyR => {
-                    commands.trigger(ResetChainEvent);
+                    // commands.trigger(ResetChainEvent);
+                    // commands.run_system_once(ChainPlugin::spawn_chain);
+                    commands.run_system(systems.0["spawn_chain"]);
                 }
                 KeyCode::Enter => {
                     commands.run_system(systems.0["spawn_bicycle"]);

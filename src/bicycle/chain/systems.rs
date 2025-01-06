@@ -1,30 +1,33 @@
 use core::f64;
 
 use avian2d::prelude::*;
-use bevy::{math::vec3, prelude::*};
+use bevy::{ecs::system::SystemState, math::vec3, prelude::*};
 
 use crate::bicycle::{
     groupset::components::{Cog, Disc, Point, Radius},
     systems::GameLayer,
 };
 
-use super::{components::Chain, events::ResetChainEvent, plugin::ChainPlugin};
+use super::{components::Chain, plugin::ChainPlugin};
 
 impl ChainPlugin {
-    pub fn reset_chain(
-        _trigger: Trigger<ResetChainEvent>,
-        mut commands: Commands,
-        mut chain: Query<(Entity, &Chain)>,
-        cogs: Query<(&Cog, &Radius, &Position)>,
-    ) {
+    pub(crate) fn spawn_chain(world: &mut World) {
+        let mut system_state: SystemState<(
+            Commands,
+            Query<Entity, With<Chain>>,
+            Query<(&Radius, &Position), With<Cog>>,
+        )> = SystemState::new(world);
+
+        let (mut commands, mut chain, cogs) = system_state.get_mut(world);
+
         if let Ok(chain) = chain.get_single_mut() {
-            commands.entity(chain.0).despawn_recursive();
+            commands.entity(chain).despawn_recursive();
         }
 
         let mut point_set = vec![];
 
         // R(eset) was pressed
-        for (_cog, radius, transform) in cogs.iter() {
+        for (radius, transform) in cogs.iter() {
             let larger_disc = Disc {
                 center: Point {
                     x: transform.x,
@@ -44,38 +47,12 @@ impl ChainPlugin {
             point_set.extend(poly);
         }
 
+        // info!("POINT SET: {:?}", point_set);
+
         let chain_links = ChainPlugin::generate_chain_link_points_from_point_set(&point_set);
         ChainPlugin::setup_chain(&mut commands, chain_links);
-    }
 
-    pub fn generate_chain_link_points_from_point_set(points: &Vec<Point>) -> Vec<Point> {
-        let convex_hull = gift_wrapping(points);
-
-        equidistant_points_on_polygon(&convex_hull, 60)
-    }
-
-    pub fn generate_link(pos: &Point) -> impl Bundle {
-        let link_radius: f64 = 0.5;
-
-        (
-            RigidBody::Dynamic,
-            Collider::circle(link_radius),
-            CollisionMargin(0.05),
-            Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
-            LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
-            MassPropertiesBundle {
-                mass: Mass(0.01),
-                ..default()
-            },
-            Transform {
-                translation: vec3(pos.x as f32, pos.y as f32, 0.0),
-                ..default()
-            },
-            CollisionLayers::new(
-                GameLayer::Chain,
-                GameLayer::Groupset.to_bits() | GameLayer::Chain.to_bits(),
-            ),
-        )
+        system_state.apply(world);
     }
 
     pub fn setup_chain(commands: &mut Commands, links: Vec<Point>) {
@@ -115,6 +92,36 @@ impl ChainPlugin {
                         .with_compliance(compliance),
                 );
             });
+    }
+
+    pub fn generate_chain_link_points_from_point_set(points: &Vec<Point>) -> Vec<Point> {
+        let convex_hull = gift_wrapping(points);
+
+        equidistant_points_on_polygon(&convex_hull, 60)
+    }
+
+    pub fn generate_link(pos: &Point) -> impl Bundle {
+        let link_radius: f64 = 0.5;
+
+        (
+            RigidBody::Dynamic,
+            Collider::circle(link_radius),
+            CollisionMargin(0.05),
+            Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
+            LockedAxes::ROTATION_LOCKED, // VERY IMPORTANT SO LINK PIVOTS DONT ROTATE
+            MassPropertiesBundle {
+                mass: Mass(0.01),
+                ..default()
+            },
+            Transform {
+                translation: vec3(pos.x as f32, pos.y as f32, 0.0),
+                ..default()
+            },
+            CollisionLayers::new(
+                GameLayer::Chain,
+                GameLayer::Groupset.to_bits() | GameLayer::Chain.to_bits(),
+            ),
+        )
     }
 }
 

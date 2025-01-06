@@ -6,10 +6,7 @@ use bevy::{
 
 use crate::GameState;
 
-use super::{
-    events::SpawnGroupsetEvent,
-    resources::{CassetteRadius, ChainringRadius},
-};
+use super::resources::{CassetteRadius, ChainringRadius};
 
 pub struct GroupsetPlugin;
 impl Plugin for GroupsetPlugin {
@@ -27,9 +24,6 @@ impl Plugin for GroupsetPlugin {
                 .run_if(in_state(GameState::Ready)),
         )
         .init_resource::<ChainringRadius>()
-        .init_resource::<CassetteRadius>()
-        .add_observer(GroupsetPlugin::init_groupset)
-        .add_observer(GroupsetPlugin::handle_spawn_component)
-        .add_event::<SpawnGroupsetEvent>();
+        .init_resource::<CassetteRadius>();
     }
 }

@@ -1,7 +1,15 @@
 use avian2d::prelude::*;
-use bevy::{ecs::system::SystemId, math::DVec2, prelude::*, utils::HashMap};
+use bevy::{
+    ecs::system::{RunSystemOnce, SystemId, SystemState},
+    math::DVec2,
+    prelude::*,
+    utils::HashMap,
+};
 
 use crate::{
+    bicycle::{
+        chain::plugin::ChainPlugin, groupset::plugin::GroupsetPlugin, wheel::plugin::WheelPlugin,
+    },
     camera::components::FollowCamera,
     world::{plugin::WorldTerrainPlugin, resources::TerrainSeed},
 };
@@ -9,10 +17,9 @@ use crate::{
 use super::{
     chain::components::Chain,
     components::{Bicycle, BicycleFrame},
-    events::SpawnBicycleEvent,
-    groupset::{components::Cog, events::SpawnGroupsetEvent},
+    groupset::components::Cog,
     plugin::BicyclePlugin,
-    wheel::{components::BicycleWheel, events::SpawnWheelEvent},
+    wheel::components::BicycleWheel,
 };
 
 pub(crate) fn initialize(world: &mut World) {
@@ -32,22 +39,83 @@ impl FromWorld for BicycleSystems {
             .0
             .insert("spawn_bicycle".into(), world.register_system(spawn_bicycle));
 
+        systems.0.insert(
+            "spawn_chain".into(),
+            world.register_system(ChainPlugin::spawn_chain),
+        );
+
         systems
     }
 }
 
-fn spawn_bicycle(mut commands: Commands, bicycle: Query<Entity, With<Bicycle>>) {
+fn spawn_bicycle(world: &mut World) {
+    let mut system_state: SystemState<(Query<Entity, With<Bicycle>>)> = SystemState::new(world);
+    let (bicycle) = system_state.get_mut(world);
+
     // Despawn Bicycle If It Already Exists to prepare to reinitialize.
     if let Ok(bicycle_ent) = bicycle.get_single() {
-        commands.entity(bicycle_ent).despawn_recursive();
+        world.entity_mut(bicycle_ent).despawn_recursive();
     }
 
-    commands.spawn((
+    world.spawn((
         Bicycle,
         Name::new("Bicycle"),
         Transform::default(),
         InheritedVisibility::default(),
     ));
+
+    world
+        .run_system_once(spawn_frame)
+        .expect("Error Spawning Frame");
+}
+
+pub fn spawn_frame(world: &mut World) {
+    let mut system_state: SystemState<(Res<TerrainSeed>, Query<&Transform, With<FollowCamera>>)> =
+        SystemState::new(world);
+    let (terrain_seed, camera_t) = system_state.get_mut(world);
+
+    let bicycle_frame = BicycleFrame::new();
+    let frame_collider = bicycle_frame.collider();
+
+    let mut camera_pos = DVec2::ZERO;
+    if let Ok(camera_t) = camera_t.get_single() {
+        camera_pos = camera_t.translation.truncate().as_dvec2();
+    }
+
+    let spawn_height: f32 = 50.0
+        + WorldTerrainPlugin::CHUNK_WIDTH
+            * WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
+
+    info!("SPAWN HEIGHT: {:?}", spawn_height);
+
+    let _frame_id = world
+        .spawn((
+            BicycleFrame::new(),
+            Name::new("Frame"),
+            Transform::from_xyz(camera_pos.x as f32, spawn_height, 0.0),
+            RigidBody::Dynamic,
+            Mass(10.0),
+            AngularInertia(0.1),
+            CenterOfMass(bevy::prelude::Vec2::ZERO),
+            Visibility::Inherited,
+            frame_collider,
+            CollisionMargin(0.5),
+            CollisionLayers::new([GameLayer::Frame], [GameLayer::World]),
+        ))
+        .id();
+
+    world
+        .run_system_once_with(BicycleWheel::Front, WheelPlugin::spawn_wheel)
+        .expect("Error Spawning Front Wheel");
+    world
+        .run_system_once_with(BicycleWheel::Back, WheelPlugin::spawn_wheel)
+        .expect("Error Spawning Rear Wheel");
+    world
+        .run_system_once(GroupsetPlugin::spawn_groupset)
+        .expect("Error Spawning Groupset");
+
+    // TODO: causes lag due to physics interactions
+    // world.run_system_once(ChainPlugin::spawn_chain);
 }
 
 #[derive(PhysicsLayer, Default)]
@@ -63,30 +131,30 @@ pub enum GameLayer {
 }
 
 impl BicyclePlugin {
-    pub fn spawn_bicycle_on_startup(mut commands: Commands, bicycle: Query<Entity, With<Bicycle>>) {
-        if bicycle.is_empty() {
-            info!("SPAWN BICYCLE");
-            commands.trigger(SpawnBicycleEvent);
-        }
-    }
+    // pub fn spawn_bicycle_on_startup(mut commands: Commands, bicycle: Query<Entity, With<Bicycle>>) {
+    //     if bicycle.is_empty() {
+    //         info!("SPAWN BICYCLE");
+    //         commands.trigger(SpawnBicycleEvent);
+    //     }
+    // }
 
-    pub fn init_bicycle(
-        _trigger: Trigger<SpawnBicycleEvent>,
-        mut commands: Commands,
-        bicycle: Query<Entity, With<Bicycle>>,
-    ) {
-        // Despawn Bicycle If It Already Exists to prepare to reinitialize.
-        if let Ok(bicycle_ent) = bicycle.get_single() {
-            commands.entity(bicycle_ent).despawn_recursive();
-        }
-
-        commands.spawn((
-            Bicycle,
-            Name::new("Bicycle"),
-            Transform::default(),
-            InheritedVisibility::default(),
-        ));
-    }
+    // pub fn init_bicycle(
+    //     _trigger: Trigger<SpawnBicycleEvent>,
+    //     mut commands: Commands,
+    //     bicycle: Query<Entity, With<Bicycle>>,
+    // ) {
+    //     // Despawn Bicycle If It Already Exists to prepare to reinitialize.
+    //     if let Ok(bicycle_ent) = bicycle.get_single() {
+    //         commands.entity(bicycle_ent).despawn_recursive();
+    //     }
+    //
+    //     commands.spawn((
+    //         Bicycle,
+    //         Name::new("Bicycle"),
+    //         Transform::default(),
+    //         InheritedVisibility::default(),
+    //     ));
+    // }
 
     pub fn on_remove_bicyle(
         _trigger: Trigger<OnRemove, Bicycle>,
@@ -121,56 +189,56 @@ impl BicyclePlugin {
         }
     }
 
-    pub fn spawn_frame(
-        _trigger: Trigger<OnAdd, Bicycle>,
-        mut commands: Commands,
-        terrain_seed: Res<TerrainSeed>,
-        camera_t: Query<&Transform, With<FollowCamera>>,
-    ) {
-        let bicycle_frame = BicycleFrame::new();
-        let frame_collider = bicycle_frame.collider();
-
-        let mut camera_pos = DVec2::ZERO;
-        if let Ok(camera_t) = camera_t.get_single() {
-            camera_pos = camera_t.translation.truncate().as_dvec2();
-        }
-
-        let spawn_height: f32 = 50.0
-            + WorldTerrainPlugin::CHUNK_WIDTH
-                * WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
-
-        info!("SPAWN HEIGHT: {:?}", spawn_height);
-
-        let _frame_id = commands
-            .spawn((
-                BicycleFrame::new(),
-                Name::new("Frame"),
-                Transform::from_xyz(camera_pos.x as f32, spawn_height, 0.0),
-                RigidBody::Dynamic,
-                Mass(10.0),
-                AngularInertia(0.1),
-                CenterOfMass(bevy::prelude::Vec2::ZERO),
-                Visibility::Inherited,
-                frame_collider,
-                CollisionMargin(0.5),
-                CollisionLayers::new([GameLayer::Frame], [GameLayer::World]),
-            ))
-            .id();
-
-        commands.trigger(SpawnWheelEvent {
-            wheel: BicycleWheel::Front,
-        });
-
-        commands.trigger(SpawnWheelEvent {
-            wheel: BicycleWheel::Back,
-        });
-
-        commands.trigger(SpawnGroupsetEvent);
-
-        // commands.trigger(ResetChainEvent);
-
-        // commands.trigger(SpawnCrankEvent);
-    }
+    // pub fn spawn_frame(
+    //     _trigger: Trigger<OnAdd, Bicycle>,
+    //     mut commands: Commands,
+    //     terrain_seed: Res<TerrainSeed>,
+    //     camera_t: Query<&Transform, With<FollowCamera>>,
+    // ) {
+    //     let bicycle_frame = BicycleFrame::new();
+    //     let frame_collider = bicycle_frame.collider();
+    //
+    //     let mut camera_pos = DVec2::ZERO;
+    //     if let Ok(camera_t) = camera_t.get_single() {
+    //         camera_pos = camera_t.translation.truncate().as_dvec2();
+    //     }
+    //
+    //     let spawn_height: f32 = 50.0
+    //         + WorldTerrainPlugin::CHUNK_WIDTH
+    //             * WorldTerrainPlugin::terrain_height_sample(camera_pos.x, terrain_seed.0) as f32;
+    //
+    //     info!("SPAWN HEIGHT: {:?}", spawn_height);
+    //
+    //     let _frame_id = commands
+    //         .spawn((
+    //             BicycleFrame::new(),
+    //             Name::new("Frame"),
+    //             Transform::from_xyz(camera_pos.x as f32, spawn_height, 0.0),
+    //             RigidBody::Dynamic,
+    //             Mass(10.0),
+    //             AngularInertia(0.1),
+    //             CenterOfMass(bevy::prelude::Vec2::ZERO),
+    //             Visibility::Inherited,
+    //             frame_collider,
+    //             CollisionMargin(0.5),
+    //             CollisionLayers::new([GameLayer::Frame], [GameLayer::World]),
+    //         ))
+    //         .id();
+    //
+    //     commands.trigger(SpawnWheelEvent {
+    //         wheel: BicycleWheel::Front,
+    //     });
+    //
+    //     commands.trigger(SpawnWheelEvent {
+    //         wheel: BicycleWheel::Back,
+    //     });
+    //
+    //     commands.trigger(SpawnGroupsetEvent);
+    //
+    //     // commands.trigger(ResetChainEvent);
+    //
+    //     // commands.trigger(SpawnCrankEvent);
+    // }
 
     // pub fn spawn_crank(
     //     _trigger: Trigger<SpawnCrankEvent>,
