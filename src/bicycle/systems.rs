@@ -1,30 +1,18 @@
 use avian2d::prelude::*;
+
 use bevy::{
-    ecs::system::{RunSystemOnce, SystemId, SystemState},
-    math::DVec2,
+    ecs::system::{RunSystemOnce, SystemId},
     prelude::*,
     utils::HashMap,
 };
 
-use crate::{
-    bicycle::{groupset::spawn_groupset, wheel::spawn_wheel},
-    camera::components::FollowCamera,
-    world::{plugin::WorldTerrainPlugin, resources::TerrainSeed},
-};
-
 use super::{
     chain::{spawn_chain, Chain},
-    components::{Bicycle, BicycleFrame},
     frame::spawn_frame,
+    frame::BicycleFrame,
     groupset::Cog,
-    plugin::BicyclePlugin,
     wheel::BicycleWheel,
 };
-
-use std::collections::BTreeMap; // itertools = "0.8"
-
-use avian2d::prelude::{Collider, Position, Rotation};
-use bevy::{math::DVec2, prelude::Component};
 
 #[derive(Component)]
 pub struct Bicycle;
@@ -48,7 +36,7 @@ impl FromWorld for BicycleSystems {
     }
 }
 
-fn spawn_bicycle(world: &mut World, mut bicycle: QueryState<Entity, With<Bicycle>>) {
+fn spawn_bicycle(world: &mut World, bicycle: &mut QueryState<Entity, With<Bicycle>>) {
     // Despawn Bicycle If It Already Exists to prepare to reinitialize.
     if let Ok(bicycle_ent) = bicycle.get_single_mut(world) {
         world.entity_mut(bicycle_ent).despawn_recursive();

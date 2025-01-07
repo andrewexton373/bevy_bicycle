@@ -8,7 +8,7 @@ use bevy::{
 
 use crate::{
     bicycle::{
-        components::{BicycleFrame, FrameGeometry},
+        frame::{BicycleFrame, FrameGeometry},
         systems::BicycleSystems,
         wheel::BicycleWheel,
     },

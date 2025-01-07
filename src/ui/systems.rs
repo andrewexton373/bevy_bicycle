@@ -8,7 +8,7 @@ use iyes_perf_ui::{entry::PerfUiEntry, prelude::PerfUiDefaultEntries};
 
 use crate::{
     bicycle::{
-        components::BicycleFrame,
+        frame::BicycleFrame,
         groupset::{CassetteRadius, ChainringRadius, Cog},
         wheel::BicycleWheel,
     },

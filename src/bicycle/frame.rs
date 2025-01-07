@@ -1,15 +1,16 @@
+use std::collections::BTreeMap;
+
 use avian2d::prelude::*;
 use bevy::ecs::system::{RunSystemOnce, SystemState};
 use bevy::math::DVec2;
 use bevy::prelude::*;
 
-use crate::bicycle::components::BicycleFrame;
 use crate::bicycle::groupset::spawn_groupset;
-use crate::bicycle::systems::GameLayer;
 use crate::bicycle::wheel::{spawn_wheel, BicycleWheel};
 use crate::camera::components::FollowCamera;
 use crate::world::plugin::WorldTerrainPlugin;
 use crate::world::resources::TerrainSeed;
+use crate::GameLayer;
 
 #[derive(Component)]
 pub struct Frame;

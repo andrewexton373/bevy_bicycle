@@ -4,11 +4,8 @@ use bevy::{color::palettes::css::BLACK, ecs::system::SystemState};
 use bevy_sprite3d::{Sprite3dBuilder, Sprite3dParams};
 
 use crate::{
-    bicycle::{
-        components::{BicycleFrame, FrameGeometry},
-        systems::GameLayer,
-    },
-    PNGAssets,
+    bicycle::frame::{BicycleFrame, FrameGeometry},
+    GameLayer, PNGAssets,
 };
 
 #[derive(Component, PartialEq, Debug)]
