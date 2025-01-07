@@ -7,15 +7,13 @@ use bevy::{
 };
 
 use crate::{
-    bicycle::{
-        chain::plugin::ChainPlugin, groupset::plugin::GroupsetPlugin, wheel::plugin::WheelPlugin,
-    },
+    bicycle::{groupset::plugin::GroupsetPlugin, wheel::plugin::WheelPlugin},
     camera::components::FollowCamera,
     world::{plugin::WorldTerrainPlugin, resources::TerrainSeed},
 };
 
 use super::{
-    chain::components::Chain,
+    chain::{spawn_chain, Chain},
     components::{Bicycle, BicycleFrame},
     groupset::components::Cog,
     plugin::BicyclePlugin,
@@ -39,10 +37,9 @@ impl FromWorld for BicycleSystems {
             .0
             .insert("spawn_bicycle".into(), world.register_system(spawn_bicycle));
 
-        systems.0.insert(
-            "spawn_chain".into(),
-            world.register_system(ChainPlugin::spawn_chain),
-        );
+        systems
+            .0
+            .insert("spawn_chain".into(), world.register_system(spawn_chain));
 
         systems
     }

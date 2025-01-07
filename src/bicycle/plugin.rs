@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
 use super::{
-    chain::plugin::ChainPlugin, groupset::plugin::GroupsetPlugin, systems::BicycleSystems,
-    wheel::plugin::WheelPlugin,
+    groupset::plugin::GroupsetPlugin, systems::BicycleSystems, wheel::plugin::WheelPlugin,
 };
 
 pub struct BicyclePlugin;
@@ -10,7 +9,6 @@ pub struct BicyclePlugin;
 impl Plugin for BicyclePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            ChainPlugin,
             // SprocketPlugin,
             GroupsetPlugin,
             WheelPlugin,
