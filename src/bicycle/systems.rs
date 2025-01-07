@@ -36,7 +36,7 @@ impl FromWorld for BicycleSystems {
     }
 }
 
-fn spawn_bicycle(world: &mut World, bicycle: &mut QueryState<Entity, With<Bicycle>>) {
+pub(crate) fn spawn_bicycle(world: &mut World, bicycle: &mut QueryState<Entity, With<Bicycle>>) {
     // Despawn Bicycle If It Already Exists to prepare to reinitialize.
     if let Ok(bicycle_ent) = bicycle.get_single_mut(world) {
         world.entity_mut(bicycle_ent).despawn_recursive();
