@@ -3,13 +3,14 @@ use iyes_perf_ui::PerfUiPlugin;
 
 use crate::GameState;
 
-use super::systems::UiState;
+use super::systems::{BicycleStats, UiState};
 
 pub struct UIPlugin;
 
 impl Plugin for UIPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<UiState>()
+        app.init_resource::<BicycleStats>()
+            .init_resource::<UiState>()
             .add_plugins(PerfUiPlugin)
             .add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin)
             .add_systems(Startup, UIPlugin::performance_ui)
@@ -20,6 +21,7 @@ impl Plugin for UIPlugin {
                     UIPlugin::bottom_panel_ui,
                     UIPlugin::camera_window_ui,
                     UIPlugin::update_resources,
+                    UIPlugin::measure_bicycle_statistics,
                 )
                     .run_if(in_state(GameState::Ready)),
             );

@@ -19,6 +19,8 @@ bevy_sprite3d = "4.0"
 itertools = "0.14.0"
 noise = "0.9"
 rand = "0.8.5"
+strum = "0.26.3"
+strum_macros = "0.26.4"
 iyes_perf_ui = { git = "https://github.com/IyesGames/iyes_perf_ui.git", branch = "main" }
 bevy_infinite_grid = { git = "https://github.com/ForesightMiningSoftwareCorporation/bevy_infinite_grid", branch = "main" }
 # bevy-parallax = {git = "https://github.com/Corrosive-Games/bevy-parallax.git"}
