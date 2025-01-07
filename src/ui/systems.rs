@@ -213,67 +213,32 @@ impl UIPlugin {
 
                     ui.vertical(|ui| {
                         ui.heading("COG RPM");
-                        ui.label(format!(
-                            "COG {:?} RPM: {:.0}",
-                            &Cog::FrontChainring,
-                            bicycle_stats.get_avg(&BicycleStat::ChainringRPM)
-                        ));
 
-                        ui.label("Chainring Radius:");
+                        ui.horizontal(|ui| {
+                            ui.label(format!(
+                                "COG {:?} RPM: {:.0}",
+                                &Cog::FrontChainring,
+                                bicycle_stats.get_avg(&BicycleStat::ChainringRPM)
+                            ));
+                            ui.label("Chainring Radius:");
+                            ui.add(
+                                egui::Slider::new(&mut ui_state.chainring_radius, 4.0..=15.0)
+                                    .text("value"),
+                            );
+                        });
 
-                        ui.add(
-                            egui::Slider::new(&mut ui_state.chainring_radius, 4.0..=15.0)
-                                .text("value"),
-                        );
-                        ui.label(format!(
-                            "COG {:?} RPM: {:.0}",
-                            &Cog::RearCassette,
-                            bicycle_stats.get_avg(&BicycleStat::CassetteRPM)
-                        ));
-                        ui.label("Cassette Radius:");
-
-                        ui.add(
-                            egui::Slider::new(&mut ui_state.cassette_radius, 4.0..=15.0)
-                                .text("value"),
-                        );
-                        // for (_, cog, ang_vel) in chainring_query.iter() {
-                        //     ui.horizontal(|ui| match cog {
-                        //         Cog::FrontChainring => {
-                        //             let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
-                        //
-                        //             bicycle_stats.chainring_rpms.enqueue(rpm);
-                        //
-                        //             ui.label(format!(
-                        //                 "COG {:?} RPM: {:.0}",
-                        //                 cog,
-                        //                 bicycle_stats.chainring_rpm_avg()
-                        //             ));
-                        //
-                        //             ui.label("Chainring Radius:");
-                        //
-                        //             ui.add(
-                        //                 egui::Slider::new(
-                        //                     &mut ui_state.chainring_radius,
-                        //                     4.0..=15.0,
-                        //                 )
-                        //                 .text("value"),
-                        //             );
-                        //         }
-                        //         Cog::RearCassette => {
-                        //             let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
-                        //             ui.label(format!("COG {:?} RPM: {:.0}", cog, rpm));
-                        //             ui.label("Cassette Radius:");
-                        //
-                        //             ui.add(
-                        //                 egui::Slider::new(
-                        //                     &mut ui_state.cassette_radius,
-                        //                     4.0..=15.0,
-                        //                 )
-                        //                 .text("value"),
-                        //             );
-                        //         }
-                        //     });
-                        // }
+                        ui.horizontal(|ui| {
+                            ui.label(format!(
+                                "COG {:?} RPM: {:.0}",
+                                &Cog::RearCassette,
+                                bicycle_stats.get_avg(&BicycleStat::CassetteRPM)
+                            ));
+                            ui.label("Cassette Radius:");
+                            ui.add(
+                                egui::Slider::new(&mut ui_state.cassette_radius, 4.0..=15.0)
+                                    .text("value"),
+                            );
+                        });
                     });
                 });
             },
