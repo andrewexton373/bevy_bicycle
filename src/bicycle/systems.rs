@@ -7,7 +7,7 @@ use bevy::{
 };
 
 use crate::{
-    bicycle::{groupset::plugin::GroupsetPlugin, wheel::spawn_wheel},
+    bicycle::{groupset::spawn_groupset, wheel::spawn_wheel},
     camera::components::FollowCamera,
     world::{plugin::WorldTerrainPlugin, resources::TerrainSeed},
 };
@@ -15,7 +15,7 @@ use crate::{
 use super::{
     chain::{spawn_chain, Chain},
     components::{Bicycle, BicycleFrame},
-    groupset::components::Cog,
+    groupset::Cog,
     plugin::BicyclePlugin,
     wheel::BicycleWheel,
 };
@@ -108,7 +108,7 @@ pub fn spawn_frame(world: &mut World) {
         .run_system_once_with(BicycleWheel::Back, spawn_wheel)
         .expect("Error Spawning Rear Wheel");
     world
-        .run_system_once(GroupsetPlugin::spawn_groupset)
+        .run_system_once(spawn_groupset)
         .expect("Error Spawning Groupset");
 
     // TODO: causes lag due to physics interactions

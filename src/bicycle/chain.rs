@@ -5,10 +5,8 @@ use core::f64;
 
 use avian2d::prelude::*;
 
-use crate::bicycle::{
-    groupset::components::{Cog, Disc, Point, Radius},
-    systems::GameLayer,
-};
+use super::groupset::{Cog, Disc, Point, Radius};
+use super::systems::GameLayer;
 
 #[derive(Component)]
 pub struct ChainPivot;

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{groupset::plugin::GroupsetPlugin, systems::BicycleSystems};
+use super::{groupset::GroupsetPlugin, systems::BicycleSystems};
 
 pub struct BicyclePlugin;
 

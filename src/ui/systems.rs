@@ -9,10 +9,7 @@ use iyes_perf_ui::{entry::PerfUiEntry, prelude::PerfUiDefaultEntries};
 use crate::{
     bicycle::{
         components::BicycleFrame,
-        groupset::{
-            components::Cog,
-            resources::{CassetteRadius, ChainringRadius},
-        },
+        groupset::{CassetteRadius, ChainringRadius, Cog},
         wheel::BicycleWheel,
     },
     camera::systems::CameraState,
