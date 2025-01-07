@@ -154,3 +154,52 @@ impl Material2d for CustomMaterial {
     //     self.alpha_mode
     // }
 }
+
+use std::collections::VecDeque;
+
+#[derive(Clone)]
+struct BoundedQueue<T> {
+    queue: VecDeque<T>,
+    max_size: usize,
+}
+
+impl<T> BoundedQueue<T> {
+    fn new(max_size: usize) -> Self {
+        BoundedQueue {
+            queue: VecDeque::with_capacity(max_size),
+            max_size,
+        }
+    }
+
+    fn enqueue(&mut self, item: T) {
+        if self.queue.len() == self.max_size {
+            self.queue.pop_front(); // Remove the oldest item
+        }
+        self.queue.push_back(item); // Add the new item
+    }
+
+    fn dequeue(&mut self) -> Option<T> {
+        self.queue.pop_front() // Remove the front item
+    }
+
+    fn peek(&self) -> Option<&T> {
+        self.queue.front() // Peek at the front item
+    }
+
+    fn len(&self) -> usize {
+        self.queue.len() // Get the current length of the queue
+    }
+
+    fn is_empty(&self) -> bool {
+        self.queue.is_empty() // Check if the queue is empty
+    }
+}
+
+// Implementing the Iterator trait for BoundedQueue
+impl<T> Iterator for BoundedQueue<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.queue.pop_front() // Remove and return the front element
+    }
+}

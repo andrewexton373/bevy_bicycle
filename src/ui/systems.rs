@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use avian2d::prelude::{AngularVelocity, LinearVelocity, Rotation};
-use bevy::prelude::*;
+use bevy::{prelude::*, reflect::List};
 use bevy_egui::{
     egui::{self, panel::TopBottomSide, Align2},
     EguiContexts,
@@ -14,7 +16,11 @@ use crate::{
     },
     camera::systems::CameraState,
     world::resources::{MaxTerrainChunkCount, TerrainSeed},
+    BoundedQueue,
 };
+
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use super::plugin::UIPlugin;
 
@@ -23,6 +29,48 @@ pub struct UiState {
     chainring_radius: f32,
     cassette_radius: f32,
     max_terrain_chunk_count: u8,
+}
+
+#[derive(Debug, EnumIter, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum BicycleStat {
+    Speed,
+    Grade,
+    ChainringRPM,
+    CassetteRPM,
+    FrontWheelRPM,
+    RearWheelRPM,
+}
+
+#[derive(Resource)]
+pub struct BicycleStats {
+    stats: HashMap<BicycleStat, BoundedQueue<f64>>,
+}
+
+const BICYCLE_STAT_SAMPLES: usize = 1000;
+
+impl Default for BicycleStats {
+    fn default() -> Self {
+        let mut stats: HashMap<BicycleStat, BoundedQueue<f64>> = HashMap::new();
+
+        for stat in BicycleStat::iter() {
+            stats.insert(stat, BoundedQueue::new(BICYCLE_STAT_SAMPLES));
+        }
+
+        Self { stats }
+    }
+}
+
+impl BicycleStats {
+    pub fn get_avg(&self, stat: &BicycleStat) -> f64 {
+        let stat_samples = self.stats.get(stat).unwrap().clone();
+        let sum: f64 = stat_samples.clone().into_iter().sum();
+        let count: f64 = stat_samples.len() as f64;
+        sum / count
+    }
+
+    pub fn enqueue_value_for_stat(&mut self, stat: &BicycleStat, value: f64) {
+        self.stats.entry(*stat).and_modify(|v| v.enqueue(value));
+    }
 }
 
 impl UIPlugin {
@@ -78,17 +126,55 @@ impl UIPlugin {
         });
     }
 
-    pub fn bottom_panel_ui(
-        mut ui_state: ResMut<UiState>,
-        mut contexts: EguiContexts,
+    pub fn measure_bicycle_statistics(
         frame: Query<(&LinearVelocity, &Rotation), With<BicycleFrame>>,
-        rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
-        chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
+        wheels: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
+        cogs: Query<(Entity, &Cog, &AngularVelocity)>,
+        mut bicycle_stats: ResMut<BicycleStats>,
     ) {
-        if rear_wheel_query.is_empty() || chainring_query.is_empty() || frame.is_empty() {
+        if wheels.is_empty() || cogs.is_empty() || frame.is_empty() {
             return;
         }
 
+        let (lin_vel, rotation) = frame.single();
+        bicycle_stats.enqueue_value_for_stat(&BicycleStat::Speed, lin_vel.length());
+        let grade = 100.0 * rotation.sin / rotation.cos;
+        bicycle_stats.enqueue_value_for_stat(&BicycleStat::Grade, grade);
+
+        // Enqueue Wheel RPMs
+        for (_wheel_ent, wheel, ang_vel) in wheels.iter() {
+            let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
+
+            match wheel {
+                BicycleWheel::Front => {
+                    bicycle_stats.enqueue_value_for_stat(&BicycleStat::FrontWheelRPM, rpm)
+                }
+                BicycleWheel::Back => {
+                    bicycle_stats.enqueue_value_for_stat(&BicycleStat::RearWheelRPM, rpm)
+                }
+            }
+        }
+
+        // Enqueue Cog RPMs
+        for (_, cog, ang_vel) in cogs.iter() {
+            let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
+
+            match cog {
+                Cog::FrontChainring => {
+                    bicycle_stats.enqueue_value_for_stat(&BicycleStat::ChainringRPM, rpm)
+                }
+                Cog::RearCassette => {
+                    bicycle_stats.enqueue_value_for_stat(&BicycleStat::CassetteRPM, rpm)
+                }
+            }
+        }
+    }
+
+    pub fn bottom_panel_ui(
+        mut ui_state: ResMut<UiState>,
+        mut contexts: EguiContexts,
+        bicycle_stats: Res<BicycleStats>,
+    ) {
         egui::TopBottomPanel::new(TopBottomSide::Bottom, "Bottom Panel").show(
             contexts.ctx_mut(),
             |ui| {
@@ -96,61 +182,98 @@ impl UIPlugin {
                     ui.vertical(|ui| {
                         ui.heading("Bicycle Statistics");
 
-                        let (lin_vel, rotation) = frame.single();
-
                         ui.label(format!(
                             "Frame Grade: {:.1}",
-                            100.0 * rotation.sin / rotation.cos
+                            bicycle_stats.get_avg(&BicycleStat::Grade)
                         ));
 
-                        ui.label(format!("Bicycle Speed: {:.01}", lin_vel.length().abs()));
+                        ui.label(format!(
+                            "Bicycle Speed: {:.01}",
+                            bicycle_stats.get_avg(&BicycleStat::Speed)
+                        ));
                     });
 
                     ui.separator();
 
                     ui.vertical(|ui| {
                         ui.heading("Wheel RPM");
-                        for (_wheel_ent, wheel, ang_vel) in rear_wheel_query.iter() {
-                            let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
-                            ui.label(format!("{:?} RPM {:.0}", wheel, rpm));
-                        }
+                        ui.label(format!(
+                            "{:?} RPM {:.0}",
+                            BicycleWheel::Front,
+                            bicycle_stats.get_avg(&BicycleStat::FrontWheelRPM)
+                        ));
+                        ui.label(format!(
+                            "{:?} RPM {:.0}",
+                            BicycleWheel::Back,
+                            bicycle_stats.get_avg(&BicycleStat::RearWheelRPM)
+                        ));
                     });
 
                     ui.separator();
 
                     ui.vertical(|ui| {
                         ui.heading("COG RPM");
-                        for (_, cog, ang_vel) in chainring_query.iter() {
-                            ui.horizontal(|ui| match cog {
-                                Cog::FrontChainring => {
-                                    let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
-                                    ui.label(format!("COG {:?} RPM: {:.0}", cog, rpm));
+                        ui.label(format!(
+                            "COG {:?} RPM: {:.0}",
+                            &Cog::FrontChainring,
+                            bicycle_stats.get_avg(&BicycleStat::ChainringRPM)
+                        ));
 
-                                    ui.label("Chainring Radius:");
+                        ui.label("Chainring Radius:");
 
-                                    ui.add(
-                                        egui::Slider::new(
-                                            &mut ui_state.chainring_radius,
-                                            4.0..=15.0,
-                                        )
-                                        .text("value"),
-                                    );
-                                }
-                                Cog::RearCassette => {
-                                    let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
-                                    ui.label(format!("COG {:?} RPM: {:.0}", cog, rpm));
-                                    ui.label("Cassette Radius:");
+                        ui.add(
+                            egui::Slider::new(&mut ui_state.chainring_radius, 4.0..=15.0)
+                                .text("value"),
+                        );
+                        ui.label(format!(
+                            "COG {:?} RPM: {:.0}",
+                            &Cog::RearCassette,
+                            bicycle_stats.get_avg(&BicycleStat::CassetteRPM)
+                        ));
+                        ui.label("Cassette Radius:");
 
-                                    ui.add(
-                                        egui::Slider::new(
-                                            &mut ui_state.cassette_radius,
-                                            4.0..=15.0,
-                                        )
-                                        .text("value"),
-                                    );
-                                }
-                            });
-                        }
+                        ui.add(
+                            egui::Slider::new(&mut ui_state.cassette_radius, 4.0..=15.0)
+                                .text("value"),
+                        );
+                        // for (_, cog, ang_vel) in chainring_query.iter() {
+                        //     ui.horizontal(|ui| match cog {
+                        //         Cog::FrontChainring => {
+                        //             let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
+                        //
+                        //             bicycle_stats.chainring_rpms.enqueue(rpm);
+                        //
+                        //             ui.label(format!(
+                        //                 "COG {:?} RPM: {:.0}",
+                        //                 cog,
+                        //                 bicycle_stats.chainring_rpm_avg()
+                        //             ));
+                        //
+                        //             ui.label("Chainring Radius:");
+                        //
+                        //             ui.add(
+                        //                 egui::Slider::new(
+                        //                     &mut ui_state.chainring_radius,
+                        //                     4.0..=15.0,
+                        //                 )
+                        //                 .text("value"),
+                        //             );
+                        //         }
+                        //         Cog::RearCassette => {
+                        //             let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
+                        //             ui.label(format!("COG {:?} RPM: {:.0}", cog, rpm));
+                        //             ui.label("Cassette Radius:");
+                        //
+                        //             ui.add(
+                        //                 egui::Slider::new(
+                        //                     &mut ui_state.cassette_radius,
+                        //                     4.0..=15.0,
+                        //                 )
+                        //                 .text("value"),
+                        //             );
+                        //         }
+                        //     });
+                        // }
                     });
                 });
             },
