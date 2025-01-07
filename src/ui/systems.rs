@@ -1,5 +1,5 @@
 use avian2d::prelude::{AngularVelocity, LinearVelocity, Rotation};
-use bevy::prelude::*;
+use bevy::{prelude::*, reflect::List};
 use bevy_egui::{
     egui::{self, panel::TopBottomSide, Align2},
     EguiContexts,
@@ -14,6 +14,7 @@ use crate::{
     },
     camera::systems::CameraState,
     world::resources::{MaxTerrainChunkCount, TerrainSeed},
+    BoundedQueue,
 };
 
 use super::plugin::UIPlugin;
@@ -23,6 +24,36 @@ pub struct UiState {
     chainring_radius: f32,
     cassette_radius: f32,
     max_terrain_chunk_count: u8,
+}
+
+pub struct BicycleStats {
+    speeds: BoundedQueue<f64>,
+    chainring_rpms: BoundedQueue<f64>,
+}
+
+const BICYCLE_STAT_SAMPLES: usize = 1000;
+
+impl Default for BicycleStats {
+    fn default() -> Self {
+        Self {
+            speeds: BoundedQueue::new(BICYCLE_STAT_SAMPLES),
+            chainring_rpms: BoundedQueue::new(BICYCLE_STAT_SAMPLES),
+        }
+    }
+}
+
+impl BicycleStats {
+    pub fn avg_speed(&self) -> f64 {
+        let sum: f64 = self.speeds.clone().into_iter().sum();
+        let count: f64 = self.speeds.len() as f64;
+        sum / count
+    }
+
+    pub fn chainring_rpm_avg(&self) -> f64 {
+        let sum: f64 = self.chainring_rpms.clone().into_iter().sum();
+        let count: f64 = self.chainring_rpms.len() as f64;
+        sum / count
+    }
 }
 
 impl UIPlugin {
@@ -84,6 +115,7 @@ impl UIPlugin {
         frame: Query<(&LinearVelocity, &Rotation), With<BicycleFrame>>,
         rear_wheel_query: Query<(Entity, &BicycleWheel, &AngularVelocity)>,
         chainring_query: Query<(Entity, &Cog, &AngularVelocity)>,
+        mut bicycle_stats: Local<BicycleStats>,
     ) {
         if rear_wheel_query.is_empty() || chainring_query.is_empty() || frame.is_empty() {
             return;
@@ -97,13 +129,14 @@ impl UIPlugin {
                         ui.heading("Bicycle Statistics");
 
                         let (lin_vel, rotation) = frame.single();
+                        bicycle_stats.speeds.enqueue(lin_vel.length());
 
                         ui.label(format!(
                             "Frame Grade: {:.1}",
                             100.0 * rotation.sin / rotation.cos
                         ));
 
-                        ui.label(format!("Bicycle Speed: {:.01}", lin_vel.length().abs()));
+                        ui.label(format!("Bicycle Speed: {:.01}", bicycle_stats.avg_speed()));
                     });
 
                     ui.separator();
@@ -124,7 +157,14 @@ impl UIPlugin {
                             ui.horizontal(|ui| match cog {
                                 Cog::FrontChainring => {
                                     let rpm = -ang_vel.0 * 60.0 / (2.0 * std::f64::consts::PI);
-                                    ui.label(format!("COG {:?} RPM: {:.0}", cog, rpm));
+
+                                    bicycle_stats.chainring_rpms.enqueue(rpm);
+
+                                    ui.label(format!(
+                                        "COG {:?} RPM: {:.0}",
+                                        cog,
+                                        bicycle_stats.chainring_rpm_avg()
+                                    ));
 
                                     ui.label("Chainring Radius:");
 
