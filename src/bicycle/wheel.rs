@@ -11,6 +11,12 @@ use crate::{
     PNGAssets,
 };
 
+#[derive(Component, PartialEq, Debug)]
+pub enum Axle {
+    FRONT,
+    REAR,
+}
+
 #[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BicycleWheel {
     Front,

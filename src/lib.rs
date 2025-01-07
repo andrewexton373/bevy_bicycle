@@ -31,6 +31,18 @@ use ui::plugin::UIPlugin;
 use user_input::plugin::UserInputPlugin;
 use world::plugin::WorldTerrainPlugin;
 
+#[derive(PhysicsLayer, Default)]
+pub enum GameLayer {
+    #[default]
+    Default,
+    World,
+    Frame,
+    Wheels,
+    AttachmentPoints,
+    Groupset,
+    Chain,
+}
+
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {

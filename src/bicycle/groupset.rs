@@ -6,10 +6,13 @@ use bevy::{
     prelude::*,
 };
 
-use crate::bicycle::{
-    components::{BicycleFrame, FrameGeometry},
-    systems::{BicycleSystems, GameLayer},
-    wheel::BicycleWheel,
+use crate::{
+    bicycle::{
+        components::{BicycleFrame, FrameGeometry},
+        systems::BicycleSystems,
+        wheel::BicycleWheel,
+    },
+    GameLayer,
 };
 
 use bevy::{
@@ -24,12 +27,6 @@ use bevy::prelude::Component;
 
 #[derive(Component)]
 pub struct Groupset;
-
-#[derive(Component, PartialEq, Debug)]
-pub enum Axle {
-    FRONT,
-    REAR,
-}
 
 #[derive(Component, PartialEq, Debug, Clone, Copy)]
 pub enum Cog {

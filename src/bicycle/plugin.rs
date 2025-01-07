@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use super::{groupset::GroupsetPlugin, systems::BicycleSystems};
+use super::{
+    groupset::GroupsetPlugin,
+    systems::{on_remove_bicyle, BicycleSystems},
+};
 
 pub struct BicyclePlugin;
 
@@ -10,7 +13,7 @@ impl Plugin for BicyclePlugin {
             // SprocketPlugin,
             GroupsetPlugin,
         ))
-        .add_observer(BicyclePlugin::on_remove_bicyle)
+        .add_observer(on_remove_bicyle)
         .init_resource::<BicycleSystems>();
     }
 }
