@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridSettings};
 
-use crate::bicycle::components::BicycleFrame;
+use crate::bicycle::frame::BicycleFrame;
 
 use super::{
     components::FollowCamera,

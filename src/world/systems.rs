@@ -7,7 +7,7 @@ use bevy::{
 };
 use noise::{NoiseFn, Perlin};
 
-use crate::{bicycle::systems::GameLayer, camera::components::FollowCamera};
+use crate::{camera::components::FollowCamera, GameLayer};
 
 use super::{
     components::{Terrain, TerrainChunk},

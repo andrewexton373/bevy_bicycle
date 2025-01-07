@@ -8,12 +8,9 @@ use iyes_perf_ui::{entry::PerfUiEntry, prelude::PerfUiDefaultEntries};
 
 use crate::{
     bicycle::{
-        components::BicycleFrame,
-        groupset::{
-            components::Cog,
-            resources::{CassetteRadius, ChainringRadius},
-        },
-        wheel::components::BicycleWheel,
+        frame::BicycleFrame,
+        groupset::{CassetteRadius, ChainringRadius, Cog},
+        wheel::BicycleWheel,
     },
     camera::systems::CameraState,
     world::resources::{MaxTerrainChunkCount, TerrainSeed},
