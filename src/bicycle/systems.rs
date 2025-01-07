@@ -20,11 +20,11 @@ use super::{
     wheel::BicycleWheel,
 };
 
-pub(crate) fn initialize(world: &mut World) {
-    world
-        .run_system(world.resource::<BicycleSystems>().0["spawn_bicycle"])
-        .expect("Error Spawning Bicycle");
-}
+// pub(crate) fn initialize(world: &mut World) {
+//     world
+//         .run_system(world.resource::<BicycleSystems>().0["spawn_bicycle"])
+//         .expect("Error Spawning Bicycle");
+// }
 
 #[derive(Resource)]
 pub struct BicycleSystems(pub HashMap<String, SystemId>);
