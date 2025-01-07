@@ -7,7 +7,7 @@ use bevy::{
 };
 
 use crate::{
-    bicycle::{groupset::plugin::GroupsetPlugin, wheel::plugin::WheelPlugin},
+    bicycle::{groupset::plugin::GroupsetPlugin, wheel::spawn_wheel},
     camera::components::FollowCamera,
     world::{plugin::WorldTerrainPlugin, resources::TerrainSeed},
 };
@@ -17,7 +17,7 @@ use super::{
     components::{Bicycle, BicycleFrame},
     groupset::components::Cog,
     plugin::BicyclePlugin,
-    wheel::components::BicycleWheel,
+    wheel::BicycleWheel,
 };
 
 pub(crate) fn initialize(world: &mut World) {
@@ -102,10 +102,10 @@ pub fn spawn_frame(world: &mut World) {
         .id();
 
     world
-        .run_system_once_with(BicycleWheel::Front, WheelPlugin::spawn_wheel)
+        .run_system_once_with(BicycleWheel::Front, spawn_wheel)
         .expect("Error Spawning Front Wheel");
     world
-        .run_system_once_with(BicycleWheel::Back, WheelPlugin::spawn_wheel)
+        .run_system_once_with(BicycleWheel::Back, spawn_wheel)
         .expect("Error Spawning Rear Wheel");
     world
         .run_system_once(GroupsetPlugin::spawn_groupset)

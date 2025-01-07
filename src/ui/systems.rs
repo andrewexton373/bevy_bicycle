@@ -13,7 +13,7 @@ use crate::{
             components::Cog,
             resources::{CassetteRadius, ChainringRadius},
         },
-        wheel::components::BicycleWheel,
+        wheel::BicycleWheel,
     },
     camera::systems::CameraState,
     world::resources::{MaxTerrainChunkCount, TerrainSeed},

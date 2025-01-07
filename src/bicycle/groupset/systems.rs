@@ -9,7 +9,7 @@ use bevy::{
 use crate::bicycle::{
     components::{BicycleFrame, FrameGeometry},
     systems::{BicycleSystems, GameLayer},
-    wheel::components::BicycleWheel,
+    wheel::BicycleWheel,
 };
 
 use super::{
